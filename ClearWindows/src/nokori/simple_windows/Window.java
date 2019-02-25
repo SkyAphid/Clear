@@ -6,12 +6,14 @@ import static org.lwjgl.system.MemoryStack.*;
 
 import java.io.File;
 import java.nio.ByteBuffer;
+import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFWCharModsCallback;
 import org.lwjgl.glfw.GLFWCursorPosCallback;
 import org.lwjgl.glfw.GLFWFramebufferSizeCallback;
@@ -77,6 +79,10 @@ public class Window {
 
 	private AtomicIntegerArray pressedKeys;
 	
+	//
+	DoubleBuffer mx = BufferUtils.createDoubleBuffer(1);
+	DoubleBuffer my = BufferUtils.createDoubleBuffer(1);
+
 	Window(WindowManager parent, long handle, ContextParams contextParams, boolean fullscreen, int swapInterval) {
 		
 		this.parent = parent;
@@ -231,6 +237,7 @@ public class Window {
 			advancedSwapSupported = 
 					glfwExtensionSupported("WGL_EXT_swap_control_tear") ||
 					glfwExtensionSupported("GLX_EXT_swap_control_tear");
+			
 			initialized = true;
 		}
 	}
@@ -616,6 +623,20 @@ public class Window {
 	
 	public ContextParams getContextParams() {
 		return contextParams;
+	}
+	
+	private void updateMouse() {
+		glfwGetCursorPos(handle, mx, my);
+	}
+	
+	public double getMouseX() {
+		updateMouse();
+		return mx.get(0);
+	}
+	
+	public double getMouseY() {
+		updateMouse();
+		return my.get(0);
 	}
 	
 	public boolean isKeyDown(int key){

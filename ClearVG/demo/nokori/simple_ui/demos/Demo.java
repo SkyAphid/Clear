@@ -78,10 +78,10 @@ class Demo {
 
     static class DemoData {
 
-        final ByteBuffer entypo           = loadResource("demo/nanovg/entypo.ttf", 40 * 1024);
-        final ByteBuffer RobotoRegular    = loadResource("demo/nanovg/Roboto-Regular.ttf", 150 * 1024);
-        final ByteBuffer RobotoBold       = loadResource("demo/nanovg/Roboto-Bold.ttf", 150 * 1024);
-        final ByteBuffer NotoEmojiRegular = loadResource("demo/nanovg/NotoEmoji-Regular.ttf", 450 * 1024);
+        final ByteBuffer entypo           = loadResource("fonts/NotoSans/NotoSans-Regular.ttf", 40 * 1024);
+        final ByteBuffer RobotoRegular    = loadResource("fonts/NotoSans/NotoSans-Regular.ttf", 150 * 1024);
+        final ByteBuffer RobotoBold       = loadResource("fonts/NotoSans/NotoSans-Regular.ttf", 150 * 1024);
+        final ByteBuffer NotoEmojiRegular = loadResource("fonts/NotoSans/NotoSans-Regular.ttf", 450 * 1024);
 
         int fontNormal,
             fontBold,

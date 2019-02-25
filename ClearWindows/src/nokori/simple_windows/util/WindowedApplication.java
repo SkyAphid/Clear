@@ -5,12 +5,12 @@ import nokori.simple_windows.Window;
 import nokori.simple_windows.WindowManager;
 
 
-public abstract class SimpleApplication {
+public abstract class WindowedApplication {
 
 	protected WindowManager windowManager;
 	protected Window window;
 	
-	public SimpleApplication() {
+	public WindowedApplication() {
 		try {
 			windowManager = new WindowManager();
 		} catch (GLFWException e) {
@@ -24,7 +24,7 @@ public abstract class SimpleApplication {
 	 * @param program - a class that extends this one, meant to be the root of the program
 	 * @param args - the args passed through the main method
 	 */
-	public static void launch(SimpleApplication program, String[] args) {
+	public static void launch(WindowedApplication program, String[] args) {
 		//Restarts the JVM if necessary on the first thread to ensure Mac compatibility
 		if (JVMUtil.restartJVMOnFirstThread(true, args)) {
 			return;
@@ -53,11 +53,11 @@ public abstract class SimpleApplication {
 	private void loop() {
 		//Software loop
 		while (!window.isCloseRequested()) {
-			
+			run();
 			windowManager.update(true);
 		}
 		
-		dispose();
+		endOfApplicationCallback();
 		windowManager.dispose();
 	}
 	
@@ -70,7 +70,7 @@ public abstract class SimpleApplication {
 	public abstract void init(WindowManager windowManager, Window window, String[] args);
 
 	/**
-	 * Called from the program loop before rendering.
+	 * Called from the program loop.
 	 */
 	public abstract void run();
 	
@@ -92,7 +92,7 @@ public abstract class SimpleApplication {
 	}
 	
 	/**
-	 * This is called at the end of this program's life, right before WindowManager and NuklearContext are disposed.
+	 * This is called at the end of this program's life, right before WindowManager is disposed.
 	 */
-	protected abstract void dispose();
+	protected abstract void endOfApplicationCallback();
 }
