@@ -34,13 +34,15 @@ public class ClearHelloWorld extends ClearApplication {
 	
 	@Override
 	public void init(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly, String[] args) {
+		//WidgetAssemblies act as containers for various widgets. This will allow you to "assemble" a variety of UI components.
 		WidgetAssembly button = new WidgetAssembly(100, 50, new WidgetClip(WidgetClip.Alignment.CENTER));
+		
+		/*
+		 * Background - rectangle with dropshadow
+		 */
 		
 		float cornerRadius = 3f;
 		
-		/*
-		 * Background
-		 */
 		button.addChild(new DropShadow(cornerRadius, ClearColor.LIGHT_BLACK));
 		button.addChild(new Rectangle(cornerRadius, ClearColor.CORAL));
 		
@@ -59,7 +61,7 @@ public class ClearHelloWorld extends ClearApplication {
 		}
 		
 		/*
-		 * Input
+		 * Input - click the WidgetAssembly to toggle rendering and show the bounding
 		 */
 		
 		button.setOnMouseMotionEvent(e -> {
