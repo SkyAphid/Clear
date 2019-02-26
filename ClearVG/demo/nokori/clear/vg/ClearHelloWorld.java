@@ -1,4 +1,4 @@
-package nokori.clear.vg.demos;
+package nokori.clear.vg;
 
 import nokori.clear.vg.ClearColor;
 
