@@ -12,4 +12,4 @@ Clear is a wrapper for LWJGL3 that makes it simple to build basic programs that 
 ## ClearVG
 - Create a NanoVG-capable application within 100 lines
 - Has basic tools for making pretty user-interfaces
-- Provides tools and detailed documentation on how to make your own
+- Reliable and customizable
