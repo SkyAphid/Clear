@@ -1,0 +1,98 @@
+package nokori.clear.vg.demos;
+
+import nokori.clear.vg.ClearColor;
+
+import java.io.IOException;
+
+import nokori.clear.vg.ClearApplication;
+import nokori.clear.vg.NanoVGContext;
+import nokori.clear.vg.SharedStaticVariables;
+import nokori.clear.vg.font.Font;
+import nokori.clear.vg.font.FontStyle;
+import nokori.clear.vg.widget.DropShadow;
+import nokori.clear.vg.widget.Label;
+import nokori.clear.vg.widget.Rectangle;
+import nokori.clear.vg.widget.assembly.WidgetAssembly;
+import nokori.clear.vg.widget.assembly.WidgetClip;
+import nokori.clear.windows.Cursor;
+import nokori.clear.windows.GLFWException;
+import nokori.clear.windows.Window;
+import nokori.clear.windows.WindowManager;
+
+public class ClearHelloWorld extends ClearApplication {
+
+	private static final int WINDOW_WIDTH = 256;
+	private static final int WINDOW_HEIGHT = 256;
+	
+	public static void main(String[] args) {
+		ClearApplication.launch(new ClearHelloWorld(), args);
+	}
+
+	public ClearHelloWorld() {
+		super(new WidgetAssembly());
+	}
+	
+	@Override
+	public void init(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly, String[] args) {
+		WidgetAssembly button = new WidgetAssembly(100, 50, new WidgetClip(WidgetClip.Alignment.CENTER));
+		
+		float cornerRadius = 3f;
+		
+		/*
+		 * Background
+		 */
+		button.addChild(new DropShadow(cornerRadius, ClearColor.LIGHT_BLACK));
+		button.addChild(new Rectangle(cornerRadius, ClearColor.CORAL));
+		
+		/*
+		 * Text
+		 */
+		
+		try {
+			Font font = new Font("fonts/NotoSans/", "NotoSans-Regular", "NotoSans-Bold", "NotoSans-Italic", "NotoSans-Light").load(context);
+			
+			Label label = new Label(ClearColor.WHITE_SMOKE, "Hello World!", font, FontStyle.REGULAR, 20);
+			label.addChild(new WidgetClip(WidgetClip.Alignment.CENTER));
+			button.addChild(label);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		
+		/*
+		 * Input
+		 */
+		
+		button.setOnMouseMotionEvent(e -> {
+			if (button.isMouseWithin(window)) {
+				SharedStaticVariables.getCursor(Cursor.Type.HAND).apply(window);
+			} else {
+				SharedStaticVariables.getCursor(Cursor.Type.ARROW).apply(window);
+			}
+		});
+		
+		button.setOnMouseButtonEvent(e -> {
+			if (e.isPressed() && button.isMouseWithin(e.getWindow())) {
+				button.setBackgroundFill(button.getBackgroundFill() != null ? null : ClearColor.LIGHT_GRAY);
+				button.setRenderChildren(!button.isRenderingChildren());
+			}
+		});
+		
+		/*
+		 * Add button to root assembly
+		 */
+		
+		rootWidgetAssembly.addChild(button);
+	}
+
+
+	@Override
+	protected void endOfNanoVGApplicationCallback() {
+		
+	}
+
+	@Override
+	public Window createWindow(WindowManager windowManager) throws GLFWException {
+		return windowManager.createWindow("Hello World!", WINDOW_WIDTH, WINDOW_HEIGHT, true, true);
+	}
+
+}
