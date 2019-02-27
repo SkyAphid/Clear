@@ -5,17 +5,23 @@ import org.lwjgl.nanovg.NanoVG;
 import nokori.clear.vg.ClearColor;
 import nokori.clear.vg.NanoVGContext;
 import nokori.clear.vg.widget.assembly.WidgetAssembly;
-import nokori.clear.vg.widget.assembly.ColoredWidgetImpl;
+import nokori.clear.vg.widget.attachments.FillAttachment;
+import nokori.clear.vg.widget.attachments.StrokeFillAttachment;
+import nokori.clear.vg.widget.assembly.Widget;
 import nokori.clear.windows.Window;
 import nokori.clear.windows.WindowManager;
 
 /**
  * A widget that draws a rectangle at the given coordinates. It can be manually configured or set to sync up to the parent container.
  */
-public class Rectangle extends ColoredWidgetImpl {
+public class Rectangle extends Widget implements FillAttachment, StrokeFillAttachment {
 	
 	protected float cornerRadius;
 	protected boolean syncToParent = false;
+	
+	protected ClearColor fill, strokeFill;
+	
+	private float strokeWidth = 0.5f;
 	
 	/*
 	 * 
@@ -55,12 +61,14 @@ public class Rectangle extends ColoredWidgetImpl {
 	}
 	
 	public Rectangle(float x, float y, float width, float height, float cornerRadius, ClearColor fill) {
-		super(x, y, width, height, fill, null);
+		this(x, y, width, height, fill, null);
 	}
 	
 	public Rectangle(float x, float y, float width, float height, float cornerRadius, ClearColor fill, ClearColor strokeFill) {
-		super(x, y, width, height, fill, strokeFill);
+		super(x, y, width, height);
 		this.cornerRadius = cornerRadius;
+		this.fill = fill;
+		this.strokeFill = strokeFill;
 	}
 
 	/*
@@ -83,8 +91,8 @@ public class Rectangle extends ColoredWidgetImpl {
 	public void render(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
 		long vg = context.get();
 		
-		float x = getRenderX(pos.x);
-		float y = getRenderY(pos.y);
+		float x = getRenderX();
+		float y = getRenderY();
 		float w = getWidth();
 		float h = getHeight();
 		
@@ -93,18 +101,25 @@ public class Rectangle extends ColoredWidgetImpl {
 			NanoVG.nvgRoundedRect(vg, x, y, w, h, cornerRadius);
 			NanoVG.nvgFillColor(vg, fill);
 			NanoVG.nvgFill(vg);
+			
+			if (strokeFill != null) {
+				strokeFill.stackPushLambda(strokeFill -> {
+					NanoVG.nvgStrokeWidth(vg, strokeWidth);
+					NanoVG.nvgStrokeColor(vg, strokeFill);
+					NanoVG.nvgStroke(vg);
+				});
+			}
+			
 			NanoVG.nvgClosePath(vg);
 		});
-		
-		if (strokeFill != null) {
-			strokeFill.stackPushLambda(strokeFill -> {
-				NanoVG.nvgBeginPath(vg);
-				NanoVG.nvgRoundedRect(vg, x, y, w, h, cornerRadius);
-				NanoVG.nvgStrokeColor(vg, strokeFill);
-				NanoVG.nvgStroke(vg);
-				NanoVG.nvgClosePath(vg);
-			});
-		}
+	}
+	
+	public float getStrokeWidth() {
+		return strokeWidth;
+	}
+
+	public void setStrokeWidth(float strokeWidth) {
+		this.strokeWidth = strokeWidth;
 	}
 
 	@Override
@@ -112,4 +127,21 @@ public class Rectangle extends ColoredWidgetImpl {
 		
 	}
 
+	@Override
+	public ClearColor getStrokeFill() {
+		return strokeFill;
+	}
+
+	@Override
+	public ClearColor getFill() {
+		return fill;
+	}
+
+	public void setFill(ClearColor fill) {
+		this.fill = fill;
+	}
+
+	public void setStrokeFill(ClearColor strokeFill) {
+		this.strokeFill = strokeFill;
+	}
 }

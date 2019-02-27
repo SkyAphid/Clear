@@ -7,13 +7,13 @@ import nokori.clear.vg.ClearColor;
 
 //TODO: Complete
 @SuppressWarnings("all")
-public abstract class DraggableWidget extends ColoredWidgetImpl {
+public abstract class DraggableWidget extends Widget {
 
 	private boolean dragging = false;
 	private Vector2f anchor = new Vector2f();
 
-	public DraggableWidget(float x, float y, float width, float height, ClearColor fill, ClearColor strokeFill) {
-		super(x, y, width, height, fill, strokeFill);
+	public DraggableWidget(float x, float y, float width, float height) {
+		super(x, y, width, height);
 	}
 	
 	/**

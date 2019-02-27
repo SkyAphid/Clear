@@ -54,6 +54,7 @@ public class DemoProgram extends WindowedApplication {
 
 	@Override
 	protected void endOfApplicationCallback() {
+		Demo.freeDemoData();
 		context.dispose();
 	}
 

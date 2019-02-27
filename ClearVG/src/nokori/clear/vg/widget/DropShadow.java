@@ -17,6 +17,10 @@ public class DropShadow extends Rectangle {
 	private float shadowRadius;
 	private Vector2f shadowOffset = new Vector2f(0, 0);
 	
+	public DropShadow(ClearColor fill) {
+		this(0, 4f, 2f, 2f, fill);
+	}
+	
 	public DropShadow(float cornerRadius, ClearColor fill) {
 		this(cornerRadius, 4f, 2f, 2f, fill);
 	}
@@ -37,8 +41,8 @@ public class DropShadow extends Rectangle {
 	public void render(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
 		long vg = context.get();
 		
-		float x = getRenderX(pos.x) + shadowOffset.x;
-		float y = getRenderY(pos.y) + shadowOffset.y;
+		float x = getRenderX() + shadowOffset.x;
+		float y = getRenderY() + shadowOffset.y;
 		float w = getWidth();
 		float h = getHeight();
 		

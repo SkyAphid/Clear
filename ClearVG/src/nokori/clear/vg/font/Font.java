@@ -11,9 +11,10 @@ import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
 import org.joml.Vector2f;
 import org.lwjgl.BufferUtils;
+import org.lwjgl.nanovg.NanoVG;
+
 import static org.lwjgl.nanovg.NanoVG.*;
 
 import nokori.clear.vg.NanoVGContext;
@@ -105,28 +106,28 @@ public class Font {
 		}
 	}
 	
-	public float getLineHeight(NanoVGContext context, float size, FontStyle fontStyle) {
-		return getLineHeight(context, size, DEFAULT_TEXT_ALIGNMENT, fontStyle);
+	public float getHeight(NanoVGContext context, float size, FontStyle fontStyle) {
+		return getHeight(context, size, DEFAULT_TEXT_ALIGNMENT, fontStyle);
 	}
 	
-	public float getLineHeight(NanoVGContext context, float size, int textAlignment, FontStyle fontStyle) {
+	public float getHeight(NanoVGContext context, float size, int textAlignment, FontStyle fontStyle) {
 		configureNVG(context, size, textAlignment, fontStyle);
 		nvgTextMetrics(context.get(), null, null, tempBuffer);
 		return tempBuffer.get(0);
 	}
 	
-	public float getLineAscend(NanoVGContext context, float size, int textAlignment, FontStyle fontStyle) {
+	public float getAscend(NanoVGContext context, float size, int textAlignment, FontStyle fontStyle) {
 		configureNVG(context, size, textAlignment, fontStyle);
 		nvgTextMetrics(context.get(), tempBuffer, null, null);
 		return tempBuffer.get(0);
 	}
 	
-	public float getLineDescend(NanoVGContext context, float size, int textAlignment, FontStyle fontStyle) {
+	public float getDescend(NanoVGContext context, float size, int textAlignment, FontStyle fontStyle) {
 		configureNVG(context, size, textAlignment, fontStyle);
 		nvgTextMetrics(context.get(), null, tempBuffer, null);
 		return tempBuffer.get(0);
 	}
-
+	
 	/**
 	 * @return a Vector2f with the width and height of the given settings (x = w, y = h)
 	 */
@@ -135,7 +136,8 @@ public class Font {
 
 		configureNVG(context, size, textAlignment, style);
 		nvgTextBounds(context.get(), 0, 0, string, bounds);
-		
+		NanoVG.nvgReset(context.get());
+
 		float width = bounds[2] - bounds[0];
 		float height = bounds[3] - bounds[1];
 		

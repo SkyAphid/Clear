@@ -71,9 +71,12 @@ class Demo {
 
     private static final NVGTextRow.Buffer       rows      = NVGTextRow.create(3);
     private static final NVGGlyphPosition.Buffer glyphs    = NVGGlyphPosition.create(100);
+    
+    private static final String PARAGRAPH_STRING = "This is longer chunk of text.\n  \n  Would have used lorem ipsum but she    was busy jumping over the lazy dog with the fox and all the men " +
+            "who came to the aid of the party.🎉";
+    
     private static final ByteBuffer              paragraph = memUTF8(
-        "This is longer chunk of text.\n  \n  Would have used lorem ipsum but she    was busy jumping over the lazy dog with the fox and all the men " +
-        "who came to the aid of the party.🎉",
+        PARAGRAPH_STRING,
         false
     );
 
@@ -612,7 +615,7 @@ class Demo {
 
         float u  = (1 + (float)cos(t * 0.5f)) * 0.5f;
         float u2 = (1 - (float)cos(t * 0.2f)) * 0.5f;
-
+      
         nvgSave(vg);
         //nvgClearState(vg);
 
@@ -734,6 +737,8 @@ class Demo {
         nvgFillPaint(vg, shadowPaint);
         //nvgFillColor(vg, rgba(0,0,0,128, color));
         nvgFill(vg);
+        
+        //System.err.println(stackh + " " + scrollh + " " + u);
 
         nvgRestore(vg);
     }
@@ -1040,7 +1045,6 @@ class Demo {
         int gutter = 0;
 
         nvgSave(vg);
-        //TODO: Reference
         nvgFontSize(vg, 18.0f);
         nvgFontFace(vg, "sans");
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
@@ -1246,6 +1250,9 @@ class Demo {
         long vg, float mx, float my, float width, float height,
         float t, boolean blowup, DemoData data
     ) {
+    	
+    	//System.err.println(rows.capacity() + " " + glyphs.capacity() + " " + paragraph.capacity() + " " + PARAGRAPH_STRING.length());
+    	
         float x, y, popy;
 
         drawEyes(vg, width - 250, 50, 150, 100, mx, my, t);

@@ -59,6 +59,8 @@ public abstract class WindowedApplication {
 		
 		endOfApplicationCallback();
 		windowManager.dispose();
+		
+		System.exit(0);
 	}
 	
 	/**

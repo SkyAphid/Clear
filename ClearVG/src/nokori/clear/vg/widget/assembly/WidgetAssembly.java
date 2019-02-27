@@ -53,8 +53,8 @@ public class WidgetAssembly extends Widget {
 		if (backgroundFill != null) {
 			backgroundFill.stackPushLambda(fill -> {
 				long vg = context.get();
-				float x = getRenderX(pos.x);
-				float y = getRenderY(pos.y);
+				float x = getRenderX();
+				float y = getRenderY();
 				float w = size.x;
 				float h = size.y;
 				

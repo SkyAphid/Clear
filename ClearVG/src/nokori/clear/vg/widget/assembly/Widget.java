@@ -32,6 +32,17 @@ public abstract class Widget extends WidgetContainer {
 	private MouseMotionEventListener mouseMotionEventListener = null;
 	private MouseScrollEventListener mouseScrollEventListener = null;
 	
+	public Widget() {
+		
+	}
+	
+	public Widget(float x, float y, float width, float height) {
+		pos.x = x;
+		pos.y = y;
+		size.x = width;
+		size.y = height;
+	}
+	
 	public abstract void tick(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly);
 	public abstract void render(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly);
 	public abstract void dispose();
@@ -76,12 +87,18 @@ public abstract class Widget extends WidgetContainer {
 		size.y = height;
 	}
 	
-	public float getRenderX(float x) {
-		return (parent != null ? parent.getX() + x : x);
+	/**
+	 * @return an x value that takes into account the parent widgets position (if applicable). Used to make sure that child widgets are rendered in the parents bounds appropriately.
+	 */
+	public float getRenderX() {
+		return (parent != null ? parent.getX() + pos.x : pos.x);
 	}
 	
-	public float getRenderY(float y) {
-		return (parent != null ? parent.getY() + y : y);
+	/**
+	 * @return an y value that takes into account the parent widgets position (if applicable). Used to make sure that child widgets are rendered in the parents bounds appropriately.
+	 */
+	public float getRenderY() {
+		return (parent != null ? parent.getY() + pos.y : pos.y);
 	}
 	
 	public boolean isMouseWithin(Window window) {
