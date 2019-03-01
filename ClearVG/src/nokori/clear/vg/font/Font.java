@@ -11,6 +11,8 @@ import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+
 import org.joml.Vector2f;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.nanovg.NanoVG;
@@ -25,6 +27,8 @@ public class Font {
 	
 	private String fontNameRegular, fontNameBold, fontNameItalic, fontNameLight;
 	private File fileRegular, fileBold, fileItalic, fileLight;
+	
+	private ByteBuffer regularDataBuffer, boldDataBuffer, italicDataBuffer, lightDataBuffer;
 	
 	private FloatBuffer tempBuffer = BufferUtils.createFloatBuffer(1);
 	
@@ -55,26 +59,26 @@ public class Font {
 	 * Prepares the Font with the given settings. Text alignment is set to the default.
 	 * 
 	 * @param context
-	 * @param size
+	 * @param fontSize
 	 * @param textAlignment
 	 * @param fontStyle
 	 */
-	public void configureNVG(NanoVGContext context, float size, FontStyle fontStyle) {
-		configureNVG(context, size, DEFAULT_TEXT_ALIGNMENT, fontStyle);
+	public void configureNVG(NanoVGContext context, float fontSize, FontStyle fontStyle) {
+		configureNVG(context, fontSize, DEFAULT_TEXT_ALIGNMENT, fontStyle);
 	}
 	
 	/**
 	 * Prepares the Font with the given settings.
 	 * 
 	 * @param context
-	 * @param size
+	 * @param fontSize
 	 * @param textAlignment
 	 * @param fontStyle
 	 */
-	public void configureNVG(NanoVGContext context, float size, int textAlignment, FontStyle fontStyle) {
+	public void configureNVG(NanoVGContext context, float fontSize, int textAlignment, FontStyle fontStyle) {
 		long vg = context.get();
 		nvgFontFace(vg, getFontName(fontStyle));
-		nvgFontSize(vg, size);
+		nvgFontSize(vg, fontSize);
 		nvgTextAlign(vg, textAlignment);
 	}
 	
@@ -89,11 +93,11 @@ public class Font {
 	/**
 	 * Gets the font handle that corresponds to the given style.
 	 * 
-	 * @param style
+	 * @param fontStyle
 	 * @return
 	 */
-	public String getFontName(FontStyle style) {
-		switch(style) {
+	public String getFontName(FontStyle fontStyle) {
+		switch(fontStyle) {
 		case BOLD:
 			return fontNameBold;
 		case ITALIC:
@@ -106,24 +110,28 @@ public class Font {
 		}
 	}
 	
-	public float getHeight(NanoVGContext context, float size, FontStyle fontStyle) {
-		return getHeight(context, size, DEFAULT_TEXT_ALIGNMENT, fontStyle);
+	public float getHeight(NanoVGContext context, float fontSize, FontStyle fontStyle) {
+		return getHeight(context, fontSize, DEFAULT_TEXT_ALIGNMENT, fontStyle);
 	}
 	
-	public float getHeight(NanoVGContext context, float size, int textAlignment, FontStyle fontStyle) {
-		configureNVG(context, size, textAlignment, fontStyle);
+	public float getHeight(NanoVGContext context, float fontSize, int textAlignment, FontStyle fontStyle) {
+		configureNVG(context, fontSize, textAlignment, fontStyle);
 		nvgTextMetrics(context.get(), null, null, tempBuffer);
 		return tempBuffer.get(0);
 	}
 	
-	public float getAscend(NanoVGContext context, float size, int textAlignment, FontStyle fontStyle) {
-		configureNVG(context, size, textAlignment, fontStyle);
+	public float getHeight(NanoVGContext context, int numberOfLines, float fontSize, int textAlignment, FontStyle fontStyle) {
+		return (numberOfLines * getHeight(context, fontSize, textAlignment, fontStyle));
+	}
+	
+	public float getAscend(NanoVGContext context, float fontSize, int textAlignment, FontStyle fontStyle) {
+		configureNVG(context, fontSize, textAlignment, fontStyle);
 		nvgTextMetrics(context.get(), tempBuffer, null, null);
 		return tempBuffer.get(0);
 	}
 	
-	public float getDescend(NanoVGContext context, float size, int textAlignment, FontStyle fontStyle) {
-		configureNVG(context, size, textAlignment, fontStyle);
+	public float getDescend(NanoVGContext context, float fontSize, int textAlignment, FontStyle fontStyle) {
+		configureNVG(context, fontSize, textAlignment, fontStyle);
 		nvgTextMetrics(context.get(), null, tempBuffer, null);
 		return tempBuffer.get(0);
 	}
@@ -131,10 +139,10 @@ public class Font {
 	/**
 	 * @return a Vector2f with the width and height of the given settings (x = w, y = h)
 	 */
-	public Vector2f getTextBounds(NanoVGContext context, String string, float size, int textAlignment, FontStyle style) {
+	public Vector2f getTextBounds(NanoVGContext context, String string, float fontSize, int textAlignment, FontStyle fontStyle) {
 		float[] bounds = new float[4];
 
-		configureNVG(context, size, textAlignment, style);
+		configureNVG(context, fontSize, textAlignment, fontStyle);
 		nvgTextBounds(context.get(), 0, 0, string, bounds);
 		NanoVG.nvgReset(context.get());
 
@@ -142,6 +150,130 @@ public class Font {
 		float height = bounds[3] - bounds[1];
 		
 		return new Vector2f(width, height);
+	}
+	
+	public void split(NanoVGContext context, ArrayList<String> lines, String string, float maxLineWidth, float fontSize, int textAlignment, FontStyle fontStyle) {
+		if (lines == null) {
+			lines = new ArrayList<String>();
+		} else {
+			lines.clear();
+		}
+		
+		StringBuilder builder = new StringBuilder();
+		
+		int len = string.length();
+		float advanceX = 0;
+		
+		for (int i = 0; i < len; i++) {
+			char c = string.charAt(i);
+			
+			if (c != '\n') {
+				builder.append(c);
+			}
+
+			if (c == '\n') {
+				lines.add(builder.toString());
+				builder.setLength(0);
+				advanceX = 0;
+				continue;
+			}
+
+			float a = getTextBounds(context, Character.toString(c), fontSize, textAlignment, fontStyle).x;
+
+			if (advanceX + a > maxLineWidth) {
+				lines.add(builder.toString());
+				builder.setLength(0);
+				advanceX = 0;
+			}
+
+			advanceX += a;
+
+			if (isBreakable(c)) {
+				float wordLength = getWordLength(context, string, len, i+1, fontSize, textAlignment, fontStyle);
+
+				if (advanceX + wordLength > maxLineWidth) {
+					lines.add(builder.toString());
+					builder.setLength(0);
+					advanceX = 0;
+				}
+			}
+		}
+
+		if(builder.length() > 0){
+			lines.add(builder.toString());
+		}
+	}
+	
+	private float getWordLength(NanoVGContext context, String string, int len, int i, float fontSize, int textAlignment, FontStyle fontStyle) {
+
+		boolean isCommand = false;
+		
+		float advance = 0;
+		for(; i < string.length(); i++){
+			
+			char c = string.charAt(i);
+			char next = (i+1) < len ? string.charAt(i+1) : 0;
+			
+			if(!isCommand){
+				if(c == '\\' && next == '{'){
+					c = next; // escaped curly brace {
+					i++;
+				}else{
+					if(c == '{'){
+						isCommand = true;
+						continue;
+					}
+				}
+
+				advance += getTextBounds(context, Character.toString(c), fontSize, textAlignment, fontStyle).x;
+					
+				if(isBreakable(c)){
+					return advance;
+				}
+			}else{
+				if(c == '}'){
+					isCommand = false;
+				}
+			}
+		}
+		
+		return advance;
+	}
+	
+	private boolean isBreakable(char c) {
+		return c == ' ' || c == '\n';
+	}
+	
+	public String getFontNameRegular() {
+		return fontNameRegular;
+	}
+
+	public String getFontNameBold() {
+		return fontNameBold;
+	}
+
+	public String getFontNameItalic() {
+		return fontNameItalic;
+	}
+
+	public String getFontNameLight() {
+		return fontNameLight;
+	}
+
+	public ByteBuffer getRegularDataBuffer() {
+		return regularDataBuffer;
+	}
+
+	public ByteBuffer getBoldDataBuffer() {
+		return boldDataBuffer;
+	}
+
+	public ByteBuffer getItalicDataBuffer() {
+		return italicDataBuffer;
+	}
+
+	public ByteBuffer getLightDataBuffer() {
+		return lightDataBuffer;
 	}
 	
 	/*
@@ -154,6 +286,8 @@ public class Font {
 	/**
 	 * Loads all of the data for this Font.
 	 * 
+	 * The buffers used to make the fonts are stored as variables to ensure that they stay in memory to prevent NanoVG errors/crashes.
+	 * 
 	 * @param context
 	 * @throws IOException
 	 * 
@@ -161,34 +295,28 @@ public class Font {
 	 */
 	public Font load(NanoVGContext context) throws IOException {
 		if (fontNameRegular != null && fileRegular != null) {
-			load(context, fontNameRegular, fileRegular);
+			regularDataBuffer = createFont(context, fontNameRegular, fileRegular);
 		}
 
 		if (fontNameBold != null && fileBold != null) {
-			load(context, fontNameBold, fileBold);
+			boldDataBuffer = createFont(context, fontNameBold, fileBold);
 		}
 		
 		if (fontNameItalic != null && fileItalic != null) {
-			load(context, fontNameItalic, fileItalic);
+			italicDataBuffer = createFont(context, fontNameItalic, fileItalic);
 		}
 		
 		if (fontNameLight != null && fileLight != null) {
-			load(context, fontNameLight, fileLight);
+			lightDataBuffer = createFont(context, fontNameLight, fileLight);
 		}
 		
 		return this;
 	}
 	
-	private void load(NanoVGContext context, String name, File file) throws IOException {
+	private ByteBuffer createFont(NanoVGContext context, String name, File file) throws IOException {
 		ByteBuffer dataBuffer = ioResourceToByteBuffer(file.getAbsolutePath(), (int) file.getTotalSpace());
 		nvgCreateFontMem(context.get(), name, dataBuffer, 0);
-	}
-	
-	private static ByteBuffer resizeBuffer(ByteBuffer buffer, int newCapacity) {
-		ByteBuffer newBuffer = BufferUtils.createByteBuffer(newCapacity);
-		buffer.flip();
-		newBuffer.put(buffer);
-		return newBuffer;
+		return dataBuffer;
 	}
 
 	/**
@@ -202,8 +330,6 @@ public class Font {
 	 * @throws IOException if an IO error occurs
 	 */
 	private static ByteBuffer ioResourceToByteBuffer(String resource, int bufferSize) throws IOException {
-		System.out.println(resource);
-		
 		ByteBuffer buffer;
 
 		Path path = Paths.get(resource);
@@ -237,4 +363,15 @@ public class Font {
 		buffer.flip();
 		return buffer.slice();
 	}
+	
+	/**
+	 * For internal use by ioResourceToByteBuffer
+	 */
+	private static ByteBuffer resizeBuffer(ByteBuffer buffer, int newCapacity) {
+		ByteBuffer newBuffer = BufferUtils.createByteBuffer(newCapacity);
+		buffer.flip();
+		newBuffer.put(buffer);
+		return newBuffer;
+	}
+
 }

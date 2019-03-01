@@ -134,31 +134,31 @@ public abstract class Widget extends WidgetContainer {
 	 * 
 	 */
 
-	public void charEvent(CharEvent event) {
+	public void charEvent(Window window, CharEvent event) {
 		if (charEventListener != null) {
 			charEventListener.listen(event);
 		}
 	}
 	
-	public void keyEvent(KeyEvent event) {
+	public void keyEvent(Window window, KeyEvent event) {
 		if (keyEventListener != null) {
 			keyEventListener.listen(event);
 		}
 	}
 	
-	public void mouseButtonEvent(MouseButtonEvent event) {
+	public void mouseButtonEvent(Window window, MouseButtonEvent event) {
 		if (mouseButtonEventListener != null) {
 			mouseButtonEventListener.listen(event);
 		}
 	}
 	
-	public void mouseMotionEvent(MouseMotionEvent event) {
+	public void mouseMotionEvent(Window window, MouseMotionEvent event) {
 		if (mouseMotionEventListener != null) {
 			mouseMotionEventListener.listen(event);
 		}
 	}
 	
-	public void mouseScrollEvent(MouseScrollEvent event) {
+	public void mouseScrollEvent(Window window, MouseScrollEvent event) {
 		if (mouseScrollEventListener != null) {
 			mouseScrollEventListener.listen(event);
 		}

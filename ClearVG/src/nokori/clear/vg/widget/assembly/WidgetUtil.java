@@ -1,11 +1,13 @@
 package nokori.clear.vg.widget.assembly;
 
+import nokori.clear.windows.Window;
+
 public class WidgetUtil {
 
 	/**
 	 * Adapted from the java Rectangle API
 	 */
-	public static boolean rectanglesIntersect(double x1, double w1, double y1, double h1, double x2, double w2, double y2, double h2){
+	public static boolean rectanglesIntersect(double x1, double y1, double w1, double h1, double x2, double y2, double w2, double h2){
 		double tw = w1;
 		double th = h1;
 		
@@ -30,13 +32,17 @@ public class WidgetUtil {
 		return ((rw < rx || rw > tx) && (rh < ry || rh > ty) && (tw < tx || tw > rx) && (th < ty || th > ry));
 	}
 	
-	public static boolean pointWithinRectangle(double px, double py, double x1, double y1, double w1, double h1){
-		if (px >= x1 && px <= x1 + w1){
-			if (py >= y1 && py <= y1 + h1){
+	public static boolean pointWithinRectangle(double px, double py, double x, double y, double w, double h){
+		if (px >= x && px <= x + w){
+			if (py >= y && py <= y + h){
 				return true;
 			}
 		}
 
 		return false;
+	}
+	
+	public static boolean mouseWithinRectangle(Window window, double x, double y, double w, double h) {
+		return pointWithinRectangle(window.getMouseX(), window.getMouseY(), x, y, w, h);
 	}
 }

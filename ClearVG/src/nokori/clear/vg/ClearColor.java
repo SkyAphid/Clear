@@ -215,10 +215,10 @@ public class ClearColor {
 	/**
 	 * Multiplies this color's RGB values (but not the alpha) by the factor and returns a new object containing the new colors.
 	 * <br><br>
-	 * This can be used to brighten colors as needed.
+	 * The intended application for this function is to be able to brighten/darken colors as needed.
 	 * 
 	 * @param factor
-	 * @return
+	 * @return a new ClearColor object with the given settings
 	 */
 	public ClearColor multiply(float factor) {
 		return new ClearColor(getRed() * factor, getGreen() * factor, getBlue() * factor, getAlpha());
@@ -227,10 +227,10 @@ public class ClearColor {
 	/**
 	 * Divides this color's RGB values (but not the alpha) by the quotient and returns a new object containing the new colors.
 	 * <br><br>
-	 * This can be used to darken colors as needed.
+	 * The intended application for this function is to be able to brighten/darken colors as needed.
 	 * 
 	 * @param quotient
-	 * @return
+	 * @return a new ClearColor object with the given settings
 	 */
 	public ClearColor divide(float quotient) {
 		return new ClearColor(getRed() / quotient, getRed() / quotient, getRed() / quotient, getAlpha());

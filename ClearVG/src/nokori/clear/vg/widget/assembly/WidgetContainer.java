@@ -35,38 +35,38 @@ public abstract class WidgetContainer {
 		}
 	}
 	
-	public void childrenCharEvent(CharEvent event) {
+	public void childrenCharEvent(Window window, CharEvent event) {
 		for (Widget w : children) {
-			w.charEvent(event);
-			w.childrenCharEvent(event);
+			w.charEvent(window, event);
+			w.childrenCharEvent(window, event);
 		}
 	}
 	
-	public void childrenKeyEvent(KeyEvent event) {
+	public void childrenKeyEvent(Window window, KeyEvent event) {
 		for (Widget w : children) {
-			w.keyEvent(event);
-			w.childrenKeyEvent(event);
+			w.keyEvent(window, event);
+			w.childrenKeyEvent(window, event);
 		}
 	}
 	
-	public void childrenMouseButtonEvent(MouseButtonEvent event) {
+	public void childrenMouseButtonEvent(Window window, MouseButtonEvent event) {
 		for (Widget w : children) {
-			w.mouseButtonEvent(event);
-			w.childrenMouseButtonEvent(event);
+			w.mouseButtonEvent(window, event);
+			w.childrenMouseButtonEvent(window, event);
 		}
 	}
 	
-	public void childrenMouseMotionEvent(MouseMotionEvent event) {
+	public void childrenMouseMotionEvent(Window window, MouseMotionEvent event) {
 		for (Widget w : children) {
-			w.mouseMotionEvent(event);
-			w.childrenMouseMotionEvent(event);
+			w.mouseMotionEvent(window, event);
+			w.childrenMouseMotionEvent(window, event);
 		}
 	}
 	
-	public void childrenMouseScrollEvent(MouseScrollEvent event) {
+	public void childrenMouseScrollEvent(Window window, MouseScrollEvent event) {
 		for (Widget w : children) {
-			w.mouseScrollEvent(event);
-			w.childrenMouseScrollEvent(event);
+			w.mouseScrollEvent(window, event);
+			w.childrenMouseScrollEvent(window, event);
 		}
 	}
 	

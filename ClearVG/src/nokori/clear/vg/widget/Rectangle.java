@@ -21,7 +21,7 @@ public class Rectangle extends Widget implements FillAttachment, StrokeFillAttac
 	
 	protected ClearColor fill, strokeFill;
 	
-	private float strokeWidth = 0.5f;
+	private float strokeWidth = 1.0f;
 	
 	/*
 	 * 

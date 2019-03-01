@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import nokori.clear.vg.ClearApplication;
 import nokori.clear.vg.NanoVGContext;
-import nokori.clear.vg.SharedStaticVariables;
+import nokori.clear.vg.ClearStaticResources;
 import nokori.clear.vg.font.Font;
 import nokori.clear.vg.font.FontStyle;
 import nokori.clear.vg.widget.DropShadow;
@@ -66,9 +66,9 @@ public class ClearHelloWorld extends ClearApplication {
 		
 		button.setOnMouseMotionEvent(e -> {
 			if (button.isMouseWithin(window)) {
-				SharedStaticVariables.getCursor(Cursor.Type.HAND).apply(window);
+				ClearStaticResources.getCursor(Cursor.Type.HAND).apply(window);
 			} else {
-				SharedStaticVariables.getCursor(Cursor.Type.ARROW).apply(window);
+				ClearStaticResources.getCursor(Cursor.Type.ARROW).apply(window);
 			}
 		});
 		

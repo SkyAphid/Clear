@@ -38,7 +38,7 @@ public abstract class ClearApplication extends WindowedApplication {
 	
 	@Override
 	public void init(WindowManager windowManager, Window window, String[] args) {
-		SharedStaticVariables.loadAllCursors();
+		ClearStaticResources.loadAllCursors();
 		addInputCallbacks(window, rootWidgetAssembly);
 		context = new NanoVGContext().init();
 		init(windowManager, window, context, rootWidgetAssembly, args);
@@ -76,7 +76,7 @@ public abstract class ClearApplication extends WindowedApplication {
 	@Override
 	protected void endOfApplicationCallback() {
 		endOfNanoVGApplicationCallback();
-		SharedStaticVariables.destroyAllCursors();
+		ClearStaticResources.destroyAllCursors();
 		rootWidgetAssembly.dispose();
 		context.dispose();
 	}
@@ -94,8 +94,8 @@ public abstract class ClearApplication extends WindowedApplication {
 			@Override
 			public void charEvent(Window window, long timestamp, int codepoint, String c, int mods) {
 				CharEvent event = CharEvent.fire(window, timestamp, codepoint, c, mods);
-				rootWidgetAssembly.charEvent(event);
-				rootWidgetAssembly.childrenCharEvent(event);
+				rootWidgetAssembly.charEvent(window, event);
+				rootWidgetAssembly.childrenCharEvent(window, event);
 			}
 			
 		});
@@ -106,8 +106,8 @@ public abstract class ClearApplication extends WindowedApplication {
 			@Override
 			public void keyEvent(Window window, long timestamp, int key, int scanCode, boolean pressed, boolean repeat, int mods) {
 				KeyEvent event = KeyEvent.fire(window, timestamp, key, scanCode, pressed, repeat, mods);
-				rootWidgetAssembly.keyEvent(event);
-				rootWidgetAssembly.childrenKeyEvent(event);
+				rootWidgetAssembly.keyEvent(window, event);
+				rootWidgetAssembly.childrenKeyEvent(window, event);
 			}
 			
 		});
@@ -118,8 +118,8 @@ public abstract class ClearApplication extends WindowedApplication {
 			@Override
 			public void mouseButtonEvent(Window window, long timestamp, double mouseX, double mouseY, int button, boolean pressed, int mods) {
 				MouseButtonEvent event = MouseButtonEvent.fire(window, timestamp, mouseX, mouseY, button, pressed, mods);
-				rootWidgetAssembly.mouseButtonEvent(event);
-				rootWidgetAssembly.childrenMouseButtonEvent(event);
+				rootWidgetAssembly.mouseButtonEvent(window, event);
+				rootWidgetAssembly.childrenMouseButtonEvent(window, event);
 			}
 			
 		});
@@ -130,8 +130,8 @@ public abstract class ClearApplication extends WindowedApplication {
 			@Override
 			public void mouseMotionEvent(Window window, long timestamp, double mouseX, double mouseY, double dx, double dy) {
 				MouseMotionEvent event = MouseMotionEvent.fire(window, timestamp, mouseX, mouseY, dx, dy);
-				rootWidgetAssembly.mouseMotionEvent(event);
-				rootWidgetAssembly.childrenMouseMotionEvent(event);
+				rootWidgetAssembly.mouseMotionEvent(window, event);
+				rootWidgetAssembly.childrenMouseMotionEvent(window, event);
 			}
 			
 		});
@@ -142,8 +142,8 @@ public abstract class ClearApplication extends WindowedApplication {
 			@Override
 			public void scrollEvent(Window window, long timestamp, double mouseX, double mouseY, double xoffset, double yoffset) {
 				MouseScrollEvent event = MouseScrollEvent.fire(window, timestamp, mouseX, mouseY, xoffset, yoffset);
-				rootWidgetAssembly.mouseScrollEvent(event);
-				rootWidgetAssembly.childrenMouseScrollEvent(event);
+				rootWidgetAssembly.mouseScrollEvent(window, event);
+				rootWidgetAssembly.childrenMouseScrollEvent(window, event);
 			}
 			
 		});

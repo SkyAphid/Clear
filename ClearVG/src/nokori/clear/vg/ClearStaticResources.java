@@ -5,9 +5,9 @@ import nokori.clear.windows.Cursor;
 import nokori.clear.windows.Cursor.Type;;
 
 /**
- * This class contains some static utility variables that can be used easily around the system.
+ * This class contains some static utility variables and functions that can be used easily around the system.
  */
-public class SharedStaticVariables {
+public class ClearStaticResources {
 	private static Widget focusedWidget = null;
 	
 	private static Cursor[] loadedCursors;
@@ -17,7 +17,7 @@ public class SharedStaticVariables {
 	}
 
 	public static void setFocusedWidget(Widget focusedWidget) {
-		SharedStaticVariables.focusedWidget = focusedWidget;
+		ClearStaticResources.focusedWidget = focusedWidget;
 	}
 	
 	/**
@@ -38,6 +38,9 @@ public class SharedStaticVariables {
 		}
 	}
 	
+	/**
+	 * @return Gets the loaded Cursor object for the given default system type.
+	 */
 	public static Cursor getCursor(Type type) {
 		for (int i = 0; i < loadedCursors.length; i++) {
 			if (loadedCursors[i].getType() == type) {
@@ -49,8 +52,10 @@ public class SharedStaticVariables {
 	}
 	
 	public static void destroyAllCursors() {
-		for (int i = 0; i < loadedCursors.length; i++) {
-			loadedCursors[i].destroy();
+		if (loadedCursors != null) {
+			for (int i = 0; i < loadedCursors.length; i++) {
+				loadedCursors[i].destroy();
+			}
 		}
 	}
 }

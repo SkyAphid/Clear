@@ -14,6 +14,8 @@ public abstract class Transition {
 	private long startStamp;
 	private long endStamp;
 	
+	TransitionCompletedCallback completedCallback = null;
+	
 	public Transition(long durationInMillis) {
 		this.durationInMillis = durationInMillis;
 	}
@@ -42,22 +44,26 @@ public abstract class Transition {
 	 * 
 	 * @param progress - the progress of the Transition to completion (between 0-1, where 1 is 100% complete)
 	 */
-	public abstract void tick(double progress);
+	public abstract void tick(float progress);
 	
-	/**
-	 * Callback for when the transition is finished and is about to be removed from the TransitionManager.
-	 */
-	public void completedCallback() {}
+	public void setOnCompleted(TransitionCompletedCallback completedCallback) {
+		this.completedCallback = completedCallback;
+	}
+	
+	public interface TransitionCompletedCallback {
+		public void callback(Transition t);
+	};
 	
 	/**
 	 * @return a value from 0 to 1 based on the transition time.
 	 */
-	public double getProgress() {
+	public float getProgress() {
 		long currentTime = System.currentTimeMillis();
 		
 		double maxDistance = endStamp - startStamp;
 		double distance = Math.max(endStamp - currentTime, 0);
-		double progress = 1f - (distance / maxDistance);
+		
+		float progress = 1f - (float) (distance / maxDistance);
 		
 		//System.err.println(maxDistance + " " + distance + " -> " + progress);
 		
