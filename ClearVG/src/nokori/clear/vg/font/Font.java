@@ -31,15 +31,42 @@ public class Font {
 	private FloatBuffer tempBuffer = BufferUtils.createFloatBuffer(1);
 	private FloatBuffer boundsTempBuffer = null;
 	
+	/**
+	 * Creates a font that only supports the regular style. Mostly meant to be used for testing purposes. Supports only TrueTypeFonts (TTF)
+	 * 
+	 * @param fontNameRegular - the identifier for the regular font
+	 * @param fileRegular - the file location of the regular font
+	 */
 	public Font(String fontNameRegular, File fileRegular) {
 		this(fontNameRegular, null, null, null, fileRegular, null, null, null);
 	}
 	
+	/**
+	 * A more straight-forward short-hand version of the main constructor. Supports only TrueTypeFonts (TTF)
+	 * 
+	 * @param path - a single path with all font files
+	 * @param fontNameRegular - the file name of the regular font, which will also be used as the identifier
+	 * @param fontNameBold - the file name of the bold font, which will also be used as the identifier
+	 * @param fontNameItalic - the file name of the italic font, which will also be used as the identifier
+	 * @param fontNameLight - the file name of the light font, which will also be used as the identifier
+	 */
 	public Font(String path, String fontNameRegular, String fontNameBold, String fontNameItalic, String fontNameLight) {
 		this(fontNameRegular, fontNameBold, fontNameItalic, fontNameLight, 
 				new File(path + fontNameRegular + ".ttf"), new File(path + fontNameBold + ".ttf"), new File(path + fontNameItalic + ".ttf"), new File(path + fontNameLight + ".ttf"));
 	}
 	
+	/**
+	 * Creates a font with the given styles. Supports only TrueTypeFonts (TTF)
+	 * 
+	 * @param fontNameRegular - the identifier for the regular font
+	 * @param fontNameBold - the identifier for the bold font
+	 * @param fontNameItalic - the identifier for the italic font
+	 * @param fontNameLight - the identifier for the light font
+	 * @param fileRegular - the file location of the regular font
+	 * @param fileBold - the file location of the bold font
+	 * @param fileItalic - the file location of the italic font
+	 * @param fileLight - the file location of the light font
+	 */
 	public Font(String fontNameRegular, String fontNameBold, String fontNameItalic, String fontNameLight, 
 			File fileRegular, File fileBold, File fileItalic, File fileLight) {
 		
