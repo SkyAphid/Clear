@@ -24,6 +24,6 @@ Clear is a wrapper for LWJGL3 that makes it simple to build basic programs that 
 ![clear_textarea](https://user-images.githubusercontent.com/6147299/53695030-3a029e80-3d7c-11e9-9375-ff3f71f0b5db.png)
 
 
-# See Also
+# Recommended Projects (See Also)
 - [LWJGUI - LWJGL3 JavaFX Alternative](https://github.com/orange451/LWJGUI)
 I contributed a bit to this project, of which some of those contributions helped for the basis of Clear. If you're wanting more in-depth functionality closer to JavaFX, I recommend this project. Clear is meant to be somewhat more minimalistic and straight-forward, whereas LWJGUI will give you a close approximation of JavaFX's general structure. It's well-made and concise, I highly recommend this UI solution if Clear doesn't have the features you're looking for.
