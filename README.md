@@ -22,7 +22,7 @@ Clear is a wrapper for LWJGL3 that makes it simple to build basic programs that 
 
 # Examples
 
-### [Hello World (basic clickable button)](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearTextFieldDemo.java)
+### [Hello World (basic clickable button)](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearHelloWorld.java)
 ![clear_helloworld](https://user-images.githubusercontent.com/6147299/53410619-f24dd280-3989-11e9-91dd-5c653870fc59.png) 
 
 
