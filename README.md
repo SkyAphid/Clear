@@ -7,6 +7,7 @@ Clear is a wrapper for LWJGL3 that makes it simple to build basic programs that 
 - Heavily customizable: focus on user extendability
 - High performance: system performance was kept in mind when creating the system, and as far as I know, it doesn't have any sort of resources leak or the like. Tools are provided to help keep resource management sweet and simple.
 - Documentation: the project has carefully been documented with numerous comments so far to allow users to quickly learn how to begin adding their own functionality to the base systems
+- Detailed Examples: demo programs are included that will show users how to use all of the currently implemented systems. The default LWJGL3 NanoVG demos are included as well for additional support options.
 
 ## ClearWindows
 - Create OpenGL-capable windows in two lines
