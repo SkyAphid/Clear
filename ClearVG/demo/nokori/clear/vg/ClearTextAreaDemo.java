@@ -18,16 +18,16 @@ import nokori.clear.windows.GLFWException;
 import nokori.clear.windows.Window;
 import nokori.clear.windows.WindowManager;
 
-public class ClearTextFieldDemo extends ClearApplication {
+public class ClearTextAreaDemo extends ClearApplication {
 
 	private static final int WINDOW_WIDTH = 1280;
 	private static final int WINDOW_HEIGHT = 720;
 	
 	public static void main(String[] args) {
-		ClearApplication.launch(new ClearTextFieldDemo(), args);
+		ClearApplication.launch(new ClearTextAreaDemo(), args);
 	}
 
-	public ClearTextFieldDemo() {
+	public ClearTextAreaDemo() {
 		super(new WidgetAssembly());
 	}
 	
