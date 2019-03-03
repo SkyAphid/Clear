@@ -26,7 +26,7 @@ Clear is a wrapper for LWJGL3 that makes it simple to build basic programs that 
 ![clear_helloworld](https://user-images.githubusercontent.com/6147299/53410619-f24dd280-3989-11e9-91dd-5c653870fc59.png) 
 
 
-### [Text Area Support (formatting, line numbers, editing, in-depth customization)](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearTextFieldDemo.java)
+### [Text Area Support (formatting, line numbers, editing, in-depth customization)](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearTextAreaDemo.java)
 ![clear_textarea](https://user-images.githubusercontent.com/6147299/53695030-3a029e80-3d7c-11e9-9375-ff3f71f0b5db.png)
 
 
