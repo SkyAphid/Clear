@@ -16,20 +16,14 @@ Clear is a wrapper for LWJGL3 that makes it simple to build basic programs that 
 
 # Examples
 
-## Hello World (basic clickable button)
-
-
-[Link to Example](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearHelloWorld.java)
--
+### [Hello World (basic clickable button)](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearTextFieldDemo.java)
 ![clear_helloworld](https://user-images.githubusercontent.com/6147299/53410619-f24dd280-3989-11e9-91dd-5c653870fc59.png) 
 
 
-## Text Area support (formatting, line numbers, editing)
-[Link to Example](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearTextFieldDemo.java)
--
+### [Text Area support (formatting, line numbers, editing)] (https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearTextFieldDemo.java)
 ![clear_textarea](https://user-images.githubusercontent.com/6147299/53695030-3a029e80-3d7c-11e9-9375-ff3f71f0b5db.png)
 
 
 # See Also
--[LWJGUI - LWJGL3 JavaFX Alternative](https://github.com/orange451/LWJGUI)
+- [LWJGUI - LWJGL3 JavaFX Alternative](https://github.com/orange451/LWJGUI)
 I contributed a bit to this project, of which some of those contributions helped for the basis of Clear. If you're wanting more in-depth functionality closer to JavaFX, I recommend this project. Clear is meant to be somewhat more minimalistic and straight-forward, whereas LWJGUI will give you a close approximation of JavaFX's general structure.
