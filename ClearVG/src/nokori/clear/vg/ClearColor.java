@@ -4,6 +4,9 @@ import org.joml.Vector4f;
 import org.lwjgl.nanovg.NVGColor;
 import org.lwjgl.system.MemoryStack;
 
+/**
+ * This class is a wrapper for NVGColor that allows for short-hand customization and allocation.
+ */
 public class ClearColor {
 	public static final ClearColor WHITE = new ClearColor("#FFFFFF").immutable(true);
 	public static final ClearColor LIGHT_GRAY = new ClearColor("#D3D3D3").immutable(true);
@@ -185,7 +188,7 @@ public class ClearColor {
 	/**
 	 * Allows for automatic stack push allocated colors to be used (and automatically disposed after usage).
 	 */
-	public void stackPushLambda(ColorAction a) {
+	public void memoryStackPush(ColorAction a) {
 		try (MemoryStack stack = MemoryStack.stackPush()){
 			NVGColor color = NVGColor.mallocStack(stack);
 			a.execute(sync(color));

@@ -6,9 +6,11 @@ import java.io.IOException;
 import nokori.clear.vg.ClearApplication;
 import nokori.clear.vg.NanoVGContext;
 import nokori.clear.vg.font.Font;
+import nokori.clear.vg.font.FontStyle;
+import nokori.clear.vg.text_rendering.CommandSetFill;
+import nokori.clear.vg.text_rendering.CommandSetFont;
 import nokori.clear.vg.widget.DropShadow;
 import nokori.clear.vg.widget.Rectangle;
-import nokori.clear.vg.widget.TextArea;
 import nokori.clear.vg.widget.TextArea;
 import nokori.clear.vg.widget.assembly.WidgetAssembly;
 import nokori.clear.vg.widget.assembly.WidgetClip;
@@ -40,8 +42,11 @@ public class ClearTextFieldDemo extends ClearApplication {
 		try {
 			Font font = new Font("fonts/NotoSans/", "NotoSans-Regular", "NotoSans-Bold", "NotoSans-Italic", "NotoSans-Light").load(context);
 
-			//TextArea textArea = new TextArea(900, 400, ClearColor.BLACK, getText(), font, 18);
 			TextArea textArea = new TextArea(900, 400, ClearColor.BLACK, getText(), font, 18);
+			textArea.getTextContentRenderer().addCommand(new CommandSetFont(0, 11, font, FontStyle.BOLD));
+			textArea.getTextContentRenderer().addCommand(new CommandSetFont(13, 35, font, FontStyle.ITALIC));
+			textArea.getTextContentRenderer().addCommand(new CommandSetFill(0, 35, ClearColor.CORAL));
+			
 			textArea.addChild(new WidgetClip(WidgetClip.Alignment.CENTER));
 			button.addChild(textArea);
 		} catch (IOException e1) {

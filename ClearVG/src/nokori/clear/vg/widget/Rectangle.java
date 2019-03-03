@@ -96,14 +96,14 @@ public class Rectangle extends Widget implements FillAttachment, StrokeFillAttac
 		float w = getWidth();
 		float h = getHeight();
 		
-		fill.stackPushLambda(fill -> {
+		fill.memoryStackPush(fill -> {
 			NanoVG.nvgBeginPath(vg);
 			NanoVG.nvgRoundedRect(vg, x, y, w, h, cornerRadius);
 			NanoVG.nvgFillColor(vg, fill);
 			NanoVG.nvgFill(vg);
 			
 			if (strokeFill != null) {
-				strokeFill.stackPushLambda(strokeFill -> {
+				strokeFill.memoryStackPush(strokeFill -> {
 					NanoVG.nvgStrokeWidth(vg, strokeWidth);
 					NanoVG.nvgStrokeColor(vg, strokeFill);
 					NanoVG.nvgStroke(vg);

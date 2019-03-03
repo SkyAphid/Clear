@@ -22,6 +22,8 @@ public class Label extends Widget implements FillAttachment{
 	private float fontSize;
 	private int textAlignment;
 	
+	private Vector2f bounds = new Vector2f();
+	
 	private ClearColor fill;
 	
 	public Label(ClearColor fill, String text, Font font, FontStyle style, float fontSize) {
@@ -48,7 +50,7 @@ public class Label extends Widget implements FillAttachment{
 
 	@Override
 	public void tick(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
-		Vector2f bounds = font.getTextBounds(context, text, fontSize, textAlignment, style);
+		font.getTextBounds(context, bounds, text, fontSize, textAlignment, style);
 		
 		setWidth(bounds.x);
 		setHeight(bounds.y);

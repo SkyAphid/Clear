@@ -15,8 +15,6 @@ import java.util.ArrayList;
 
 import org.joml.Vector2f;
 import org.lwjgl.BufferUtils;
-import org.lwjgl.nanovg.NanoVG;
-
 import static org.lwjgl.nanovg.NanoVG.*;
 
 import nokori.clear.vg.NanoVGContext;
@@ -31,6 +29,7 @@ public class Font {
 	private ByteBuffer regularDataBuffer, boldDataBuffer, italicDataBuffer, lightDataBuffer;
 	
 	private FloatBuffer tempBuffer = BufferUtils.createFloatBuffer(1);
+	private FloatBuffer boundsTempBuffer = null;
 	
 	public Font(String fontNameRegular, File fileRegular) {
 		this(fontNameRegular, null, null, null, fileRegular, null, null, null);
@@ -139,17 +138,32 @@ public class Font {
 	/**
 	 * @return a Vector2f with the width and height of the given settings (x = w, y = h)
 	 */
-	public Vector2f getTextBounds(NanoVGContext context, String string, float fontSize, int textAlignment, FontStyle fontStyle) {
-		float[] bounds = new float[4];
-
+	public Vector2f getTextBounds(NanoVGContext context, Vector2f boundsResultVector, String string, float fontSize, int textAlignment, FontStyle fontStyle) {
 		configureNVG(context, fontSize, textAlignment, fontStyle);
-		nvgTextBounds(context.get(), 0, 0, string, bounds);
-		NanoVG.nvgReset(context.get());
+		return getTextBounds(context, boundsResultVector, string);
+	}
+	
+	/**
+	 * Gets the given text bounds, assuming that you've already configured the font in NanoVG yourself. To have this class do it for you, call the longer version of this method.
+	 * 
+	 * @param context
+	 * @param boundsResultVector
+	 * @param string
+	 * @return
+	 */
+	public Vector2f getTextBounds(NanoVGContext context, Vector2f boundsResultVector, String string) {
+		if (boundsTempBuffer == null) {
+			boundsTempBuffer = BufferUtils.createFloatBuffer(4);
+		}
 
-		float width = bounds[2] - bounds[0];
-		float height = bounds[3] - bounds[1];
+		nvgTextBounds(context.get(), 0, 0, string, boundsTempBuffer);
+
+		float width = boundsTempBuffer.get(2) - boundsTempBuffer.get(0);
+		float height = boundsTempBuffer.get(3) - boundsTempBuffer.get(1);
 		
-		return new Vector2f(width, height);
+		boundsResultVector.set(width, height);
+		
+		return boundsResultVector;
 	}
 	
 	public void split(NanoVGContext context, ArrayList<String> lines, String string, float maxLineWidth, float fontSize, int textAlignment, FontStyle fontStyle) {
@@ -160,6 +174,7 @@ public class Font {
 		}
 		
 		StringBuilder builder = new StringBuilder();
+		Vector2f boundsResultVector = new Vector2f(0f, 0f);
 		
 		int len = string.length();
 		float advanceX = 0;
@@ -178,7 +193,7 @@ public class Font {
 				continue;
 			}
 
-			float a = getTextBounds(context, Character.toString(c), fontSize, textAlignment, fontStyle).x;
+			float a = getTextBounds(context, boundsResultVector, Character.toString(c), fontSize, textAlignment, fontStyle).x;
 
 			if (advanceX + a > maxLineWidth) {
 				lines.add(builder.toString());
@@ -189,7 +204,7 @@ public class Font {
 			advanceX += a;
 
 			if (isBreakable(c)) {
-				float wordLength = getWordLength(context, string, len, i+1, fontSize, textAlignment, fontStyle);
+				float wordLength = getWordLength(context, boundsResultVector, string, len, i+1, fontSize, textAlignment, fontStyle);
 
 				if (advanceX + wordLength > maxLineWidth) {
 					lines.add(builder.toString());
@@ -204,7 +219,7 @@ public class Font {
 		}
 	}
 	
-	private float getWordLength(NanoVGContext context, String string, int len, int i, float fontSize, int textAlignment, FontStyle fontStyle) {
+	private float getWordLength(NanoVGContext context, Vector2f boundsVector, String string, int len, int i, float fontSize, int textAlignment, FontStyle fontStyle) {
 
 		boolean isCommand = false;
 		
@@ -225,7 +240,7 @@ public class Font {
 					}
 				}
 
-				advance += getTextBounds(context, Character.toString(c), fontSize, textAlignment, fontStyle).x;
+				advance += getTextBounds(context, boundsVector, Character.toString(c), fontSize, textAlignment, fontStyle).x;
 					
 				if(isBreakable(c)){
 					return advance;
