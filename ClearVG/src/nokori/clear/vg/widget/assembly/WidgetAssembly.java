@@ -51,7 +51,7 @@ public class WidgetAssembly extends Widget {
 	@Override
 	public void render(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
 		if (backgroundFill != null) {
-			backgroundFill.memoryStackPush(fill -> {
+			backgroundFill.tallocNVG(fill -> {
 				long vg = context.get();
 				float x = getRenderX();
 				float y = getRenderY();

@@ -3,7 +3,7 @@ package nokori.clear.vg.transition;
 import java.util.ArrayList;
 
 public class TransitionManager {
-	private static ArrayList<Transition> activeTransitions = new ArrayList<Transition>();
+	private static ArrayList<Transition> activeTransitions = new ArrayList<>();
 	
 	static void add(Transition transition) {
 		activeTransitions.add(transition);

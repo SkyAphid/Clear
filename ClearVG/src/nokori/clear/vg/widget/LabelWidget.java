@@ -14,7 +14,7 @@ import nokori.clear.windows.WindowManager;
 
 import static org.lwjgl.nanovg.NanoVG.*;
 
-public class Label extends Widget implements FillAttachment{
+public class LabelWidget extends Widget implements FillAttachment{
 	
 	private String text;
 	private Font font;
@@ -26,19 +26,19 @@ public class Label extends Widget implements FillAttachment{
 	
 	private ClearColor fill;
 	
-	public Label(ClearColor fill, String text, Font font, FontStyle style, float fontSize) {
+	public LabelWidget(ClearColor fill, String text, Font font, FontStyle style, float fontSize) {
 		this(0, 0, fill, text, font, style, fontSize, Font.DEFAULT_TEXT_ALIGNMENT);
 	}
 	
-	public Label(ClearColor fill, String text, Font font, FontStyle style, float fontSize, int textAlignment) {
+	public LabelWidget(ClearColor fill, String text, Font font, FontStyle style, float fontSize, int textAlignment) {
 		this(0, 0, fill, text, font, style, fontSize, textAlignment);
 	}
 	
-	public Label(float x, float y, ClearColor fill, String text, Font font, FontStyle style, float fontSize) {
+	public LabelWidget(float x, float y, ClearColor fill, String text, Font font, FontStyle style, float fontSize) {
 		this(x, y, fill, text, font, style, fontSize, Font.DEFAULT_TEXT_ALIGNMENT);
 	}
 
-	public Label(float x, float y, ClearColor fill, String text, Font font, FontStyle style, float fontSize, int textAlignment) {
+	public LabelWidget(float x, float y, ClearColor fill, String text, Font font, FontStyle style, float fontSize, int textAlignment) {
 		super(x, y, 0, 0);
 		this.fill = fill;
 		this.text = text;

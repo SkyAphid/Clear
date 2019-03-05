@@ -12,25 +12,25 @@ import nokori.clear.vg.widget.assembly.WidgetAssembly;
 import nokori.clear.windows.Window;
 import nokori.clear.windows.WindowManager;
 
-public class DropShadow extends Rectangle {
+public class DropShadowWidget extends RectangleWidget {
 	
 	private float shadowRadius;
 	private Vector2f shadowOffset = new Vector2f(0, 0);
 	
-	public DropShadow(ClearColor fill) {
+	public DropShadowWidget(ClearColor fill) {
 		this(0, 4f, 2f, 2f, fill);
 	}
 	
-	public DropShadow(float cornerRadius, ClearColor fill) {
+	public DropShadowWidget(float cornerRadius, ClearColor fill) {
 		this(cornerRadius, 4f, 2f, 2f, fill);
 	}
 	
-	public DropShadow(float cornerRadius, float shadowRadius, float shadowOffsetX, float shadowOffsetY, ClearColor fill) {
+	public DropShadowWidget(float cornerRadius, float shadowRadius, float shadowOffsetX, float shadowOffsetY, ClearColor fill) {
 		this(0, 0, 0, 0, cornerRadius, shadowRadius, shadowOffsetX, shadowOffsetY, fill);
 		syncToParent = true;
 	}
 
-	public DropShadow(float x, float y, float width, float height, float cornerRadius, float shadowRadius, float shadowOffsetX, float shadowOffsetY, ClearColor fill) {
+	public DropShadowWidget(float x, float y, float width, float height, float cornerRadius, float shadowRadius, float shadowOffsetX, float shadowOffsetY, ClearColor fill) {
 		super(x, y, width, height, fill, null);
 		this.shadowRadius = shadowRadius;
 		shadowOffset.x = shadowOffsetX;

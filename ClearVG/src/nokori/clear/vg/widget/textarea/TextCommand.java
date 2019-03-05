@@ -1,18 +1,17 @@
-package nokori.clear.vg.text_rendering;
+package nokori.clear.vg.widget.textarea;
 
 import nokori.clear.vg.NanoVGContext;
-import nokori.clear.vg.widget.TextArea;
 
-public abstract class TextRenderCommand {
+public abstract class TextCommand {
 	private int startIndex, endIndex;
 	boolean deleteFlag = false;
 	
-	public TextRenderCommand(int startIndex, int endIndex) {
+	public TextCommand(int startIndex, int endIndex) {
 		this.startIndex = startIndex;
 		this.endIndex = endIndex;
 	}
 	
-	public abstract void run(NanoVGContext context, TextArea textArea, String text, int index);
+	public abstract void run(NanoVGContext context, TextAreaWidget textArea, String text, int index, boolean indexHighlighted);
 	
 	public int getStartIndex() {
 		return startIndex;
@@ -45,7 +44,7 @@ public abstract class TextRenderCommand {
 		return (index >= getStartIndex() && index <= getEndIndex());
 	}
 	
-	void merge(TextRenderCommand c) {
+	void merge(TextCommand c) {
 		this.startIndex = Math.min(c.startIndex, startIndex);
 		this.endIndex = Math.max(c.endIndex, endIndex);
 	}
@@ -54,5 +53,5 @@ public abstract class TextRenderCommand {
 	 * @param command
 	 * @return true if the passed-in command matches this one. Used for merging similar added commands together in the TextContentRenderer.
 	 */
-	abstract boolean matches(TextRenderCommand command);
+	abstract boolean matches(TextCommand command);
 }

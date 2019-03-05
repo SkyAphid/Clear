@@ -9,9 +9,9 @@ import nokori.clear.vg.NanoVGContext;
 import nokori.clear.vg.ClearStaticResources;
 import nokori.clear.vg.font.Font;
 import nokori.clear.vg.font.FontStyle;
-import nokori.clear.vg.widget.DropShadow;
-import nokori.clear.vg.widget.Label;
-import nokori.clear.vg.widget.Rectangle;
+import nokori.clear.vg.widget.DropShadowWidget;
+import nokori.clear.vg.widget.LabelWidget;
+import nokori.clear.vg.widget.RectangleWidget;
 import nokori.clear.vg.widget.assembly.WidgetAssembly;
 import nokori.clear.vg.widget.assembly.WidgetClip;
 import nokori.clear.windows.Cursor;
@@ -43,8 +43,8 @@ public class ClearHelloWorld extends ClearApplication {
 		
 		float cornerRadius = 3f;
 		
-		button.addChild(new DropShadow(cornerRadius, ClearColor.LIGHT_BLACK));
-		button.addChild(new Rectangle(cornerRadius, ClearColor.CORAL));
+		button.addChild(new DropShadowWidget(cornerRadius, ClearColor.LIGHT_BLACK));
+		button.addChild(new RectangleWidget(cornerRadius, ClearColor.CORAL));
 		
 		/*
 		 * Text
@@ -53,7 +53,7 @@ public class ClearHelloWorld extends ClearApplication {
 		try {
 			Font font = new Font("fonts/NotoSans/", "NotoSans-Regular", "NotoSans-Bold", "NotoSans-Italic", "NotoSans-Light").load(context);
 			
-			Label label = new Label(ClearColor.WHITE_SMOKE, "Hello World!", font, FontStyle.REGULAR, 20);
+			LabelWidget label = new LabelWidget(ClearColor.WHITE_SMOKE, "Hello World!", font, FontStyle.REGULAR, 20);
 			label.addChild(new WidgetClip(WidgetClip.Alignment.CENTER));
 			button.addChild(label);
 		} catch (IOException e1) {

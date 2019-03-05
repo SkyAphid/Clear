@@ -209,9 +209,9 @@ public class Font {
 		for (int i = 0; i < len; i++) {
 			char c = string.charAt(i);
 			
-			if (c != '\n') {
+			//if (c != '\n') {
 				builder.append(c);
-			}
+			//}
 
 			if (c == '\n') {
 				lines.add(builder.toString());

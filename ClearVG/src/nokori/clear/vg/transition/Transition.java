@@ -20,10 +20,18 @@ public abstract class Transition {
 		this.durationInMillis = durationInMillis;
 	}
 	
+	public long getDurationInMillis() {
+		return durationInMillis;
+	}
+
+	public void setDurationInMillis(long durationInMillis) {
+		this.durationInMillis = durationInMillis;
+	}
+
 	/**
 	 * Will start this transition. If it's already playing, it will be reset.
 	 */
-	public void play() {
+	public Transition play() {
 		if (isPlaying) {
 			stop();
 		}
@@ -32,11 +40,14 @@ public abstract class Transition {
 		endStamp = startStamp + durationInMillis;
 		TransitionManager.add(this);
 		isPlaying = true;
+		
+		return this;
 	}
 	
-	public void stop() {
+	public Transition stop() {
 		TransitionManager.remove(this);
 		isPlaying = false;
+		return this;
 	}
 	
 	/**

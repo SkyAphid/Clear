@@ -1,4 +1,4 @@
-package nokori.clear.vg.widget;
+package nokori.clear.vg.widget.textarea;
 
 import static org.lwjgl.nanovg.NanoVG.*;
 import java.util.ArrayList;
@@ -12,7 +12,6 @@ import nokori.clear.vg.ClearStaticResources;
 import nokori.clear.vg.NanoVGContext;
 import nokori.clear.vg.font.Font;
 import nokori.clear.vg.font.FontStyle;
-import nokori.clear.vg.text_rendering.TextContentRenderer;
 import nokori.clear.vg.transition.FillTransition;
 import nokori.clear.vg.transition.SimpleTransition;
 import nokori.clear.vg.widget.assembly.Widget;
@@ -28,9 +27,14 @@ import nokori.clear.windows.event.MouseButtonEvent;
 import nokori.clear.windows.event.MouseMotionEvent;
 import nokori.clear.windows.event.MouseScrollEvent;
 
-public class TextArea extends Widget implements FillAttachment {
+/**
+ * This class contains all needed functionality for creating TextAreas. All features are enabled by default. If you want to make "quick-access" versions
+ * with specific features turned off and on, I recommend extending this class and having those constructors toggle the desired features as necessary.
+ */
+public class TextAreaWidget extends Widget implements FillAttachment {
 	
 	private Vector2f tempVec = new Vector2f();
+	private boolean resetCursor = false;
 
 	/*
 	 * Text rendering
@@ -40,14 +44,15 @@ public class TextArea extends Widget implements FillAttachment {
 	
 	private String text;
 	private ArrayList<String> lines = new ArrayList<>();
-	private TextContentRenderer textContentRenderer;
+	
+	private TextAreaContentHandler textContentHandler;
+	private float textContentX = -1f, textContentY = -1f, textContentW = -1f, textContentH = -1f;
 	
 	private Font font;
 	private float fontSize;
 	private FontStyle fontStyle = FontStyle.REGULAR;
 	
 	private ClearColor fill;
-	private ClearColor highlightFill = ClearColor.CORAL;
 	
 	/*
 	 * Line numbers
@@ -80,7 +85,7 @@ public class TextArea extends Widget implements FillAttachment {
 	
 	private ClearColor scrollbarBackgroundFill = ClearColor.LIGHT_GRAY;
 	private ClearColor scrollbarFill = ClearColor.DARK_GRAY;
-	private ClearColor scrollbarHighlightFill = highlightFill;
+	private ClearColor scrollbarHighlightFill = ClearColor.CORAL;
 	
 	//usage
 	private float scroll = 0.0f;
@@ -98,20 +103,25 @@ public class TextArea extends Widget implements FillAttachment {
 	
 	private ClearColor scrollbarRenderFill = new ClearColor(scrollbarFill);
 	private FillTransition scrollbarFillTransition = null;
-	
-	/*
-	 * Caret
-	 */
-	private long lastTime = -1;
-	private float caretFader = 0f;
-	
-	private ClearColor caretFill = ClearColor.LIGHT_BLACK;
 
-	public TextArea(float width, float height, ClearColor fill, String text, Font font, float fontSize) {
+	/*
+	 * 
+	 * Editing
+	 * 
+	 */
+	
+	private boolean caretEnabled = true;
+	private ClearColor caretFill = ClearColor.LIGHT_BLACK;
+	
+	private boolean highlightingEnabled = true;
+	private ClearColor highlightFill = ClearColor.CORAL;
+	
+	
+	public TextAreaWidget(float width, float height, ClearColor fill, String text, Font font, float fontSize) {
 		this(0, 0, width, height, fill, text, font, fontSize);
 	}
 
-	public TextArea(float x, float y, float width, float height, ClearColor fill, String text, Font font, float fontSize) {
+	public TextAreaWidget(float x, float y, float width, float height, ClearColor fill, String text, Font font, float fontSize) {
 		super(x, y, width, height);
 		this.fill = fill;
 		this.font = font;
@@ -119,24 +129,23 @@ public class TextArea extends Widget implements FillAttachment {
 
 		lineNumberFont = font;
 		
-		textContentRenderer = new TextContentRenderer(this);
+		textContentHandler = new TextAreaContentHandler(this);
 
 		setText(text);
 	}
 
 	@Override
 	public void tick(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
-		caretFader += (lastTime - System.currentTimeMillis());
-		lastTime = System.currentTimeMillis();
+		
 	}
 
 	@Override
 	public void render(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
-		renderParagraph(context, getRenderX(), getRenderY(), size.x, size.y);
-	}
-	
-	private void renderParagraph(NanoVGContext context, float x, float y, float width, float height) {
-
+		float x = getRenderX();
+		float y = getRenderY();
+		float width = size.x;
+		float height = size.y;
+		
 		/*
 		 * 
 		 * 
@@ -158,19 +167,26 @@ public class TextArea extends Widget implements FillAttachment {
 		 */
 		
 		//If this is the first time initialization, we'll just use 9999 as the estimated max lines. If we go over it in the future, it'll auto-correct.
-		int numLines = (lines != null ? lines.size() : 9999);
-		float maxLineNumberWidth = lineNumberFont.getTextBounds(context, tempVec, Integer.toString(numLines)).x();
+		int defaultMaxLines = 999;
+		int maxLines = (lines != null ? Math.max(lines.size(), defaultMaxLines) : defaultMaxLines);
+		float maxLineNumberWidth = lineNumberFont.getTextBounds(context, tempVec, Integer.toString(maxLines)).x() + lineNumberLeftPadding;
 		float lineNumberCompleteWidth = lineNumbersEnabled ? lineNumberLeftPadding + maxLineNumberWidth + lineNumberRightPadding : 0f;
 		
 		/*
-		 * Line split and text area width calculations
+		 * Line split and text content area calculations
 		 */
 		
-		float textAreaWidth = width - scrollbarCompleteWidth - lineNumberCompleteWidth;
-
+		float lineSplitW = 	textContentW = width - scrollbarCompleteWidth - lineNumberCompleteWidth;
+		
 		if (lines == null) {
-			font.split(context, lines = new ArrayList<>(), text, textAreaWidth, fontSize, TEXT_AREA_ALIGNMENT, fontStyle);
+			font.split(context, lines = new ArrayList<>(), text, lineSplitW, fontSize, TEXT_AREA_ALIGNMENT, fontStyle);
 		}
+		
+		//Used for activating the I-Beam cursor
+		textContentX = x + lineNumberCompleteWidth;
+		textContentY = y;
+		textContentW = lineSplitW + scrollbarLeftPadding;
+		textContentH = height;
 		
 		//Scroll increment is adjusted based on the length of the text content (higher increments for more text, lower increments for less text)
 		scrollIncrement = (5f / lines.size());
@@ -178,19 +194,13 @@ public class TextArea extends Widget implements FillAttachment {
 		float fontHeight = font.getHeight(context, fontSize, TEXT_AREA_ALIGNMENT, fontStyle);
 		float renderAreaHeight = (height / fontHeight) * fontHeight;
 		float stringHeight = font.getHeight(context, lines.size(), fontHeight, TEXT_AREA_ALIGNMENT, fontStyle);
-		
-		/*
-		 * 
-		 * Culling calculations
-		 * 
-		 */
-		
-		//Scissor translation Y
-		float scissorY = -((stringHeight - renderAreaHeight) * scroll);
 
 		/*
 		 * Rendering
 		 */
+		
+		//Scissor translation Y
+		float scissorY = -((stringHeight - renderAreaHeight) * scroll);
 		
 		//System.err.println(fontHeight + " " + renderAreaHeight + " " + indicesVisible + " | " + startIndex + " " + endIndex + " " + lines.size());
 		
@@ -204,8 +214,8 @@ public class TextArea extends Widget implements FillAttachment {
 		int totalCharacters = 0;
 		
 		for (int i = 0; i < lines.size(); i++) {
-			float rX = x + lineNumberCompleteWidth;
-			float rY = y + (fontHeight * i);
+			float rX = textContentX;
+			float rY = textContentY + (fontHeight * i);
 			
 			//Culls text that's outside of the scissoring range. We include a bit of padding. 
 			//You can test the culling by commenting out the nvgScissor call above.
@@ -223,7 +233,7 @@ public class TextArea extends Widget implements FillAttachment {
 			resetRenderConfiguration(context);
 			
 			//Draw the text
-			totalCharacters += textContentRenderer.render(context, lines.get(i), totalCharacters, rX, rY);
+			totalCharacters += textContentHandler.render(context, lines.get(i), totalCharacters, rX, rY, fontHeight);
 		}
 		
 		nvgResetTransform(vg);
@@ -233,14 +243,14 @@ public class TextArea extends Widget implements FillAttachment {
 		//Scrollbar
 		renderScrollbar(context, x, y, width, height, stringHeight/5f);
 	}
-	
+
 	/**
 	 * Used by TextContentRenderer to set this TextArea back to the user's defined parameters in-between TextRenderCommands.
 	 */
 	public void resetRenderConfiguration(NanoVGContext context) {
 		font.configureNVG(context, fontSize, TEXT_AREA_ALIGNMENT, fontStyle);
 		
-		fill.memoryStackPush(fill -> {
+		fill.tallocNVG(fill -> {
 			nvgFillColor(context.get(), fill);
 		});
 	}
@@ -254,7 +264,7 @@ public class TextArea extends Widget implements FillAttachment {
 		float bgHeight = fontHeight + 1f; //adds a teensy bit of padding to prevent minor rounding errors when scrolling. May cause issues if the background has transparency enabled.
 		
 		if (lineNumberBackgroundFill != ClearColor.TRANSPARENT) {
-			lineNumberBackgroundFill.memoryStackPush(bgFill -> {
+			lineNumberBackgroundFill.tallocNVG(bgFill -> {
 				nvgBeginPath(vg);
 				nvgFillColor(vg, bgFill);
 				nvgRect(vg, x, y, bgWidth, bgHeight);
@@ -263,7 +273,7 @@ public class TextArea extends Widget implements FillAttachment {
 			});
 		}
 		
-		lineNumberFill.memoryStackPush(fill -> {
+		lineNumberFill.tallocNVG(fill -> {
 			lineNumberFont.configureNVG(context, fontSize, TEXT_AREA_ALIGNMENT, lineNumberFontStyle);
 			nvgFillColor(vg, fill);
 			nvgText(vg, x + lineNumberLeftPadding, y, Integer.toString(line));
@@ -330,13 +340,6 @@ public class TextArea extends Widget implements FillAttachment {
 		scrollbarFill.free();
 	}
 	
-	//TODO:
-	@SuppressWarnings("unused")
-	private void renderCaret(NanoVGContext context) {
-		float alpha = 1.0f- (float) (Math.sin(caretFader * 0.004f) * 0.5 + 0.5);
-	}
-	
-	
 	/*
 	 * 
 	 * 
@@ -359,6 +362,10 @@ public class TextArea extends Widget implements FillAttachment {
 	public void mouseButtonEvent(Window window, MouseButtonEvent event) {
 		super.mouseButtonEvent(window, event);
 		scrollbarMouseButtonEvent(window, event);
+		
+		if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT && caretEnabled) {
+			textContentHandler.mouseEvent(event.getMouseX(), event.getMouseY(), event.isPressed());
+		}
 	}
 	
 	private void scrollbarMouseButtonEvent(Window window, MouseButtonEvent event) {
@@ -373,13 +380,35 @@ public class TextArea extends Widget implements FillAttachment {
 	@Override
 	public void mouseMotionEvent(Window window, MouseMotionEvent event) {
 		super.mouseMotionEvent(window, event);
+		
+		resetCursor = true;
+		
 		scrollbarMouseMotionEvent(window, event);
+		
+		if (caretEnabled) {
+			textContentHandler.mouseEvent(event.getMouseX(), event.getMouseY());
+			
+			if (WidgetUtil.mouseWithinRectangle(window, textContentX - lineNumberRightPadding, textContentY, textContentW, textContentH)) {
+				ClearStaticResources.getCursor(Cursor.Type.I_BEAM).apply(window);
+				resetCursor = false;
+			}
+		}
+		
+		if (resetCursor) {
+			ClearStaticResources.getCursor(Cursor.Type.ARROW).apply(window);
+			resetCursor = false;
+		}
 	}
 
 	private void scrollbarMouseMotionEvent(Window window, MouseMotionEvent event) {
 		//Is mouse hovering scrollbar?
 		boolean bScrollbarHovering = scrollbarHovering;
 		scrollbarHovering = WidgetUtil.mouseWithinRectangle(window, scrollbarX, scrollbarY, scrollbarWidth, scrollbarHeight);
+		
+		if (scrollbarHovering) {
+			ClearStaticResources.getCursor(Cursor.Type.HAND).apply(window);
+			resetCursor = false;
+		}
 		
 		//The scrollbar value follows mouse. 
 		//We subtract the mouse Y from the widget render Y and then divide that by the height of the widget to get a normalized value we can use for the scroller.
@@ -438,7 +467,7 @@ public class TextArea extends Widget implements FillAttachment {
 		
 		scrollTransition.play();
 	}
-	
+
 	/*
 	 * 
 	 * General Settings
@@ -481,16 +510,15 @@ public class TextArea extends Widget implements FillAttachment {
 		lines = null;
 	}
 	
-	public ClearColor getHighlightFill() {
-		return highlightFill;
-	}
-
-	public void setHighlightFill(ClearColor highlightFill) {
-		this.highlightFill = highlightFill;
+	public TextAreaContentHandler getTextContentHandler() {
+		return textContentHandler;
 	}
 	
-	public TextContentRenderer getTextContentRenderer() {
-		return textContentRenderer;
+	/**
+	 * @return the number of lines in this text area. The text split is done before rendering, so in a case where the lines list hasn't been initialized yet, -1 will be returned.
+	 */
+	public int getNumLines() {
+		return (lines != null ? lines.size() : -1);
 	}
 	
 	/*
@@ -570,18 +598,6 @@ public class TextArea extends Widget implements FillAttachment {
 	}
 
 	/*
-	 * Caret settings
-	 */
-
-	public ClearColor getCaretFill() {
-		return caretFill;
-	}
-
-	public void setCaretFill(ClearColor caretFill) {
-		this.caretFill = caretFill;
-	}
-	
-	/*
 	 * 
 	 * Line Number settings
 	 * 
@@ -628,7 +644,9 @@ public class TextArea extends Widget implements FillAttachment {
 	}
 	
 	/**
-	 * @return the blank area padding between start of the line numbers background x and the text rendering x
+	 * @return the blank area padding between start of the line numbers background x and the text rendering x. 
+	 * This value is also added to the right side of the background width (not padding between the text and line numbers, but internally) 
+	 * so that numbers don't become congested at larger sizes.
 	 */
 	public float getLineNumberLeftPadding() {
 		return lineNumberLeftPadding;
@@ -655,7 +673,48 @@ public class TextArea extends Widget implements FillAttachment {
 		this.lineNumberRightPadding = lineNumberRightPadding;
 	}
 
+	/*
+	 * 
+	 * Editing Settings
+	 * 
+	 * 
+	 */
+	
+	public boolean isCaretEnabled() {
+		return caretEnabled;
+	}
+
+	public void setCaretEnabled(boolean caretEnabled) {
+		this.caretEnabled = caretEnabled;
+	}
+	
+	public ClearColor getCaretFill() {
+		return caretFill;
+	}
+
+	public void setCaretFill(ClearColor caretFill) {
+		this.caretFill = caretFill;
+	}
+	
+	public boolean isHighlightingEnabled() {
+		return highlightingEnabled;
+	}
+
+	public void setHighlightingEnabled(boolean highlightingEnabled) {
+		this.highlightingEnabled = highlightingEnabled;
+	}
+	
+	public ClearColor getHighlightFill() {
+		return highlightFill;
+	}
+
+	public void setHighlightFill(ClearColor highlightFill) {
+		this.highlightFill = highlightFill;
+	}
+	
 	@Override
 	public void dispose() {
 	}
+
+
 }

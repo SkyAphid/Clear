@@ -1,9 +1,47 @@
 package nokori.clear.vg.widget.assembly;
 
+import org.lwjgl.nanovg.NVGColor;
+import org.lwjgl.nanovg.NanoVG;
+
+import static org.lwjgl.nanovg.NanoVG.*;
+
+import nokori.clear.vg.NanoVGContext;
 import nokori.clear.windows.Window;
 
 public class WidgetUtil {
+	
+	/**
+	 * Shorthand way to render rectangles with NanoVG.
+	 * 
+	 * @param context
+	 * @param fill
+	 * @param x
+	 * @param y
+	 * @param width
+	 * @param height
+	 */
+	public static void nvgRect(NanoVGContext context, NVGColor fill, float x, float y, float width, float height) {
+		nvgRect(context.get(), fill, x, y, width, height);
+	}
 
+	/**
+	 * Shorthand way to render rectangles with NanoVG.
+	 * 
+	 * @param vg - handle for NanoVG context
+	 * @param fill
+	 * @param x
+	 * @param y
+	 * @param width
+	 * @param height
+	 */
+	public static void nvgRect(long vg, NVGColor fill, float x, float y, float width, float height) {
+		nvgBeginPath(vg);
+		nvgFillColor(vg, fill);
+		NanoVG.nvgRect(vg, x, y, width, height);
+		nvgFill(vg);
+		nvgClosePath(vg);
+	}
+	
 	/**
 	 * Checks if the two given rectangles are intersecting.
 	 * <br><br>

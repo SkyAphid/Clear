@@ -11,11 +11,37 @@ public class SimpleTransition extends Transition {
 	
 	private ProgressCallback callback = null;
 	
+	public SimpleTransition(long durationInMillis, float start, float end, ProgressCallback callback) {
+		this(durationInMillis, start, end);
+		this.callback = callback;
+	}
+	
 	public SimpleTransition(long durationInMillis, float start, float end) {
 		super(durationInMillis);
 		this.start = start;
 		this.end = end;
 		currentValue = start;
+	}
+
+	public void setStartAndEnd(float start, float end) {
+		this.start = start;
+		this.end = end;
+	}
+	
+	public float getStart() {
+		return start;
+	}
+
+	public void setStart(float start) {
+		this.start = start;
+	}
+
+	public float getEnd() {
+		return end;
+	}
+
+	public void setEnd(float end) {
+		this.end = end;
 	}
 
 	@Override

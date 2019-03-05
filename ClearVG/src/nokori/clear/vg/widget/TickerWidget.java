@@ -9,7 +9,7 @@ import nokori.clear.windows.WindowManager;
 /**
  * Basic widget that has a simplified tick() function. Mostly useful for debugging (so that you don't have to override the long tick function every time).
  */
-public abstract class Ticker extends Widget {
+public abstract class TickerWidget extends Widget {
 
 	@Override
 	public void tick(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {

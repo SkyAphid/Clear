@@ -4,6 +4,8 @@ import org.joml.Vector4f;
 import org.lwjgl.nanovg.NVGColor;
 import org.lwjgl.system.MemoryStack;
 
+import nokori.clear.vg.widget.assembly.WidgetUtil;
+
 /**
  * This class is a wrapper for NVGColor that allows for short-hand customization and allocation.
  */
@@ -186,9 +188,16 @@ public class ClearColor {
 	}
 	
 	/**
-	 * Allows for automatic stack push allocated colors to be used (and automatically disposed after usage).
+	 * Uses a MemoryStack push to temporarily create a NVGColor, which is then passed into ColorAction. This allows for the use of lambda function-type color calls to shorthand code
+	 * rendering behaviors. The resulting NVGColor is automatically freed after.
+	 * <br><br>
+	 * Usage example:
+	 * <br>
+	 * <code>clearColor.tallocNVG(nvgColor -> {<br>
+	 * nvgFill(nvgColor);<br>
+	 * });</code>
 	 */
-	public void memoryStackPush(ColorAction a) {
+	public void tallocNVG(ColorAction a) {
 		try (MemoryStack stack = MemoryStack.stackPush()){
 			NVGColor color = NVGColor.mallocStack(stack);
 			a.execute(sync(color));
@@ -200,19 +209,19 @@ public class ClearColor {
 	}
 	
 	public float getRed() {
-		return color.x();
+		return WidgetUtil.clamp(color.x(), 0f, 1f);
 	}
 	
 	public float getGreen() {
-		return color.y();
+		return WidgetUtil.clamp(color.y(), 0f, 1f);
 	}
 	
 	public float getBlue() {
-		return color.z();
+		return WidgetUtil.clamp(color.z(), 0f, 1f);
 	}
 	
 	public float getAlpha() {
-		return color.w();
+		return WidgetUtil.clamp(color.w(), 0f, 1f);
 	}
 
 	/**

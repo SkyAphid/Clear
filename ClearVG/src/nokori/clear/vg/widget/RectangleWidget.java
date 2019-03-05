@@ -14,7 +14,7 @@ import nokori.clear.windows.WindowManager;
 /**
  * A widget that draws a rectangle at the given coordinates. It can be manually configured or set to sync up to the parent container.
  */
-public class Rectangle extends Widget implements FillAttachment, StrokeFillAttachment {
+public class RectangleWidget extends Widget implements FillAttachment, StrokeFillAttachment {
 	
 	protected float cornerRadius;
 	protected boolean syncToParent = false;
@@ -29,19 +29,19 @@ public class Rectangle extends Widget implements FillAttachment, StrokeFillAttac
 	 * 
 	 */
 	
-	public Rectangle(ClearColor fill) {
+	public RectangleWidget(ClearColor fill) {
 		this(fill, null);
 	}
 	
-	public Rectangle(float cornerRadius, ClearColor fill) {
+	public RectangleWidget(float cornerRadius, ClearColor fill) {
 		this(cornerRadius, fill, null);
 	}
 	
-	public Rectangle(ClearColor fill, ClearColor strokeFill) {
+	public RectangleWidget(ClearColor fill, ClearColor strokeFill) {
 		this(0f, fill, strokeFill);
 	}
 	
-	public Rectangle(float cornerRadius, ClearColor fill, ClearColor strokeFill) {
+	public RectangleWidget(float cornerRadius, ClearColor fill, ClearColor strokeFill) {
 		this(0, 0, 0, 0, cornerRadius, fill, strokeFill);
 		syncToParent = true;
 	}
@@ -52,19 +52,19 @@ public class Rectangle extends Widget implements FillAttachment, StrokeFillAttac
 	 * 
 	 */
 	
-	public Rectangle(float x, float y, float width, float height, ClearColor fill) {
+	public RectangleWidget(float x, float y, float width, float height, ClearColor fill) {
 		this(x, y, width, height, 0, fill);
 	}
 	
-	public Rectangle(float x, float y, float width, float height, ClearColor fill, ClearColor strokeFill) {
+	public RectangleWidget(float x, float y, float width, float height, ClearColor fill, ClearColor strokeFill) {
 		this(x, y, width, height, 0, fill, strokeFill);
 	}
 	
-	public Rectangle(float x, float y, float width, float height, float cornerRadius, ClearColor fill) {
+	public RectangleWidget(float x, float y, float width, float height, float cornerRadius, ClearColor fill) {
 		this(x, y, width, height, fill, null);
 	}
 	
-	public Rectangle(float x, float y, float width, float height, float cornerRadius, ClearColor fill, ClearColor strokeFill) {
+	public RectangleWidget(float x, float y, float width, float height, float cornerRadius, ClearColor fill, ClearColor strokeFill) {
 		super(x, y, width, height);
 		this.cornerRadius = cornerRadius;
 		this.fill = fill;
@@ -96,14 +96,14 @@ public class Rectangle extends Widget implements FillAttachment, StrokeFillAttac
 		float w = getWidth();
 		float h = getHeight();
 		
-		fill.memoryStackPush(fill -> {
+		fill.tallocNVG(fill -> {
 			NanoVG.nvgBeginPath(vg);
 			NanoVG.nvgRoundedRect(vg, x, y, w, h, cornerRadius);
 			NanoVG.nvgFillColor(vg, fill);
 			NanoVG.nvgFill(vg);
 			
 			if (strokeFill != null) {
-				strokeFill.memoryStackPush(strokeFill -> {
+				strokeFill.tallocNVG(strokeFill -> {
 					NanoVG.nvgStrokeWidth(vg, strokeWidth);
 					NanoVG.nvgStrokeColor(vg, strokeFill);
 					NanoVG.nvgStroke(vg);
