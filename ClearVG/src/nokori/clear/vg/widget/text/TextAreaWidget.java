@@ -1,4 +1,4 @@
-package nokori.clear.vg.widget.textarea;
+package nokori.clear.vg.widget.text;
 
 import static org.lwjgl.nanovg.NanoVG.*;
 import java.util.ArrayList;
@@ -42,9 +42,15 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	
 	private static final int TEXT_AREA_ALIGNMENT = Font.DEFAULT_TEXT_ALIGNMENT;
 	
-	private String text;
-	private ArrayList<String> lines = new ArrayList<>();
+	//We store the text in a StringBuilder to make editing perform better. toString() is called when the actual string is needed, e.g. for splitting.
+	private StringBuilder textBuilder;
 	
+	//The text is then cut up into lines by font.split() for the text content handler to render. 
+	//refreshLines can be set to true to cause font.split to be called again so that the current arraylist is recycled.
+	private ArrayList<String> lines = null;
+	private boolean refreshLines = false;
+	
+	//TextAreaContentHandler handles formatting and rendering of the lines created above.
 	private TextAreaContentHandler textContentHandler;
 	private float textContentX = -1f, textContentY = -1f, textContentW = -1f, textContentH = -1f;
 	
@@ -116,6 +122,8 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	private boolean highlightingEnabled = true;
 	private ClearColor highlightFill = ClearColor.CORAL;
 	
+	private boolean editingEnabled = true;
+	
 	
 	public TextAreaWidget(float width, float height, ClearColor fill, String text, Font font, float fontSize) {
 		this(0, 0, width, height, fill, text, font, fontSize);
@@ -126,26 +134,26 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		this.fill = fill;
 		this.font = font;
 		this.fontSize = fontSize;
+		
+		setText(text);
 
 		lineNumberFont = font;
 		
 		textContentHandler = new TextAreaContentHandler(this);
-
-		setText(text);
 	}
 
 	@Override
-	public void tick(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
-		
-	}
+	public void tick(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {}
 
 	@Override
 	public void render(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
-		float x = getRenderX();
-		float y = getRenderY();
+		float x = getClippedX();
+		float y = getClippedY();
 		float width = size.x;
 		float height = size.y;
 		
+		String text = textBuilder.toString();
+
 		/*
 		 * 
 		 * 
@@ -176,10 +184,11 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		 * Line split and text content area calculations
 		 */
 		
-		float lineSplitW = 	textContentW = width - scrollbarCompleteWidth - lineNumberCompleteWidth;
+		float lineSplitW = textContentW = width - scrollbarCompleteWidth - lineNumberCompleteWidth;
 		
-		if (lines == null) {
+		if (lines == null || refreshLines) {
 			font.split(context, lines = new ArrayList<>(), text, lineSplitW, fontSize, TEXT_AREA_ALIGNMENT, fontStyle);
+			refreshLines = false;
 		}
 		
 		//Used for activating the I-Beam cursor
@@ -196,7 +205,11 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		float stringHeight = font.getHeight(context, lines.size(), fontHeight, TEXT_AREA_ALIGNMENT, fontStyle);
 
 		/*
+		 * 
+		 * 
 		 * Rendering
+		 * 
+		 * 
 		 */
 		
 		//Scissor translation Y
@@ -223,6 +236,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 			float cullOffset = fontHeight * 5;
 
 			if (cullY < (y - cullOffset) || cullY > y + height + cullOffset) {
+				totalCharacters += lines.get(i).length();
 				continue;
 			}
 			
@@ -233,7 +247,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 			resetRenderConfiguration(context);
 			
 			//Draw the text
-			totalCharacters += textContentHandler.render(context, lines.get(i), totalCharacters, rX, rY, fontHeight);
+			totalCharacters += textContentHandler.render(context, text.length(), lines.get(i), totalCharacters, rX, rY, scissorY, fontHeight);
 		}
 		
 		nvgResetTransform(vg);
@@ -351,11 +365,13 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	@Override
 	public void charEvent(Window window, CharEvent event) {
 		super.charEvent(window, event);
+		TextAreaContentInputHandler.charEvent(this, textContentHandler, textBuilder, event);
 	}
 	
 	@Override
 	public void keyEvent(Window window, KeyEvent event) {
 		super.keyEvent(window, event);
+		TextAreaContentInputHandler.keyEvent(this, textContentHandler, textBuilder, event);
 	}
 	
 	@Override
@@ -413,7 +429,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		//The scrollbar value follows mouse. 
 		//We subtract the mouse Y from the widget render Y and then divide that by the height of the widget to get a normalized value we can use for the scroller.
 		if (scrollbarSelected) {
-			float relativeMouseY = (float) (event.getMouseY() - getRenderY());
+			float relativeMouseY = (float) (event.getMouseY() - getClippedY());
 			float mouseYMult = WidgetUtil.clamp((relativeMouseY  / getHeight()), 0f, 1f);
 			scroll = mouseYMult;
 		}
@@ -438,7 +454,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	}
 	
 	private void scrollbarMouseScrollEvent(Window window, MouseScrollEvent event) {
-		if (!isMouseWithin(window)) {
+		if (!isMouseWithinThisWidget(window)) {
 			return;
 		}
 		
@@ -474,6 +490,15 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	 * 
 	 */
 
+	/**
+	 * Requests that this widget re-splice the text builder (effectively refreshing the text area with the latest text). 
+	 * This should be called every time the text in this widget is edited or otherwise changed. Keep in mind that the update doesn't happen immediately,
+	 * but rather on the next render frame - hence <code>requestRefresh()</code> and not just <code>refresh()</code>.
+	 */
+	public void requestRefresh() {
+		refreshLines = true;
+	}
+	
 	@Override
 	public ClearColor getFill() {
 		return fill;
@@ -484,12 +509,12 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	}
 	
 	public String getText() {
-		return text;
+		return textBuilder.toString();
 	}
 	
 	public void setText(String text) {
-		this.text = text;
-		lines = null;
+		textBuilder = new StringBuilder(text);
+		requestRefresh();
 	}
 
 	public Font getFont() {
@@ -524,6 +549,10 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	/*
 	 * Scrollbar settings
 	 */
+	
+	public boolean isScrollbarSelected() {
+		return scrollbarSelected;
+	}
 	
 	public float getScrollbarWidth() {
 		return scrollbarWidth;
@@ -679,6 +708,14 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	 * 
 	 * 
 	 */
+	
+	public boolean isEditingEnabled() {
+		return editingEnabled;
+	}
+
+	public void setEditingEnabled(boolean editingEnabled) {
+		this.editingEnabled = editingEnabled;
+	}
 	
 	public boolean isCaretEnabled() {
 		return caretEnabled;

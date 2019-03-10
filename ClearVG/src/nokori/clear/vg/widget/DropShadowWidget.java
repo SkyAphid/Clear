@@ -41,8 +41,8 @@ public class DropShadowWidget extends RectangleWidget {
 	public void render(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
 		long vg = context.get();
 		
-		float x = getRenderX() + shadowOffset.x;
-		float y = getRenderY() + shadowOffset.y;
+		float x = getClippedX() + shadowOffset.x;
+		float y = getClippedY() + shadowOffset.y;
 		float w = getWidth();
 		float h = getHeight();
 		

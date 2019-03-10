@@ -11,9 +11,7 @@ import nokori.clear.vg.widget.DropShadowWidget;
 import nokori.clear.vg.widget.RectangleWidget;
 import nokori.clear.vg.widget.assembly.WidgetAssembly;
 import nokori.clear.vg.widget.assembly.WidgetClip;
-import nokori.clear.vg.widget.textarea.TextCommandSetFill;
-import nokori.clear.vg.widget.textarea.TextCommandSetFont;
-import nokori.clear.vg.widget.textarea.TextAreaWidget;
+import nokori.clear.vg.widget.text.TextAreaWidget;
 import nokori.clear.windows.GLFWException;
 import nokori.clear.windows.Window;
 import nokori.clear.windows.WindowManager;
@@ -43,9 +41,9 @@ public class ClearTextAreaDemo extends ClearApplication {
 			Font font = new Font("fonts/NotoSans/", "NotoSans-Regular", "NotoSans-Bold", "NotoSans-Italic", "NotoSans-Light").load(context);
 
 			TextAreaWidget textArea = new TextAreaWidget(900, 400, ClearColor.BLACK, getText(), font, 18);
-			textArea.getTextContentHandler().addCommand(new TextCommandSetFont(0, 11, font, FontStyle.BOLD));
-			textArea.getTextContentHandler().addCommand(new TextCommandSetFont(13, 35, font, FontStyle.ITALIC));
-			textArea.getTextContentHandler().addCommand(new TextCommandSetFill(0, 35, ClearColor.CORAL));
+			textArea.getTextContentHandler().addCharacterFillAt(0, 37, ClearColor.CORAL);
+			textArea.getTextContentHandler().addCharacterFontStyleAt(0, 13, FontStyle.BOLD);
+			textArea.getTextContentHandler().addCharacterFontStyleAt(13, 37, FontStyle.ITALIC);
 			
 			textArea.addChild(new WidgetClip(WidgetClip.Alignment.CENTER));
 			button.addChild(textArea);

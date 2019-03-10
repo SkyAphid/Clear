@@ -1,17 +1,18 @@
-package nokori.clear.vg.widget.textarea;
+package nokori.clear.vg.widget.text;
 
 import org.lwjgl.nanovg.NanoVG;
 
 import nokori.clear.vg.ClearColor;
 import nokori.clear.vg.NanoVGContext;
 
-public class TextCommandSetFill extends TextCommand {
+class CharCommandFill extends CharCommand {
+	
+	public static final int COMMAND_ARRAY_INDEX = 0;
 	
 	private ClearColor fill;
 	private ClearColor cachedAltFill = null;
 
-	public TextCommandSetFill(int startIndex, int endIndex, ClearColor fill) {
-		super(startIndex, endIndex);
+	public CharCommandFill(ClearColor fill) {
 		this.fill = fill;
 	}
 
@@ -33,7 +34,7 @@ public class TextCommandSetFill extends TextCommand {
 	}
 
 	@Override
-	boolean matches(TextCommand command) {
-		return (command instanceof TextCommandSetFill && ((TextCommandSetFill) command).fill.rgbMatches(fill));
+	public int getCommandArrayIndex() {
+		return COMMAND_ARRAY_INDEX;
 	}
 }

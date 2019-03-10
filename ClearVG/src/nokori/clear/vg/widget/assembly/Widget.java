@@ -43,8 +43,30 @@ public abstract class Widget extends WidgetContainer {
 		size.y = height;
 	}
 	
+	/**
+	 * This is the update function for this widget. <code>tick()</code> is always called directly before <code>render()</code> if you're using the default application wrappers. 
+	 * Any sort of update logic can be inserted here. It's by default functionally the same as <code>render()</code>, but it was added to help keep code tidy and organized.
+	 * 
+	 * @param windowManager
+	 * @param window
+	 * @param context
+	 * @param rootWidgetAssembly
+	 */
 	public abstract void tick(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly);
+	
+	/**
+	 * This is the rendering function for this widget. NanoVG rendering calls should be inserted here.
+	 * 
+	 * @param windowManager
+	 * @param window
+	 * @param context
+	 * @param rootWidgetAssembly
+	 */
 	public abstract void render(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly);
+	
+	/**
+	 * This is called when a widget is removed from a widget container or at the end of the program's life. Make sure to dispose any native resources that will leak otherwise.
+	 */
 	public abstract void dispose();
 	
 	/*
@@ -55,18 +77,42 @@ public abstract class Widget extends WidgetContainer {
 	 * 
 	 */
 
+	/**
+	 * @return the x value of this Widget. Keep in mind, the way this value is used can vary between Widgets. For example, a widget inside of a WidgetContainer may be using x coordinates 
+	 * relative to being clipped to the parent (e.g. <code>x = 10</code>, <code>parent x = 100</code>, thus the correct coordinate to render to the child is <code>x = 110</code>.) 
+	 * To get the render x for a "clipped" widget inside of a parent widget, use <code>getClippedX()</code> instead.
+	 * 
+	 * @see getClippedX()
+	 */
 	public float getX() {
 		return pos.x();
 	}
 
+	/**
+	 * @see getX()
+	 * @see getClippedX()
+	 * @param x
+	 */
 	public void setX(float x) {
 		pos.x = x;
 	}
 
+	/**
+	 * @return the y value of this Widget. Keep in mind, the way this value is used can vary between Widgets. For example, a widget inside of a WidgetContainer may be using y coordinates 
+	 * relative to being clipped to the parent (e.g. <code>y = 10</code>, <code>parent y = 100</code>, thus the correct coordinate to render to the child is <code>y = 110</code>.) 
+	 * To get the render y for a "clipped" widget inside of a parent widget, use <code>getClippedY()</code> instead.
+	 * 
+	 * @see getClippedY()
+	 */
 	public float getY() {
 		return pos.y();
 	}
 
+	/**
+	 * @see getY()
+	 * @see getClippedY()
+	 * @param y
+	 */
 	public void setY(float y) {
 		pos.y = y;
 	}
@@ -88,21 +134,23 @@ public abstract class Widget extends WidgetContainer {
 	}
 	
 	/**
-	 * @return an x value that takes into account the parent widgets position (if applicable). Used to make sure that child widgets are rendered in the parents bounds appropriately.
+	 * @return an x value that takes into account the parent widgets position (if applicable). Used to make sure that child widgets are rendered in the parents bounds appropriately. 
+	 * @see getX()
 	 */
-	public float getRenderX() {
+	public float getClippedX() {
 		return (parent != null ? parent.getX() + pos.x : pos.x);
 	}
 	
 	/**
 	 * @return an y value that takes into account the parent widgets position (if applicable). Used to make sure that child widgets are rendered in the parents bounds appropriately.
+	 * @see getY()
 	 */
-	public float getRenderY() {
+	public float getClippedY() {
 		return (parent != null ? parent.getY() + pos.y : pos.y);
 	}
 	
-	public boolean isMouseWithin(Window window) {
-		return WidgetUtil.pointWithinRectangle(window.getMouseX(), window.getMouseY(), getX(), getY(), getWidth(), getHeight());
+	public boolean isMouseWithinThisWidget(Window window) {
+		return WidgetUtil.pointWithinRectangle(window.getMouseX(), window.getMouseY(), getClippedX(), getClippedY(), getWidth(), getHeight());
 	}
 	
 	/*

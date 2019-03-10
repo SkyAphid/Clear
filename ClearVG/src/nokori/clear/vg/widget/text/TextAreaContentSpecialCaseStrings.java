@@ -1,4 +1,4 @@
-package nokori.clear.vg.widget.textarea;
+package nokori.clear.vg.widget.text;
 
 import java.util.HashMap;
 

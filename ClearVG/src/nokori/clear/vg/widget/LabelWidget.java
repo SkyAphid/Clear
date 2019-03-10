@@ -70,7 +70,7 @@ public class LabelWidget extends Widget implements FillAttachment{
 			nvgFillColor(vg, fill);
 		}
 		
-		nvgText(vg, getRenderX(), getRenderY(), text);
+		nvgText(vg, getClippedX(), getClippedY(), text);
 		
 		nvgClosePath(vg);
 	}

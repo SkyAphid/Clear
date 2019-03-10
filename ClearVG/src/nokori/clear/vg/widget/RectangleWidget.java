@@ -91,8 +91,8 @@ public class RectangleWidget extends Widget implements FillAttachment, StrokeFil
 	public void render(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
 		long vg = context.get();
 		
-		float x = getRenderX();
-		float y = getRenderY();
+		float x = getClippedX();
+		float y = getClippedY();
 		float w = getWidth();
 		float h = getHeight();
 		

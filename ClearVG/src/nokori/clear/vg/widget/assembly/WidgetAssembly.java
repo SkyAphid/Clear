@@ -53,8 +53,8 @@ public class WidgetAssembly extends Widget {
 		if (backgroundFill != null) {
 			backgroundFill.tallocNVG(fill -> {
 				long vg = context.get();
-				float x = getRenderX();
-				float y = getRenderY();
+				float x = getClippedX();
+				float y = getClippedY();
 				float w = size.x;
 				float h = size.y;
 				

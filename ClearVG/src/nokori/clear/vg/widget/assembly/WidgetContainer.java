@@ -90,6 +90,7 @@ public abstract class WidgetContainer {
 	public boolean removeChild(Widget widget) {
 		if (children.remove(widget)) {
 			removeChildCallback(widget);
+			widget.dispose();
 			return true;
 		}
 		
@@ -97,12 +98,8 @@ public abstract class WidgetContainer {
 	}
 	
 	public Widget removeChild(int index) {
-		Widget widget = children.remove(index);
-		
-		if (widget != null) {
-			removeChildCallback(widget);
-		}
-		
+		Widget widget = children.get(index);
+		removeChild(widget);
 		return widget;
 	}
 	

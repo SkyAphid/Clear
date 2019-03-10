@@ -65,7 +65,7 @@ public class ClearHelloWorld extends ClearApplication {
 		 */
 		
 		button.setOnMouseMotionEvent(e -> {
-			if (button.isMouseWithin(window)) {
+			if (button.isMouseWithinThisWidget(window)) {
 				ClearStaticResources.getCursor(Cursor.Type.HAND).apply(window);
 			} else {
 				ClearStaticResources.getCursor(Cursor.Type.ARROW).apply(window);
@@ -73,7 +73,7 @@ public class ClearHelloWorld extends ClearApplication {
 		});
 		
 		button.setOnMouseButtonEvent(e -> {
-			if (e.isPressed() && button.isMouseWithin(e.getWindow())) {
+			if (e.isPressed() && button.isMouseWithinThisWidget(e.getWindow())) {
 				button.setBackgroundFill(button.getBackgroundFill() != null ? null : ClearColor.LIGHT_GRAY);
 				button.setRenderChildren(!button.isRenderingChildren());
 			}
