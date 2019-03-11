@@ -52,6 +52,12 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	
 	//TextAreaContentHandler handles formatting and rendering of the lines created above.
 	private TextAreaContentHandler textContentHandler;
+	
+	/**
+	 * This class handles special shortcuts for the TextAreaContentHandler. Simply override the class and reset this variable to adjust those controls.
+	 */
+	protected TextAreaContentInputHandler textContentInputHandler;
+	
 	private float textContentX = -1f, textContentY = -1f, textContentW = -1f, textContentH = -1f;
 	
 	private Font font;
@@ -124,7 +130,6 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	
 	private boolean editingEnabled = true;
 	
-	
 	public TextAreaWidget(float width, float height, ClearColor fill, String text, Font font, float fontSize) {
 		this(0, 0, width, height, fill, text, font, fontSize);
 	}
@@ -135,11 +140,12 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		this.font = font;
 		this.fontSize = fontSize;
 		
-		setText(text);
-
 		lineNumberFont = font;
 		
 		textContentHandler = new TextAreaContentHandler(this);
+		textContentInputHandler = new TextAreaContentInputHandler(textContentHandler);
+		
+		setText(text);
 	}
 
 	@Override
@@ -226,8 +232,11 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		
 		int totalCharacters = 0;
 		
+		textContentHandler.renderHighlight(vg, textContentX, textContentW, fontHeight);
+		
+		resetRenderConfiguration(context);
+		
 		for (int i = 0; i < lines.size(); i++) {
-			float rX = textContentX;
 			float rY = textContentY + (fontHeight * i);
 			
 			//Culls text that's outside of the scissoring range. We include a bit of padding. 
@@ -243,11 +252,8 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 			//Draw line number if applicable
 			renderLineNumber(context, x, rY, lineNumberCompleteWidth, fontHeight, i);
 			
-			//Reset render configuration for TextContentRenderer
-			resetRenderConfiguration(context);
-			
 			//Draw the text
-			totalCharacters += textContentHandler.render(context, text.length(), lines.get(i), totalCharacters, rX, rY, scissorY, fontHeight);
+			totalCharacters += textContentHandler.renderLine(context, text.length(), lines.get(i), totalCharacters, textContentX, rY, scissorY, fontHeight);
 		}
 		
 		nvgResetTransform(vg);
@@ -274,6 +280,8 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		
 		long vg = context.get();
 		
+		nvgSave(vg);
+		
 		float bgWidth = lineNumberCompleteWidth - lineNumberRightPadding;
 		float bgHeight = fontHeight + 1f; //adds a teensy bit of padding to prevent minor rounding errors when scrolling. May cause issues if the background has transparency enabled.
 		
@@ -292,6 +300,8 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 			nvgFillColor(vg, fill);
 			nvgText(vg, x + lineNumberLeftPadding, y, Integer.toString(line));
 		});
+		
+		nvgRestore(vg);
 	}
 	
 	private void renderScrollbar(NanoVGContext context, float x, float y, float width, float height, float stringHeight) {
@@ -365,13 +375,16 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	@Override
 	public void charEvent(Window window, CharEvent event) {
 		super.charEvent(window, event);
-		TextAreaContentInputHandler.charEvent(this, textContentHandler, textBuilder, event);
+		
+		if (editingEnabled) {
+			textContentHandler.insertCharacterAtCaret(event.getCharString());
+		}
 	}
 	
 	@Override
 	public void keyEvent(Window window, KeyEvent event) {
 		super.keyEvent(window, event);
-		TextAreaContentInputHandler.keyEvent(this, textContentHandler, textBuilder, event);
+		textContentInputHandler.keyEvent(event);
 	}
 	
 	@Override
@@ -508,12 +521,16 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		this.fill = fill;
 	}
 	
-	public String getText() {
-		return textBuilder.toString();
+	/**
+	 * @return the StringBuilder containing the text for this TextAreaWidget. A StringBuilder is stored instead of a basic String for editing/performance purposes.
+	 */
+	public StringBuilder getTextBuilder() {
+		return textBuilder;
 	}
 	
 	public void setText(String text) {
 		textBuilder = new StringBuilder(text);
+		textContentHandler.refresh();
 		requestRefresh();
 	}
 
@@ -752,6 +769,5 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	@Override
 	public void dispose() {
 	}
-
 
 }

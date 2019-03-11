@@ -2,28 +2,27 @@ package nokori.clear.vg.widget.text;
 
 import org.lwjgl.glfw.GLFW;
 
-import nokori.clear.windows.event.CharEvent;
 import nokori.clear.windows.event.KeyEvent;
 
 /**
- * A wrapper that handles any content-related inputs for TextAreaWidget. Mostly separated to prevent the TextAreaWidget from ballooning beyond sustainable ranges, this class
- * allows you to quickly access and edit any content-editing behaviors for the widget.
+ * This class handles special editing shortcuts (e.g. CTRL-V, Backspace, etc.) for the TextAreaContentHandler.
  */
 public class TextAreaContentInputHandler {
 	
-	public static void charEvent(TextAreaWidget widget, TextAreaContentHandler textContentHandler, StringBuilder textBuilder, CharEvent event) {
-		if (!widget.isEditingEnabled()) return;
-		
-		int caretPos = textContentHandler.getCaretPosition();
-		
-		if (caretPos >= 0 && caretPos <= textBuilder.length()) {
-			textBuilder.insert(caretPos, event.getCharString());
-			textContentHandler.textInsertedCallback(caretPos, true);
-			widget.requestRefresh();
-		}
-	}
+	private TextAreaContentHandler textContentHandler;
 	
-	public static void keyEvent(TextAreaWidget widget, TextAreaContentHandler textContentHandler, StringBuilder textBuilder, KeyEvent event) {
+	public TextAreaContentInputHandler(TextAreaContentHandler textContentHandler) {
+		this.textContentHandler = textContentHandler;
+	}
+
+	/**
+	 * 
+	 * @param widget
+	 * @param textContentHandler
+	 * @param textBuilder
+	 * @param event
+	 */
+	public void keyEvent(KeyEvent event) {
 		if (!event.isPressed()) return;
 		
 		/*
@@ -31,35 +30,33 @@ public class TextAreaContentInputHandler {
 		 */
 		
 		if (event.getKey() == GLFW.GLFW_KEY_BACKSPACE) {
-			backspace(widget, textContentHandler, textBuilder);
+			textContentHandler.backspaceAtCaret();
 		}
 		
 		/*
-		 * Move Cursor
+		 * Move Caret
 		 */
 		
-		//Move cursor right
+		//Move caret right
 		if (event.getKey() == GLFW.GLFW_KEY_RIGHT) {
-			
+			textContentHandler.moveCaretRight();
 		}
 		
-		//Move cursor left
+		//Move caret left
 		if (event.getKey() == GLFW.GLFW_KEY_LEFT) {
-			
+			textContentHandler.moveCaretLeft();
 		}
 		
-		//Move cursor down
+		//Move caret down
 		if (event.getKey() == GLFW.GLFW_KEY_DOWN) {
 			
 		}
+		
+		
 	}
 	
-	public static void backspace(TextAreaWidget widget, TextAreaContentHandler textContentHandler, StringBuilder textBuilder) {
-		int caretPos = textContentHandler.getCaretPosition();
-		textBuilder.deleteCharAt(caretPos-1);
-		textContentHandler.textInsertedCallback(caretPos, false);
-		widget.requestRefresh();
-	}
+
+
 	
 
 }

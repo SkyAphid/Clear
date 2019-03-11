@@ -10,6 +10,8 @@ import nokori.clear.vg.widget.assembly.WidgetUtil;
  * This class is a wrapper for NVGColor that allows for short-hand customization and allocation.
  */
 public class ClearColor {
+	public static final int HEX_COLOR_LENGTH = 7;
+	
 	public static final ClearColor WHITE = new ClearColor("#FFFFFF").immutable(true);
 	public static final ClearColor LIGHT_GRAY = new ClearColor("#D3D3D3").immutable(true);
 	public static final ClearColor SILVER = new ClearColor("#C0C0C0").immutable(true);
@@ -96,17 +98,6 @@ public class ClearColor {
 	}
 	
 	/**
-	 * Sets a Color from another Color (turns this Color into a copy of the given color)
-	 * 
-	 * @param color - the color to copy
-	 * 
-	 * @return this Color object if the Color is not mutable, or a new Color object if this Color is set to be immutable.
-	 */
-	public ClearColor set(ClearColor color) {
-		return set(color.getRed(), color.getBlue(), color.getGreen(), color.getAlpha());
-	}
-	
-	/**
 	 * Sets the red value in the range (0.0 - 1.0). Useful for when a Color object needs to be recycled.
 	 * 
 	 * @return this Color object if the Color is not mutable, or a new Color object if this Color is set to be immutable.
@@ -140,6 +131,17 @@ public class ClearColor {
 	 */
 	public ClearColor alpha(float a) {
 		return set(getRed(), getGreen(), getBlue(), a);
+	}
+	
+	/**
+	 * Sets a Color from another Color (turns this Color into a copy of the given color)
+	 * 
+	 * @param color - the color to copy
+	 * 
+	 * @return this Color object if the Color is not mutable, or a new Color object if this Color is set to be immutable.
+	 */
+	public ClearColor set(ClearColor color) {
+		return set(color.getRed(), color.getBlue(), color.getGreen(), color.getAlpha());
 	}
 	
 	/**
@@ -224,6 +226,10 @@ public class ClearColor {
 		return WidgetUtil.clamp(color.w(), 0f, 1f);
 	}
 
+	public String toHEX() {
+		return String.format("#%02X%02X%02X", (int) (255 * getRed()), (int) (255 * getGreen()), (int) (255 * getBlue())); 
+	}
+	
 	/**
 	 * Multiplies this color's RGB values (but not the alpha) by the factor and returns a new object containing the new colors.
 	 * <br><br>

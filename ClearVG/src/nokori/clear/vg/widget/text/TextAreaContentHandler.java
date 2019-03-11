@@ -2,14 +2,12 @@ package nokori.clear.vg.widget.text;
 
 import static org.lwjgl.nanovg.NanoVG.*;
 
-import java.nio.FloatBuffer;
 import java.util.HashMap;
 
 import org.joml.Vector2d;
-import org.lwjgl.BufferUtils;
+import org.joml.Vector2f;
 import nokori.clear.vg.ClearColor;
 import nokori.clear.vg.NanoVGContext;
-import nokori.clear.vg.font.FontStyle;
 import nokori.clear.vg.transition.SimpleTransition;
 import nokori.clear.vg.widget.assembly.WidgetUtil;
 
@@ -18,18 +16,21 @@ import nokori.clear.vg.widget.assembly.WidgetUtil;
  */
 public class TextAreaContentHandler {
 	
-	private TextAreaWidget textArea;
-	
-	private FloatBuffer boundsTempBuffer = BufferUtils.createFloatBuffer(4);
-	
-	private HashMap<String, String> specialCaseStrings = TextAreaContentSpecialCaseStrings.initDefault();
+	private TextAreaWidget widget;
 	
 	/*
-	 * Commands
+	 * 
+	 * Escape Sequence Handlers
+	 * 
 	 */
 	
-	private static final int TOTAL_COMMAND_TYPES = 2;
-	private HashMap<Integer, CharCommand[]> commands = new HashMap<Integer, CharCommand[]>();
+	private HashMap<String, String> escapeSequenceReplacements = TextAreaContentEscapeSequences.initDefault();
+	
+	//If true, a color escape sequence was found and we need to skip ahead seven charactes to accomodate a HEX value.
+	boolean hexIndexOffsetRequested = false;
+	
+	//This is a cache of colors created by escape sequences, to try and prevent unnecessary garbage collections
+	HashMap<String, ClearColor> colorCache = new HashMap<String, ClearColor>();
 	
 	/*
 	 * Caret
@@ -45,18 +46,23 @@ public class TextAreaContentHandler {
 	private Vector2d caretUpdateQueue = new Vector2d(-1, -1);
 
 	private int caret = -1;
-	private int caretLine = -1;
 
 	/*
 	 * Highlighting
 	 */
 	
 	private boolean mousePressed = false;
-	private int highlightedStartIndex = -1;
-	private int highlightedEndIndex = -1;
+	
+	//The character indices of the users selection
+	private int highlightIndex1 = -1;
+	private int highlightIndex2 = -1;
+	
+	//The rendering locations of the starting and ending highlight indices
+	private Vector2f highlightStartPos = new Vector2f();
+	private Vector2f highlightEndPos = new Vector2f();
 	
 	public TextAreaContentHandler(TextAreaWidget textArea) {
-		this.textArea = textArea;
+		this.widget = textArea;
 	}
 
 	/**
@@ -66,39 +72,41 @@ public class TextAreaContentHandler {
 	 * @param font - the font to be used
 	 * @param text - the line of text to render
 	 * @param startIndex - the number of characters rendered so far
-	 * @param x - the start render x
-	 * @param y - the render y
+	 * @param textContentX - the start render x
+	 * @param lineY - the render y
 	 * @return - the number of characters rendered
 	 */
-	public int render(NanoVGContext context, int totalTextLength, String text, int startIndex, float x, float y, float scissorY, float fontHeight) {
+	public int renderLine(NanoVGContext context, int totalTextLength, String text, int startIndex, float textContentX, float lineY, float scissorY, float fontHeight) {
 		long vg = context.get();
 
 		int totalCharacters = 0;
-		float advanceX = x;
+		float advanceX = textContentX;
 		
-		float adjustedClickY = y + scissorY;
+		float adjustedClickY = lineY + scissorY;
 		
 		for (int i = 0; i < text.length(); i++) {
 			int characterIndex = startIndex + i;
 
-			String c = checkString(Character.toString(text.charAt(i)));
-
-			// render highlighted text
-			if (textArea.isHighlightingEnabled() && inHighlightedRange(characterIndex)) {
-				renderHighlight(vg, advanceX, y, fontHeight, characterIndex, c);
+			String c = checkString(context, characterIndex, Character.toString(text.charAt(i)));
+			
+			if (hexIndexOffsetRequested) {
+				i += ClearColor.HEX_COLOR_LENGTH;
+				hexIndexOffsetRequested = false;
 			}
+
+			// records data to be used for rendering the highlighted segments of the text
+			highlightLogic(advanceX, lineY, characterIndex);
 
 			// save state so that text formatting commands don't carry over into the next rendering
 			nvgSave(vg);
 
 			// render text
-			runCommands(context, text, characterIndex);
 			float bAdvanceX = advanceX;
-			advanceX = nvgText(vg, advanceX, y, c);
+			advanceX = nvgText(vg, advanceX, lineY, c);
 
 			// caret systems
-			if (textArea.isCaretEnabled()) {
-				forEachCharCaretLogic(vg, characterIndex, bAdvanceX, y, adjustedClickY, (advanceX - bAdvanceX), fontHeight);
+			if (widget.isCaretEnabled()) {
+				forEachCharCaretLogic(vg, characterIndex, bAdvanceX, lineY, adjustedClickY, (advanceX - bAdvanceX), fontHeight);
 			}
 
 			// add this character to total characters rendered
@@ -107,8 +115,8 @@ public class TextAreaContentHandler {
 			// pop state
 			nvgRestore(vg);
 		}
-		
-		edgeCaretLogic(vg, totalTextLength, startIndex, startIndex + totalCharacters, x, advanceX, y, adjustedClickY, fontHeight);
+
+		edgeCaretLogic(vg, totalTextLength, startIndex, startIndex + totalCharacters, textContentX, advanceX, lineY, adjustedClickY, fontHeight);
 		
 		return totalCharacters;
 	}
@@ -117,12 +125,23 @@ public class TextAreaContentHandler {
 	 * Cross-references the given string with the special cases hashmap. If this string is a special case, the replacement is returned instead. 
 	 * Otherwise the string given is just returned.
 	 */
-	private String checkString(String s) {
-		if (specialCaseStrings.containsKey(s)) {
-			return specialCaseStrings.get(s);
+	private String checkString(NanoVGContext context, int characterIndex, String c) {
+		if (escapeSequenceReplacements.containsKey(c)) {
+			return escapeSequenceReplacements.get(c);
 		}
 		
-		return s;
+		if (TextAreaContentEscapeSequences.processSequence(context, widget, this, characterIndex, c)) {
+			return "";
+		}
+		
+		return c;
+	}
+	
+	/**
+	 * Notifies this content handler that setText() has been called in TextAreaWidget.
+	 */
+	public void refresh() {
+		colorCache.clear();
 	}
 	
 	/*
@@ -138,6 +157,7 @@ public class TextAreaContentHandler {
 	 */
 	private void forEachCharCaretLogic(long vg, int characterIndex, float x, float y, float adjustedClickY, float advanceW, float fontHeight) {
 		
+		//Checks if the mouse click was in the bounding of this character - if so, the caret is set to this index.
 		if (updateCaret && WidgetUtil.pointWithinRectangle(caretUpdateQueue.x, caretUpdateQueue.y, x, adjustedClickY, advanceW, fontHeight)) {
 			
 			int bCaretPosition = caret;
@@ -202,11 +222,13 @@ public class TextAreaContentHandler {
 	 * Renders the caret using a SimpleTransition to fade in and out smoothly.
 	 */
 	private void renderCaret(long vg, float x, float y, float fontHeight) {
+		if (isContentHighlighted()) return;
+		
 		/*
 		 * Caret fading logic
 		 */
 		
-		if (textArea.isHighlightingEnabled()) {
+		if (widget.isHighlightingEnabled()) {
 			if (caretFadeTransition.isFinished()) {
 				if (caretFader == 1f) {
 					caretFadeTransition.setStartAndEnd(1f, 0f);
@@ -222,7 +244,7 @@ public class TextAreaContentHandler {
 		 * Render the caret
 		 */
 		
-		ClearColor caretFill = textArea.getCaretFill().alpha(caretFader);
+		ClearColor caretFill = widget.getCaretFill().alpha(caretFader);
 		
 		caretFill.tallocNVG(fill -> {
 			WidgetUtil.nvgRect(vg, fill, x, y, 2.0f, fontHeight);
@@ -246,45 +268,83 @@ public class TextAreaContentHandler {
 	 * 
 	 */
 	
-	private boolean inHighlightedRange(int index) {
-		return (index >= highlightedStartIndex && index < highlightedEndIndex);
+	private void highlightLogic(float x, float y, int characterIndex) {
+		if (characterIndex == getHighlightStartIndex()) {
+			highlightStartPos.set(x, y);
+		}
+		
+		if (characterIndex == getHighlightEndIndex()) {
+			highlightEndPos.set(x, y);
+		}
 	}
 	
-	private void renderHighlight(long vg, float x, float y, float fontHeight, int characterIndex, String character) {
+	/**
+	 * Renders the highlight background for text that has been selected by the user.
+	 * 
+	 * @param vg
+	 * @param textContentX
+	 * @param textContentW
+	 * @param fontHeight
+	 */
+	public void renderHighlight(long vg, float textContentX, float textContentW, float fontHeight) {
 		nvgSave(vg);
 		
-		textArea.getHighlightFill().tallocNVG(fill -> {
-			//Get bounding for the highlight coordinates.
-			nvgTextBounds(vg, 0, 0, character, boundsTempBuffer);
-			float highlightW = (boundsTempBuffer.get(2) - boundsTempBuffer.get(0));
-
-			WidgetUtil.nvgRect(vg, fill, x, y, highlightW, fontHeight);
-		});
+		if (widget.isHighlightingEnabled() && isContentHighlighted()) {
+			widget.getHighlightFill().tallocNVG(fill -> {
+				for (float y = highlightStartPos.y; y <= highlightEndPos.y; y += fontHeight) {
+					float x = textContentX;
+					float w = textContentW - 1;
+					float h = fontHeight + 1;
+					
+					if (y == highlightStartPos.y) {
+						x = highlightStartPos.x;
+					}
+					
+					if (y == highlightEndPos.y) {
+						w = (highlightEndPos.x - textContentX);
+					}
+					
+					WidgetUtil.nvgRect(vg, fill, x, y, w, h);
+				}
+			});
+		}
 		
 		nvgRestore(vg);
 	}
 	
-	
 	/**
-	 * Updates the highlighted start/end indices to match the caret index when it's updated
-	 */
-	/*
-	 * TODO: Highlighting indices need to be reworked so that they still work even when you highlight backwards. 
-	 * Here's my current idea (but too tired to implement): The start index merely represents where the caret begins. Then the end index is where it stops.
-	 * The key difference between that and the current implementation is that you should make proxy getStart/EndHighlight() functions that translate those values into
-	 * ones the rendering and logic can use effectively.
+	 * Updates the highlighted indices to match the caret index when it's updated
 	 */
 	private void refreshHighlightIndex() {
-		if (highlightedStartIndex == -1) {
-			highlightedStartIndex = caret;
+		if (highlightIndex1 == -1) {
+			highlightIndex1 = caret;
 		} else {
-			highlightedEndIndex = caret;
+			highlightIndex2 = caret;
 		}
 	}
 	
+	/**
+	 * Resets the highlighted indices (disables it)
+	 */
 	public void resetHighlightIndex() {
-		highlightedStartIndex = -1;
-		highlightedEndIndex = -1;
+		highlightIndex1 = -1;
+		highlightIndex2 = -1;
+	}
+	
+	public int getHighlightStartIndex() {
+		return Math.min(highlightIndex1, highlightIndex2);
+	}
+	
+	public int getHighlightEndIndex() {
+		return Math.max(highlightIndex1, highlightIndex2);
+	}
+	
+	public boolean isContentHighlighted() {
+		return (highlightIndex1 != -1 && highlightIndex2 != -1);
+	}
+	
+	public boolean isContentHighlighted(int index) {
+		return (isContentHighlighted() && index >= getHighlightStartIndex() && index < getHighlightEndIndex());
 	}
 	
 	/*
@@ -300,7 +360,7 @@ public class TextAreaContentHandler {
 	}
 	
 	void mouseEvent(double mouseX, double mouseY, boolean pressed) {
-		if (textArea.isScrollbarSelected()) return;
+		if (widget.isScrollbarSelected()) return;
 		
 		//This toggles highlighting mode
 		boolean bMousePressed = mousePressed;
@@ -321,18 +381,30 @@ public class TextAreaContentHandler {
 		}
 	}
 	
-	void textInsertedCallback(int index, boolean added) {
-		if (added) {
-			if (commands.containsKey(index)) {
-				CharCommand[] c = commands.get(index);
-				clearCommand(index);
-				commands.put(index+1, c);
-			}
-			
-			caret++;
-		} else {
-			clearCommand(index);
-			caret--;
+	public void insertCharacterAtCaret(String character) {
+		insertCharacter(caret, character);
+		caret++;
+	}
+	
+	public void insertCharacter(int position, String character) {
+		StringBuilder textBuilder = widget.getTextBuilder();
+		int length = textBuilder.length();
+		
+		if (caret >= 0 && caret <= length) {
+			textBuilder.insert(caret, character);
+			widget.requestRefresh();
+		}
+	}
+	
+	public void backspaceAtCaret() {
+		backspace(caret);
+		caret--;
+	}
+	
+	public void backspace(int position) {
+		if (position > 0) {
+			widget.getTextBuilder().deleteCharAt(position-1);
+			widget.requestRefresh();
 		}
 	}
 	
@@ -344,92 +416,16 @@ public class TextAreaContentHandler {
 		
 	}
 	
-	/*
-	 * 
-	 * 
-	 * Command functionality
-	 * 
-	 * 
-	 */
-	
-	private void runCommands(NanoVGContext context, String text, int index) {
-		if (commands.containsKey(index)) {
-			CharCommand[] c = commands.get(index);
-			
-			for (int i = 0; i < c.length; i++) {
-				if (c[i] == null) {
-					continue;
-				}
-				
-				c[i].run(context, textArea, text, index, inHighlightedRange(index));
-			}
+	public void moveCaretLeft() {
+		if (caret > 0) {
+			caret--;
 		}
 	}
 	
-	private void addCommand(int index, CharCommand command) {
-		if (commands.containsKey(index)) {
-			commands.get(index)[command.getCommandArrayIndex()] = command;
-		} else {
-			commands.put(index, new CharCommand[TOTAL_COMMAND_TYPES]);
-			addCommand(index, command);
+	public void moveCaretRight() {
+		if (caret < widget.getTextBuilder().length()) {
+			caret++;
 		}
-	}
-	
-	public void clearCommand(int index) {
-		commands.remove(index);
-	}
-	
-	private void clearCommand(int startIndex, int endIndex, int commandArrayIndex) {
-		for (int i = startIndex; i < endIndex; i++) {
-			if (commands.containsKey(i)) {
-				commands.get(i)[commandArrayIndex] = null;
-			}
-		}
-	}
-	
-	public void clearAllCommands(int startIndex, int endIndex) {
-		for (int i = startIndex; i < endIndex; i++) {
-			clearCommand(i);
-		}
-	}
-	
-	public void clearAllCommands() {
-		commands.clear();
-	}
-
-	/*
-	 * 
-	 * Command wrappers
-	 * 
-	 * 
-	 */
-	
-	public void addCharacterFillAt(int startIndex, int endIndex, ClearColor fill) {
-		for (int i = startIndex; i < endIndex; i++) {
-			addCommand(i, new CharCommandFill(fill));
-		}
-	}
-	
-	public void clearCharacterFillAt(int index) {
-		clearCharacterFillAt(index, index);
-	}
-	
-	public void clearCharacterFillAt(int startIndex, int endIndex) {
-		clearCommand(startIndex, endIndex, CharCommandFill.COMMAND_ARRAY_INDEX);
-	}
-	
-	public void addCharacterFontStyleAt(int startIndex, int endIndex, FontStyle fontStyle) {
-		for (int i = startIndex; i < endIndex; i++) {
-			addCommand(i, new CharCommandFontStyle(textArea.getFont(), fontStyle));
-		}
-	}
-	
-	public void clearCharacterFontStyleAt(int index) {
-		clearCharacterFontStyleAt(index, index);
-	}
-	
-	public void clearCharacterFontStyleAt(int startIndex, int endIndex) {
-		clearCommand(startIndex, endIndex, CharCommandFontStyle.COMMAND_ARRAY_INDEX);
 	}
 	
 	/*
@@ -440,11 +436,22 @@ public class TextAreaContentHandler {
 	 * 
 	 */
 	
-	public HashMap<String, String> getSpecialCaseStrings() {
-		return specialCaseStrings;
+	/**
+	 * This returns a hashmap containing escape sequences and their replacements. This hashmap is used to get around limitations of NanoVG, such as not supporting \t. 
+	 * It's initialized with default values from TextAreaDefaultEscapeSequenceReplacements, however it can be cleared and modified to your heart's content.
+	 * <br><br>
+	 * Keep in mind that TextAreaContentHandler has some escape sequences that are hardcoded. These are visible via the final static escape sequence strings.
+	 */
+	public HashMap<String, String> getEscapeSequenceReplacements() {
+		return escapeSequenceReplacements;
+	}
+	
+	void setCaretPosition(int caret) {
+		this.caret = caret;
 	}
 	
 	public int getCaretPosition() {
 		return caret;
 	}
+
 }
