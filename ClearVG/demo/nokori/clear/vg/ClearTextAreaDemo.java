@@ -58,7 +58,7 @@ public class ClearTextAreaDemo extends ClearApplication {
 				s += "\n\n";
 			}
 			
-			s += "	\01\04#FF7F50Hello World!\00 \03This is entry number " + i + ".\00	";
+			s += "	\02\05#FF7F50Hello World!\01 \04This is entry number " + i + ".\01	";
 			s += "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ";
 			s += "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. ";
 			s += "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.";

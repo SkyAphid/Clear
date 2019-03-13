@@ -23,6 +23,10 @@ public class WidgetUtil {
 	public static void nvgRect(NanoVGContext context, NVGColor fill, float x, float y, float width, float height) {
 		nvgRect(context.get(), fill, x, y, width, height);
 	}
+	
+	public static void nvgRect(long vg, float x, float y, float width, float height) {
+		nvgRect(vg, null, x, y, width, height);
+	}
 
 	/**
 	 * Shorthand way to render rectangles with NanoVG.
@@ -36,8 +40,27 @@ public class WidgetUtil {
 	 */
 	public static void nvgRect(long vg, NVGColor fill, float x, float y, float width, float height) {
 		nvgBeginPath(vg);
-		nvgFillColor(vg, fill);
+		
+		if (fill != null) {
+			nvgFillColor(vg, fill);
+		}
+		
 		NanoVG.nvgRect(vg, x, y, width, height);
+		nvgFill(vg);
+		nvgClosePath(vg);
+	}
+	
+	public static void nvgShape(long vg, NVGColor fill, float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4) {
+		nvgBeginPath(vg);
+		
+		if (fill != null) {
+			nvgFillColor(vg, fill);
+		}
+		
+		nvgMoveTo(vg, x1, y1);
+		nvgLineTo(vg, x2, y2);
+		nvgLineTo(vg, x3, y3);
+		nvgLineTo(vg, x4, y4);
 		nvgFill(vg);
 		nvgClosePath(vg);
 	}

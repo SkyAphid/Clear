@@ -49,14 +49,12 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	//refreshLines can be set to true to cause font.split to be called again so that the current arraylist is recycled.
 	private ArrayList<String> lines = null;
 	private boolean refreshLines = false;
-	
+
 	//TextAreaContentHandler handles formatting and rendering of the lines created above.
 	private TextAreaContentHandler textContentHandler;
 	
-	/**
-	 * This class handles special shortcuts for the TextAreaContentHandler. Simply override the class and reset this variable to adjust those controls.
-	 */
-	protected TextAreaContentInputHandler textContentInputHandler;
+	private TextAreaInputSettings inputSettings = new TextAreaInputSettings();
+	private TextAreaContentInputHandler textContentInputHandler;
 	
 	private float textContentX = -1f, textContentY = -1f, textContentW = -1f, textContentH = -1f;
 	
@@ -122,13 +120,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	 * 
 	 */
 	
-	private boolean caretEnabled = true;
-	private ClearColor caretFill = ClearColor.LIGHT_BLACK;
-	
-	private boolean highlightingEnabled = true;
 	private ClearColor highlightFill = ClearColor.CORAL;
-	
-	private boolean editingEnabled = true;
 	
 	public TextAreaWidget(float width, float height, ClearColor fill, String text, Font font, float fontSize) {
 		this(0, 0, width, height, fill, text, font, fontSize);
@@ -143,7 +135,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		lineNumberFont = font;
 		
 		textContentHandler = new TextAreaContentHandler(this);
-		textContentInputHandler = new TextAreaContentInputHandler(textContentHandler);
+		textContentInputHandler = new TextAreaContentInputHandler(this, textContentHandler);
 		
 		setText(text);
 	}
@@ -256,6 +248,8 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 			totalCharacters += textContentHandler.renderLine(context, text.length(), lines.get(i), totalCharacters, textContentX, rY, scissorY, fontHeight);
 		}
 		
+		textContentHandler.endOfRenderingCallback();
+
 		nvgResetTransform(vg);
 		nvgResetScissor(vg);
 		nvgClosePath(vg);
@@ -273,6 +267,9 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		fill.tallocNVG(fill -> {
 			nvgFillColor(context.get(), fill);
 		});
+		
+		textContentHandler.notifyTextFillChanged(fill);
+		textContentHandler.notifyTextStyleChanged(FontStyle.REGULAR);
 	}
 	
 	private void renderLineNumber(NanoVGContext context, float x, float y, float lineNumberCompleteWidth, float fontHeight, int line) {
@@ -375,26 +372,20 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	@Override
 	public void charEvent(Window window, CharEvent event) {
 		super.charEvent(window, event);
-		
-		if (editingEnabled) {
-			textContentHandler.insertCharacterAtCaret(event.getCharString());
-		}
+		textContentInputHandler.charEvent(window, event);
 	}
 	
 	@Override
 	public void keyEvent(Window window, KeyEvent event) {
 		super.keyEvent(window, event);
-		textContentInputHandler.keyEvent(event);
+		textContentInputHandler.keyEvent(window, event);
 	}
 	
 	@Override
 	public void mouseButtonEvent(Window window, MouseButtonEvent event) {
 		super.mouseButtonEvent(window, event);
 		scrollbarMouseButtonEvent(window, event);
-		
-		if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT && caretEnabled) {
-			textContentHandler.mouseEvent(event.getMouseX(), event.getMouseY(), event.isPressed());
-		}
+		textContentInputHandler.mouseButtonEvent(window, event);
 	}
 	
 	private void scrollbarMouseButtonEvent(Window window, MouseButtonEvent event) {
@@ -410,13 +401,16 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	public void mouseMotionEvent(Window window, MouseMotionEvent event) {
 		super.mouseMotionEvent(window, event);
 		
+		scrollbarMouseMotionEvent(window, event);
+		textContentInputHandler.mouseMotionEvent(window, event);
+		
+		/*
+		 * Change the cursor icon 
+		 */
+		
 		resetCursor = true;
 		
-		scrollbarMouseMotionEvent(window, event);
-		
-		if (caretEnabled) {
-			textContentHandler.mouseEvent(event.getMouseX(), event.getMouseY());
-			
+		if (inputSettings.isCaretEnabled()) {
 			if (WidgetUtil.mouseWithinRectangle(window, textContentX - lineNumberRightPadding, textContentY, textContentW, textContentH)) {
 				ClearStaticResources.getCursor(Cursor.Type.I_BEAM).apply(window);
 				resetCursor = false;
@@ -432,7 +426,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	private void scrollbarMouseMotionEvent(Window window, MouseMotionEvent event) {
 		//Is mouse hovering scrollbar?
 		boolean bScrollbarHovering = scrollbarHovering;
-		scrollbarHovering = WidgetUtil.mouseWithinRectangle(window, scrollbarX, scrollbarY, scrollbarWidth, scrollbarHeight);
+		scrollbarHovering = (inputSettings.isScrollbarEnabled() && WidgetUtil.mouseWithinRectangle(window, scrollbarX, scrollbarY, scrollbarWidth, scrollbarHeight));
 		
 		if (scrollbarHovering) {
 			ClearStaticResources.getCursor(Cursor.Type.HAND).apply(window);
@@ -721,41 +715,17 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 
 	/*
 	 * 
-	 * Editing Settings
+	 * Content Editing Input Settings
 	 * 
 	 * 
 	 */
-	
-	public boolean isEditingEnabled() {
-		return editingEnabled;
+
+	public TextAreaInputSettings getInputSettings() {
+		return inputSettings;
 	}
 
-	public void setEditingEnabled(boolean editingEnabled) {
-		this.editingEnabled = editingEnabled;
-	}
-	
-	public boolean isCaretEnabled() {
-		return caretEnabled;
-	}
-
-	public void setCaretEnabled(boolean caretEnabled) {
-		this.caretEnabled = caretEnabled;
-	}
-	
-	public ClearColor getCaretFill() {
-		return caretFill;
-	}
-
-	public void setCaretFill(ClearColor caretFill) {
-		this.caretFill = caretFill;
-	}
-	
-	public boolean isHighlightingEnabled() {
-		return highlightingEnabled;
-	}
-
-	public void setHighlightingEnabled(boolean highlightingEnabled) {
-		this.highlightingEnabled = highlightingEnabled;
+	public void setInputSettings(TextAreaInputSettings inputSettings) {
+		this.inputSettings = inputSettings;
 	}
 	
 	public ClearColor getHighlightFill() {
