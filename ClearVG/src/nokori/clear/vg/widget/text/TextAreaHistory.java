@@ -4,18 +4,26 @@ import java.util.Stack;
 
 public class TextAreaHistory {
 	
-	private Stack<CharAction> undoHistory = new Stack<CharAction>();
-	private Stack<CharAction> redoHistory = new Stack<CharAction>();
+	private Stack<TextState> undoStack = new Stack<TextState>();
+	private Stack<TextState> redoStack = new Stack<TextState>();
 	
-	private class CharAction {
-		int index;
-		char c;
-		boolean added; //subtracted if false
+	private static class TextState {
+		StringBuilder textBuilder;
+		int caret;
 		
-		public CharAction(int index, char c, boolean added) {
-			this.index = index;
-			this.c = c;
-			this.added = added;
+		public TextState(StringBuilder textBuilder, int caret) {
+			this.textBuilder = textBuilder;
+			this.caret = caret;
 		}
+	}
+	
+	public void pushState(StringBuilder textBuilder, int caret) {
+		undoStack.push(new TextState(new StringBuilder(textBuilder), caret));
+	}
+	
+	public void undo(TextAreaWidget widget, TextAreaContentHandler textAreaContentHandler) {
+		TextState state = undoStack.pop();
+		widget.setTextBuilder(state.textBuilder);
+		textAreaContentHandler.setCaretPosition(state.caret);
 	}
 }

@@ -232,16 +232,27 @@ public class TextAreaContentEscapeSequences {
 		}
 	}
 	
-	public static Vector2i colorEscapeSequence(StringBuilder textBuilder, int characterIndex) {
+	public static Vector2i colorEscapeSequence(StringBuilder textBuilder, int characterIndex, boolean checkRight) {
 		int colorLength = ClearColor.HEX_COLOR_LENGTH + 1;
 		int start = -1;
 		
-		for (int i = characterIndex - colorLength; i < characterIndex + colorLength; i++) {
+		int startIndex = (checkRight ? characterIndex : characterIndex - colorLength);
+		int endIndex   = (checkRight ? characterIndex + colorLength : characterIndex);
+		
+		for (int i = startIndex; i < endIndex; i++) {
 			if (i < 0 || i >= textBuilder.length()) continue;
 			
-			if (Character.toString(textBuilder.charAt(i)).equals(ESCAPE_SEQUENCE_COLOR)) {
+			String c = Character.toString(textBuilder.charAt(i));
+
+			if (c.equals(ESCAPE_SEQUENCE_COLOR)) {
 				start = i;
 				break;
+			}
+			
+			for (int j = 0; j < ESCAPE_SEQUENCES.length; j++) {
+				if (c.equals(ESCAPE_SEQUENCES[j])) {
+					return null;
+				}
 			}
 		}
 		

@@ -108,6 +108,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	
 	private float scrollbarX = -1f, scrollbarY = -1f;
 	
+	private boolean scrollbarActive = false;
 	private boolean scrollbarHovering = false;
 	private boolean scrollbarSelected = false;
 	
@@ -186,6 +187,11 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		
 		if (lines == null || refreshLines) {
 			font.split(context, lines = new ArrayList<>(), text, lineSplitW, fontSize, TEXT_AREA_ALIGNMENT, fontStyle);
+			
+			if (lines.isEmpty()) {
+				lines.add("");
+			}
+			
 			refreshLines = false;
 		}
 		
@@ -202,6 +208,8 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		float renderAreaHeight = (height / fontHeight) * fontHeight;
 		float stringHeight = font.getHeight(context, lines.size(), fontHeight, TEXT_AREA_ALIGNMENT, fontStyle);
 
+		scrollbarActive = (stringHeight > height);
+		
 		/*
 		 * 
 		 * 
@@ -309,8 +317,9 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		 * 
 		 */
 		
+		float scrollbarMaxHeight = getHeight() * 0.75f;
 		scrollbarDefaultHeight = getHeight()/2;
-		scrollbarHeight = Math.max(scrollbarDefaultHeight * (height / stringHeight), SCROLLBAR_MIN_HEIGHT);
+		scrollbarHeight = WidgetUtil.clamp(scrollbarDefaultHeight * (height / stringHeight), SCROLLBAR_MIN_HEIGHT, scrollbarMaxHeight);
 		
 		scrollbarX = (x + width) - scrollbarWidth - scrollbarRightPadding;
 		scrollbarY = (y + ((height - scrollbarHeight) * scroll));
@@ -350,12 +359,15 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		nvgFill(vg);
 		nvgClosePath(vg);
 		
-		//scrollbar
-		nvgBeginPath(vg);
-		nvgRoundedRect(vg, scrollbarX, scrollbarY, scrollbarWidth, scrollbarHeight, scrollbarCornerRadius);
-		nvgFillColor(vg, scrollbarFill);
-		nvgFill(vg);
-		nvgClosePath(vg);
+		
+		if (scrollbarActive) {
+			//scrollbar
+			nvgBeginPath(vg);
+			nvgRoundedRect(vg, scrollbarX, scrollbarY, scrollbarWidth, scrollbarHeight, scrollbarCornerRadius);
+			nvgFillColor(vg, scrollbarFill);
+			nvgFill(vg);
+			nvgClosePath(vg);
+		}
 		
 		scrollbarBackgroundFill.free();
 		scrollbarFill.free();
@@ -401,14 +413,14 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	public void mouseMotionEvent(Window window, MouseMotionEvent event) {
 		super.mouseMotionEvent(window, event);
 		
+		resetCursor = true;
+		
 		scrollbarMouseMotionEvent(window, event);
 		textContentInputHandler.mouseMotionEvent(window, event);
 		
 		/*
 		 * Change the cursor icon 
 		 */
-		
-		resetCursor = true;
 		
 		if (inputSettings.isCaretEnabled()) {
 			if (WidgetUtil.mouseWithinRectangle(window, textContentX - lineNumberRightPadding, textContentY, textContentW, textContentH)) {
@@ -425,8 +437,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 
 	private void scrollbarMouseMotionEvent(Window window, MouseMotionEvent event) {
 		//Is mouse hovering scrollbar?
-		boolean bScrollbarHovering = scrollbarHovering;
-		scrollbarHovering = (inputSettings.isScrollbarEnabled() && WidgetUtil.mouseWithinRectangle(window, scrollbarX, scrollbarY, scrollbarWidth, scrollbarHeight));
+		scrollbarHovering = (scrollbarActive && inputSettings.isScrollbarEnabled() && WidgetUtil.mouseWithinRectangle(window, scrollbarX, scrollbarY, scrollbarWidth, scrollbarHeight));
 		
 		if (scrollbarHovering) {
 			ClearStaticResources.getCursor(Cursor.Type.HAND).apply(window);
@@ -439,18 +450,6 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 			float relativeMouseY = (float) (event.getMouseY() - getClippedY());
 			float mouseYMult = WidgetUtil.clamp((relativeMouseY  / getHeight()), 0f, 1f);
 			scroll = mouseYMult;
-		}
-		
-		/*
-		 * Change mouse cursor when hovering scrollbar
-		 */
-		
-		if (!bScrollbarHovering && scrollbarHovering) {
-			ClearStaticResources.getCursor(Cursor.Type.HAND).apply(window);
-		}
-		
-		if (bScrollbarHovering && !scrollbarHovering) {
-			ClearStaticResources.getCursor(Cursor.Type.ARROW).apply(window);
 		}
 	}
 	
@@ -522,10 +521,14 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		return textBuilder;
 	}
 	
-	public void setText(String text) {
-		textBuilder = new StringBuilder(text);
+	public void setTextBuilder(StringBuilder textBuilder) {
+		this.textBuilder = textBuilder;
 		textContentHandler.refresh();
 		requestRefresh();
+	}
+	
+	public void setText(String text) {
+		setTextBuilder(new StringBuilder(text));
 	}
 
 	public Font getFont() {

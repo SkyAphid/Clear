@@ -34,8 +34,14 @@ public class TextAreaContentInputHandler {
 	}
 	
 	public void mouseMotionEvent(Window window, MouseMotionEvent event) {
-		if (mousePressed) {
+		if (mousePressed && !widget.isScrollbarSelected()) {
 			textContentHandler.queueCaret((float) event.getMouseX(), (float) event.getMouseY());
+		} else {
+			mousePressed = false;
+			
+			if (widget.isScrollbarSelected()) {
+				textContentHandler.resetHighlighting();
+			}
 		}
 	}
 	
@@ -47,8 +53,8 @@ public class TextAreaContentInputHandler {
 
 			if (mousePressed) {
 				//This queues up caret repositioning based on the mouse coordinates
-				// Update the caret positioning on next render when we have the character
-				// locations available
+				//Update the caret positioning on next render when we have the character
+				//locations available
 				textContentHandler.queueCaret((float) event.getMouseX(), (float) event.getMouseY());
 
 				// If the mouse wasn't previously pressed, reset the highlighting.
@@ -58,6 +64,7 @@ public class TextAreaContentInputHandler {
 			}
 		} else {
 			mousePressed = false;
+			textContentHandler.resetHighlighting();
 		}
 	}
 
@@ -150,6 +157,15 @@ public class TextAreaContentInputHandler {
 				textContentHandler.italicizeSelection();
 				return;
 			}
+			
+			/*
+			 * Undo
+			 */
+			
+			if (config.isUndoEnabled() && event.getKey() == GLFW.GLFW_KEY_Z) {
+				textContentHandler.undo();
+				return;
+			}
 		}
 		
 		/*
@@ -171,9 +187,4 @@ public class TextAreaContentInputHandler {
 		}
 		
 	}
-	
-
-
-	
-
 }

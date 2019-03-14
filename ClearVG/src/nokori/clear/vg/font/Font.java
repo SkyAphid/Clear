@@ -200,6 +200,8 @@ public class Font {
 			lines.clear();
 		}
 		
+		//System.out.println("Split start");
+		
 		StringBuilder builder = new StringBuilder();
 		Vector2f boundsResultVector = new Vector2f(0f, 0f);
 		
@@ -209,9 +211,9 @@ public class Font {
 		for (int i = 0; i < len; i++) {
 			char c = string.charAt(i);
 			
-			//if (c != '\n') {
-				builder.append(c);
-			//}
+			//System.out.println("Char " + i + " " + (c == '\n'));
+			
+			builder.append(c);
 
 			if (c == '\n') {
 				lines.add(builder.toString());
@@ -244,6 +246,8 @@ public class Font {
 		if(builder.length() > 0){
 			lines.add(builder.toString());
 		}
+		
+		//System.out.println("Split end: " + lines.size());
 	}
 	
 	private float getWordLength(NanoVGContext context, Vector2f boundsVector, String string, int len, int i, float fontSize, int textAlignment, FontStyle fontStyle) {

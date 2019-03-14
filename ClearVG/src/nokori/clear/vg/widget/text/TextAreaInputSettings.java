@@ -24,6 +24,9 @@ public class TextAreaInputSettings {
 	private boolean boldEnabled = true;
 	private boolean italicEnabled = true;
 	
+	private boolean undoEnabled = true;
+	private boolean redoEnabled = true;
+	
 	private boolean arrowKeysEnabled = true;
 	
 	
@@ -129,6 +132,22 @@ public class TextAreaInputSettings {
 
 	public void setItalicEnabled(boolean italicEnabled) {
 		this.italicEnabled = italicEnabled;
+	}
+
+	public boolean isUndoEnabled() {
+		return undoEnabled;
+	}
+
+	public void setUndoEnabled(boolean undoEnabled) {
+		this.undoEnabled = undoEnabled;
+	}
+
+	public boolean isRedoEnabled() {
+		return redoEnabled;
+	}
+
+	public void setRedoEnabled(boolean redoEnabled) {
+		this.redoEnabled = redoEnabled;
 	}
 
 	public boolean isArrowKeysEnabled() {

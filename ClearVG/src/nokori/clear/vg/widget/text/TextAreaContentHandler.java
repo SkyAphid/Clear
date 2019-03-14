@@ -28,6 +28,8 @@ public class TextAreaContentHandler {
 	
 	private TextAreaWidget widget;
 	
+	private TextAreaHistory editHistory = new TextAreaHistory();
+	
 	/*
 	 * 
 	 * Escape Sequence Handlers
@@ -136,7 +138,7 @@ public class TextAreaContentHandler {
 			// add this character to total characters rendered
 			totalCharacters++;
 		}
-
+		
 		/*
 		 * For moving the caret to the very start/end of this line.
 		 */
@@ -146,6 +148,10 @@ public class TextAreaContentHandler {
 		//In a special case where the caret is at the end of the entirety of the text, we render the caret at the very tail end.
 		//Normally it's rendered during normal character rendering - but if the caret is outside the text - then it won't draw otherwise.
 		if (caret == endIndex && endIndex == totalTextLength) {
+			//Highlight logic for the very end of the text.
+			highlightRenderLogic(vg, advanceX, lineY, caret);
+			
+			//Render the caret at the very end of the text.
 			renderCaret(vg, advanceX, lineY, fontHeight);
 		}
 		
@@ -363,7 +369,7 @@ public class TextAreaContentHandler {
 				highlightEndPos.set(x, y);
 			}
 		}
-		
+
 		/*
 		 * If this character is highlighted, tweak the color if it matches the highlight color.
 		 */
@@ -421,6 +427,8 @@ public class TextAreaContentHandler {
 		} else {
 			highlightIndex2 = caret;
 		}
+		
+		System.err.println(highlightIndex1 + " " + highlightIndex2);
 	}
 	
 	/**
@@ -488,7 +496,8 @@ public class TextAreaContentHandler {
 			/*
 			 * Backspace special case for color sequences
 			 */
-			Vector2i colorSequence = TextAreaContentEscapeSequences.colorEscapeSequence(textBuilder, position);
+			
+			Vector2i colorSequence = colorEscapeSequence(textBuilder, position, false);
 			
 			if (colorSequence != null) {
 				int start = colorSequence.x();
@@ -521,7 +530,8 @@ public class TextAreaContentHandler {
 	}
 	
 	public void tab(int position) {
-		widget.getTextBuilder().insert(position, "\t");
+		String c = "\t";
+		widget.getTextBuilder().insert(position, c);
 		widget.requestRefresh();
 	}
 	
@@ -531,7 +541,15 @@ public class TextAreaContentHandler {
 	}
 	
 	public void newLine(int position) {
-		widget.getTextBuilder().insert(position, "\n");
+		StringBuilder s = widget.getTextBuilder();
+		String c = "\n";
+		
+		if (position == s.length()) {
+			c += c;
+		}
+		
+		s.insert(position, c);
+		
 		widget.requestRefresh();
 	}
 	
@@ -609,6 +627,10 @@ public class TextAreaContentHandler {
 		widget.requestRefresh();
 	}
 	
+	public void undo() {
+		editHistory.undo(widget, this);
+	}
+	
 	public void moveCaretLeft() {
 		if (caret > 0) {
 			resetHighlighting();
@@ -618,7 +640,7 @@ public class TextAreaContentHandler {
 			 * Caret offset for color sequences
 			 */
 			
-			Vector2i colorSequence = TextAreaContentEscapeSequences.colorEscapeSequence(widget.getTextBuilder(), caret);
+			Vector2i colorSequence = colorEscapeSequence(widget.getTextBuilder(), caret, false);
 			
 			if (colorSequence != null) {
 				int offset = (caret - colorSequence.x());
@@ -646,7 +668,7 @@ public class TextAreaContentHandler {
 			 * Caret offset for color sequences
 			 */
 			
-			Vector2i colorSequence = TextAreaContentEscapeSequences.colorEscapeSequence(widget.getTextBuilder(), caret);
+			Vector2i colorSequence = colorEscapeSequence(widget.getTextBuilder(), caret, true);
 			
 			if (colorSequence != null) {
 				int offset = (colorSequence.y() - caret);
