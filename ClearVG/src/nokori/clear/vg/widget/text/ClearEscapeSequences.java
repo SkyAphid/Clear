@@ -9,34 +9,34 @@ import nokori.clear.vg.ClearColor;
 import nokori.clear.vg.NanoVGContext;
 import nokori.clear.vg.font.FontStyle;
 
-public class TextAreaContentEscapeSequences {
+public class ClearEscapeSequences {
 	
 	/**
 	 * This hard-coded escape sequence will reset the text formatting to the default style.
 	 */
-	public static final String ESCAPE_SEQUENCE_RESET = "\01";
+	public static final char ESCAPE_SEQUENCE_RESET = '\01';
 	
 	/**
 	 * This hard-coded escape sequence will set the text to bold styling.
 	 */
-	public static final String ESCAPE_SEQUENCE_BOLD = "\02";
+	public static final char ESCAPE_SEQUENCE_BOLD = '\02';
 	
 	/**
 	 * This hard-coded escape sequence will set the text to light styling.
 	 */
-	public static final String ESCAPE_SEQUENCE_LIGHT = "\03";
+	public static final char ESCAPE_SEQUENCE_LIGHT = '\03';
 	
 	/**
 	 * This hard-coded escape sequence will set the text to italic styling.
 	 */
-	public static final String ESCAPE_SEQUENCE_ITALIC = "\04";
+	public static final char ESCAPE_SEQUENCE_ITALIC = '\04';
 	
 	/**
-	 * This is a hard-code escape sequence to signify a HEX color.
+	 * This is a hard-coded escape sequence to signify a HEX color. Usage looks like this: <code>\05#FFFFFF</code>
 	 */
-	public static final String ESCAPE_SEQUENCE_COLOR = "\05";
+	public static final char ESCAPE_SEQUENCE_COLOR = '\05';
 	
-	public static final String[] ESCAPE_SEQUENCES = {
+	public static final char[] ESCAPE_SEQUENCES = {
 		ESCAPE_SEQUENCE_RESET, ESCAPE_SEQUENCE_BOLD, ESCAPE_SEQUENCE_LIGHT, ESCAPE_SEQUENCE_ITALIC, ESCAPE_SEQUENCE_COLOR	
 	};
 	
@@ -51,14 +51,14 @@ public class TextAreaContentEscapeSequences {
 		specialCaseCharacters.put("\t", "    ");
 	}
 	
-	public static boolean processSequence(TextAreaContentHandler textContentHandler, String c) {
+	public static boolean processSequence(TextAreaContentHandler textContentHandler, char c) {
 		return processSequence(null, null, textContentHandler, 0, c);
 	}
 
-	public static boolean processSequence(NanoVGContext context, TextAreaWidget widget, TextAreaContentHandler textContentHandler, int characterIndex, String c) {
+	public static boolean processSequence(NanoVGContext context, TextAreaWidget widget, TextAreaContentHandler textContentHandler, int characterIndex, char c) {
 		boolean checkOnly = (context == null || widget == null);
 		
-		if (c.equals(ESCAPE_SEQUENCE_RESET)) {
+		if (c == ESCAPE_SEQUENCE_RESET) {
 			if (!checkOnly) {
 				widget.resetRenderConfiguration(context);
 			}
@@ -66,7 +66,7 @@ public class TextAreaContentEscapeSequences {
 			return true;
 		}
 		
-		if (c.equals(ESCAPE_SEQUENCE_BOLD)) {
+		if (c == ESCAPE_SEQUENCE_BOLD) {
 			if (!checkOnly) {
 				textContentHandler.notifyTextStyleChanged(FontStyle.BOLD);
 				widget.getFont().configureNVG(context, widget.getFontSize(), FontStyle.BOLD);
@@ -75,7 +75,7 @@ public class TextAreaContentEscapeSequences {
 			return true;
 		}
 		
-		if (c.equals(ESCAPE_SEQUENCE_LIGHT)) {
+		if (c == ESCAPE_SEQUENCE_LIGHT) {
 			if (!checkOnly) {
 				textContentHandler.notifyTextStyleChanged(FontStyle.LIGHT);
 				widget.getFont().configureNVG(context, widget.getFontSize(), FontStyle.LIGHT);
@@ -84,7 +84,7 @@ public class TextAreaContentEscapeSequences {
 			return true;
 		}
 		
-		if (c.equals(ESCAPE_SEQUENCE_ITALIC)) {
+		if (c == ESCAPE_SEQUENCE_ITALIC) {
 			if (!checkOnly) {
 				textContentHandler.notifyTextStyleChanged(FontStyle.ITALIC);
 				widget.getFont().configureNVG(context, widget.getFontSize(), FontStyle.ITALIC);
@@ -93,7 +93,7 @@ public class TextAreaContentEscapeSequences {
 			return true;
 		}
 		
-		if (c.equals(ESCAPE_SEQUENCE_COLOR)) {
+		if (c == ESCAPE_SEQUENCE_COLOR) {
 			if (!checkOnly) {			
 				textContentHandler.skipsRequested = ClearColor.HEX_COLOR_LENGTH + 1;
 				colorEscapeSequence(context, widget, textContentHandler, characterIndex, c);
@@ -107,45 +107,82 @@ public class TextAreaContentEscapeSequences {
 		return false;
 	}
 	
-	public static boolean insideSequence(String sequence, StringBuilder textBuilder, int index) {
+	public static boolean insideSequence(char escapeSequence, StringBuilder textBuilder, int index) {
 		/*
 		 * Check to the left of the index. We don't have to check to the right because only commands to the left have an effect.
 		 */
 		for (int i = index; i > 0; i--) {
-			String c = Character.toString(textBuilder.charAt(i));
+			char c = textBuilder.charAt(i);
 			
-			if (c.equals(ESCAPE_SEQUENCE_RESET)) {
+			if (c == ESCAPE_SEQUENCE_RESET) {
 				return false;
 			}
 			
-			if (c.equals(sequence)) {
+			if (c == escapeSequence) {
 				return true;
 			}
+			
+			//System.err.println(i + " " + c + " -> " + c.equals(escapeSequence));
 		}
 
 		return false;
 	}
 	
 	/**
+	 * Deletes an escape sequence at the index. Also delete a reset sequence ahead if applicable.
+	 * 
+	 * @param textBuilder
+	 * @param index
+	 * @param deleteResetEscapeSequenceAhead
+	 * @return characters deleted
+	 */
+	public static int deleteSequenceAt(StringBuilder textBuilder, int index, boolean deleteResetEscapeSequenceAhead) {
+		char c = textBuilder.charAt(index);
+		int deleted = 0;
+		
+		if (c == ESCAPE_SEQUENCE_COLOR) {
+			Vector2i colorSequence = ClearEscapeSequences.colorEscapeSequence(textBuilder, index, true);
+			textBuilder.delete(colorSequence.x(), colorSequence.y());
+			deleted += (colorSequence.y() - colorSequence.x());
+		} else {
+			textBuilder.deleteCharAt(index);
+			deleted++;
+		}
+		
+		if (deleteResetEscapeSequenceAhead) {
+			deleted += deleteResetEscapeSequenceAhead(textBuilder, index);
+		}
+		
+		return deleted;
+	}
+	
+	public static int deleteResetEscapeSequenceAhead(StringBuilder textBuilder, int index) {
+		return deleteResetEscapeSequenceAhead(textBuilder, index, null);
+	}
+	
+	/**
 	 * In cases where we backspace an escape sequence, we'll want to scan ahead and delete its corresponding reset sequence if applicable.
 	 * @param textBuilder
 	 * @param index
+	 * @return how many characters were deleted (1 if the reset sequence was found and deleted, 0 if nothing was found)
 	 */
-	public static void deleteResetEscapeSequenceAhead(StringBuilder textBuilder, int index) {
+	public static int deleteResetEscapeSequenceAhead(StringBuilder textBuilder, int index, CharProcessor processor) {
+		if (index < 0 || index >= textBuilder.length()) return 0;
+		
 		/*
 		 * Check to the left to make sure there aren't any uncaught escape sequences.
 		 */
+		
 		for (int i = index; i > 0; i--) {
-			String c = Character.toString(textBuilder.charAt(i));
+			char c = textBuilder.charAt(i);
 			
-			if (c.equals(ESCAPE_SEQUENCE_RESET)) {
+			if (c == ESCAPE_SEQUENCE_RESET) {
 				break;
 			}
 			
 			for (int j = 1; j < ESCAPE_SEQUENCES.length; j++) {
-				if (c.equals(ESCAPE_SEQUENCES[j])) {
-					//System.err.println("1 " + j);
-					return;
+				if (c == ESCAPE_SEQUENCES[j]) {
+					return 0;
 				}
 			}
 		}
@@ -155,23 +192,25 @@ public class TextAreaContentEscapeSequences {
 		 */
 		
 		for (int i = index; i < textBuilder.length(); i++) {
-			String c = Character.toString(textBuilder.charAt(i));
+			char c = textBuilder.charAt(i);
 			
-			System.err.println(c);
-			
-			if (c.equals(ESCAPE_SEQUENCE_RESET)) {
+			if (c == ESCAPE_SEQUENCE_RESET) {
+				if (processor != null) {
+					processor.process(i, c);
+				}
+				
 				textBuilder.deleteCharAt(i);
-				//System.err.println("3 " + c);
-				return;
+				return 1;
 			}
 			
 			for (int j = 1; j < ESCAPE_SEQUENCES.length; j++) {
-				if (c.equals(ESCAPE_SEQUENCES[j])) {
-					//System.err.println("2 " + j);
-					return;
+				if (c == ESCAPE_SEQUENCES[j]) {
+					return 0;
 				}
 			}
 		}
+		
+		return 0;
 	}
 	
 	/*
@@ -191,7 +230,7 @@ public class TextAreaContentEscapeSequences {
 	 * @param characterIndex
 	 * @param c
 	 */
-	public static void colorEscapeSequence(NanoVGContext context, TextAreaWidget widget, TextAreaContentHandler textContentHandler, int characterIndex, String c) {
+	public static void colorEscapeSequence(NanoVGContext context, TextAreaWidget widget, TextAreaContentHandler textContentHandler, int characterIndex, char c) {
 		StringBuilder t = widget.getTextBuilder();
 		
 		if (characterIndex + ClearColor.HEX_COLOR_LENGTH < t.length()) {
@@ -242,15 +281,15 @@ public class TextAreaContentEscapeSequences {
 		for (int i = startIndex; i < endIndex; i++) {
 			if (i < 0 || i >= textBuilder.length()) continue;
 			
-			String c = Character.toString(textBuilder.charAt(i));
+			char c = textBuilder.charAt(i);
 
-			if (c.equals(ESCAPE_SEQUENCE_COLOR)) {
+			if (c == ESCAPE_SEQUENCE_COLOR) {
 				start = i;
 				break;
 			}
 			
 			for (int j = 0; j < ESCAPE_SEQUENCES.length; j++) {
-				if (c.equals(ESCAPE_SEQUENCES[j])) {
+				if (c == ESCAPE_SEQUENCES[j]) {
 					return null;
 				}
 			}
@@ -263,5 +302,10 @@ public class TextAreaContentEscapeSequences {
 		}
 		
 		return new Vector2i(start, end);
+	}
+
+	
+	public interface CharProcessor {
+		public void process(int index, char c);
 	}
 }

@@ -14,7 +14,7 @@ import nokori.clear.vg.transition.SimpleTransition;
 import nokori.clear.vg.widget.assembly.WidgetUtil;
 import nokori.clear.windows.Window;
 
-import static nokori.clear.vg.widget.text.TextAreaContentEscapeSequences.*;
+import static nokori.clear.vg.widget.text.ClearEscapeSequences.*;
 
 /**
  * Handles the internal logic for TextAreas when it comes to rendering, formatting, and selecting text.
@@ -36,7 +36,7 @@ public class TextAreaContentHandler {
 	 * 
 	 */
 	
-	private HashMap<String, String> escapeSequenceReplacements = TextAreaContentEscapeSequences.initDefault();
+	private HashMap<String, String> escapeSequenceReplacements = ClearEscapeSequences.initDefault();
 	
 	//If true, a color escape sequence was found and we need to skip ahead seven characters to accommodate a HEX value.
 	int skipsRequested = 0;
@@ -105,7 +105,7 @@ public class TextAreaContentHandler {
 				renderCaret(vg, advanceX, lineY, fontHeight);
 			}
 
-			String c = checkEscapeSequences(context, characterIndex, Character.toString(text.charAt(i)));
+			String c = checkEscapeSequences(context, characterIndex, text.charAt(i));
 			
 			if (skipsRequested == 0) {
 
@@ -158,18 +158,20 @@ public class TextAreaContentHandler {
 		return totalCharacters;
 	}
 	
-	private String checkEscapeSequences(NanoVGContext context, int characterIndex, String c) {
+	private String checkEscapeSequences(NanoVGContext context, int characterIndex, char c) {
 		if (!renderEscapeSequences) {
-			if (escapeSequenceReplacements.containsKey(c)) {
-				return escapeSequenceReplacements.get(c);
+			String sC = Character.toString(c);
+			
+			if (escapeSequenceReplacements.containsKey(sC)) {
+				return escapeSequenceReplacements.get(sC);
 			}
 			
-			if (TextAreaContentEscapeSequences.processSequence(context, widget, this, characterIndex, c)) {
+			if (processSequence(context, widget, this, characterIndex, c)) {
 				return "";
 			}
 		}
 		
-		return c;
+		return Character.toString(c);
 	}
 	
 	/**
@@ -204,7 +206,7 @@ public class TextAreaContentHandler {
 		//Checks if the mouse click was in the bounding of this character - if so, the caret is set to this index.
 		if (updateCaret && WidgetUtil.pointWithinRectangle(caretUpdateQueue.x, caretUpdateQueue.y, x, adjustedClickY, advanceW, fontHeight)) {
 			int bCaretPosition = caret;
-			caret = characterIndex;
+			setCaretPosition(characterIndex);
 			refreshHighlightIndex();
 	
 			if (bCaretPosition != caret) {
@@ -227,7 +229,7 @@ public class TextAreaContentHandler {
 			if (mY >= adjustedClickY && mY <= adjustedClickY + fontHeight) {
 				//Places the caret at the very start of a line if the mouse is past the very left edge of the rendering area.
 				if (mX < startX) {
-					caret = startIndex;
+					setCaretPosition(startIndex);
 					refreshHighlightIndex();
 					resetCaretFader();
 					updateCaret = false;
@@ -237,9 +239,9 @@ public class TextAreaContentHandler {
 				//A special case is added to put the caret past the end of the text if it's the end of the entire string.
 				if (mX > endX) {
 					if (endIndex < totalTextLength-1) {
-						caret = endIndex-1;
+						setCaretPosition(endIndex-1);
 					} else {
-						caret = endIndex;
+						setCaretPosition(endIndex);
 					}
 					
 					refreshHighlightIndex();
@@ -427,8 +429,6 @@ public class TextAreaContentHandler {
 		} else {
 			highlightIndex2 = caret;
 		}
-		
-		System.err.println(highlightIndex1 + " " + highlightIndex2);
 	}
 	
 	/**
@@ -466,26 +466,28 @@ public class TextAreaContentHandler {
 	private void deleteHighlightedContent() {
 		if (isContentHighlighted()) {
 			widget.getTextBuilder().delete(getHighlightStartIndex(), getHighlightEndIndex());
-			caret = getHighlightStartIndex();
+			setCaretPosition(getHighlightStartIndex());
 			resetHighlighting();
 		}
 	}
 	
 	public void insertCharacterAtCaret(String character) {
+		editHistory.notifyEditing(widget, this);
+		
 		StringBuilder textBuilder = widget.getTextBuilder();
 		
 		deleteHighlightedContent();
 
 		if (caret >= 0 && caret <= textBuilder.length()) {
 			textBuilder.insert(caret, character);
-			caret++;
+			offsetCaret(1);
 		}
-		
+
 		widget.requestRefresh();
 	}
 	
 	public void backspaceAtCaret() {
-		caret -= backspace(caret);
+		offsetCaret(-backspace(caret));
 	}
 	
 	public int backspace(int position) {
@@ -526,7 +528,7 @@ public class TextAreaContentHandler {
 	
 	public void tabAtCaret() {
 		tab(caret);
-		caret++;
+		offsetCaret(1);
 	}
 	
 	public void tab(int position) {
@@ -537,7 +539,7 @@ public class TextAreaContentHandler {
 	
 	public void newLineAtCaret() {
 		newLine(caret);
-		caret++;
+		offsetCaret(1);
 	}
 	
 	public void newLine(int position) {
@@ -562,7 +564,7 @@ public class TextAreaContentHandler {
 		widget.getTextBuilder().delete(start, end);
 		widget.requestRefresh();
 		
-		caret = start;
+		setCaretPosition(start);
 		resetCaretFader();
 		resetHighlighting();
 	}
@@ -577,7 +579,7 @@ public class TextAreaContentHandler {
 	}
 	
 	public void pasteClipboardAtCaret(Window window) {
-		caret += pasteClipboard(window, caret);
+		offsetCaret(pasteClipboard(window, caret));
 	}
 	
 	public int pasteClipboard(Window window, int position) {
@@ -602,7 +604,7 @@ public class TextAreaContentHandler {
 		styleSelection(ESCAPE_SEQUENCE_ITALIC);
 	}
 	
-	private void styleSelection(String escapeSequence) {
+	private void styleSelection(char escapeSequence) {
 		if (insideSequence(escapeSequence, widget.getTextBuilder(), caret)) {
 			return;
 		}
@@ -617,7 +619,7 @@ public class TextAreaContentHandler {
 			highlightIndex1++;
 			highlightIndex2++;
 		} else {
-			caret++;
+			offsetCaret(1);
 		}
 		
 
@@ -629,6 +631,10 @@ public class TextAreaContentHandler {
 	
 	public void undo() {
 		editHistory.undo(widget, this);
+	}
+	
+	public void redo() {
+		editHistory.redo(widget, this);
 	}
 	
 	public void moveCaretLeft() {
@@ -646,7 +652,7 @@ public class TextAreaContentHandler {
 				int offset = (caret - colorSequence.x());
 				
 				if (offset > 0) {
-					caret -= offset;
+					offsetCaret(-offset);
 					return;
 				}
 			}
@@ -655,7 +661,7 @@ public class TextAreaContentHandler {
 			 * Standard Behavior
 			 */
 			
-			caret--;
+			offsetCaret(-1);
 		}
 	}
 	
@@ -674,7 +680,7 @@ public class TextAreaContentHandler {
 				int offset = (colorSequence.y() - caret);
 				
 				if (offset > 0) {
-					caret += offset;
+					offsetCaret(offset);
 					return;
 				}
 			}
@@ -683,7 +689,7 @@ public class TextAreaContentHandler {
 			 * Standard behavior
 			 */
 			
-			caret++;
+			offsetCaret(1);
 		}
 	}
 	
@@ -707,7 +713,7 @@ public class TextAreaContentHandler {
 		StringBuilder copy = new StringBuilder();
 		
 		for (int i = 0; i < s.length(); i++) {
-			String c = Character.toString(s.charAt(i));
+			char c = s.charAt(i);
 			
 			if (skipsRequested == 0) {
 				if (!processSequence(this, c)) {
@@ -734,8 +740,16 @@ public class TextAreaContentHandler {
 		return escapeSequenceReplacements;
 	}
 	
+	void offsetCaret(int offset) {
+		caret += offset;
+		/*System.err.println("offset: "+caret);
+		Thread.dumpStack();*/
+	}
+	
 	void setCaretPosition(int caret) {
 		this.caret = caret;
+		/*System.err.println("pos: "+caret);
+		Thread.dumpStack();*/
 	}
 	
 	public int getCaretPosition() {

@@ -20,6 +20,8 @@ public class ClearTextAreaDemo extends ClearApplication {
 	private static final int WINDOW_WIDTH = 1280;
 	private static final int WINDOW_HEIGHT = 720;
 	
+	protected TextAreaWidget textAreaWidget;
+	
 	public static void main(String[] args) {
 		ClearApplication.launch(new ClearTextAreaDemo(), args);
 	}
@@ -39,10 +41,10 @@ public class ClearTextAreaDemo extends ClearApplication {
 		try {
 			Font font = new Font("fonts/NotoSans/", "NotoSans-Regular", "NotoSans-Bold", "NotoSans-Italic", "NotoSans-Light").load(context);
 
-			TextAreaWidget textArea = new TextAreaWidget(900, 400, ClearColor.BLACK, getText(), font, 18);
+			textAreaWidget = new TextAreaWidget(900, 400, ClearColor.BLACK, getText(), font, 18);
 			
-			textArea.addChild(new WidgetClip(WidgetClip.Alignment.CENTER));
-			button.addChild(textArea);
+			textAreaWidget.addChild(new WidgetClip(WidgetClip.Alignment.CENTER));
+			button.addChild(textAreaWidget);
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
@@ -50,7 +52,7 @@ public class ClearTextAreaDemo extends ClearApplication {
 		rootWidgetAssembly.addChild(button);
 	}
 
-	private String getText() {
+	protected String getText() {
 		String s = "";
 		
 		for (int i = 0; i < 50; i++) {

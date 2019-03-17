@@ -29,7 +29,29 @@ import nokori.clear.windows.event.MouseScrollEvent;
 
 /**
  * This class contains all needed functionality for creating TextAreas. All features are enabled by default. If you want to make "quick-access" versions
- * with specific features turned off and on, I recommend extending this class and having those constructors toggle the desired features as necessary.
+ * with specific features turned off and on, I recommend extending this class and having those constructors toggle the desired features as necessary.<br><br>
+ * 
+ * Text areas in software always tend to be highly complex systems. I've tried my best to organize Clear's text areas in a clean and easily modifiable fashion. 
+ * In simple terms, as I like to keep them, Clear's text area widget is organized as the following:<br><br>
+ * 
+ * • <code>TextAreaWidget:</code> This is the core container for the text area and the interface for adding one to a Clear UI. All primary text data is contained in this class.<br><br>
+ * 
+ * • <code>TextAreaContentHandler:</code> This class handles rendering and editing the text content of this <code>TextAreaWidget.</code><br><br>
+ * 
+ * • <code>TextAreaContentInputHandler:</code> This class is called by the <code>TextAreaWidget</code> to handle sending input instructions to the <code>TextAreaContentHandler.</code> 
+ * 	 It's an abstract class and is meant to be extended to allow for custom input configurations. A default one with settings common to most text editing engines is 
+ * 	 included via <code>DefaultTextAreaContentInputHandler.</code><br><br>
+ * 
+ * • <code>TextAreaInputSettings:</code> This class contains some booleans for easily enabling/disabling input features of the <code>TextAreaWidget.</code> 
+ *   However, whether or not the settings are actually read depends on the <code>TextAreaContentInputHandler</code> implementation.<br><br>
+ *   
+ * • <code>ClearEscapeSequences:</code> This class is an "under the hood" class that handles interpreting special escape sequences that can allow for special text formatting.
+ *   It's not recommended that this class be tampered with, but new features can be added if necessary. Constants for all of the available escape sequences can be found in 
+ *   this class.<br><br>
+ *   
+ * • <code>TextAreaHistory:</code> This class contains <code>TextState</code> objects that allow for undo/redoing during editing.<br><br>
+ * 
+ * If you need to edit or add new features to this text area implementation, the above list should help you in getting started on where to find functionality and how to edit it.
  */
 public class TextAreaWidget extends Widget implements FillAttachment {
 	
@@ -136,7 +158,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		lineNumberFont = font;
 		
 		textContentHandler = new TextAreaContentHandler(this);
-		textContentInputHandler = new TextAreaContentInputHandler(this, textContentHandler);
+		textContentInputHandler = new DefaultTextAreaContentInputHandler(this, textContentHandler);
 		
 		setText(text);
 	}
@@ -503,6 +525,15 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	 */
 	public void requestRefresh() {
 		refreshLines = true;
+		
+		//Update Auto-Formatters
+		for (int i = 0; i < getNumChildren(); i++) {
+			Widget widget = (Widget) getChild(i);
+			
+			if (widget instanceof TextAreaAutoFormatterWidget) {
+				((TextAreaAutoFormatterWidget) widget).refresh();
+			}
+		}
 	}
 	
 	@Override
@@ -718,7 +749,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 
 	/*
 	 * 
-	 * Content Editing Input Settings
+	 * Content Editing Input settings
 	 * 
 	 * 
 	 */
@@ -731,6 +762,14 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		this.inputSettings = inputSettings;
 	}
 	
+	public TextAreaContentInputHandler getTextContentInputHandler() {
+		return textContentInputHandler;
+	}
+
+	public void setTextContentInputHandler(TextAreaContentInputHandler textContentInputHandler) {
+		this.textContentInputHandler = textContentInputHandler;
+	}
+
 	public ClearColor getHighlightFill() {
 		return highlightFill;
 	}
