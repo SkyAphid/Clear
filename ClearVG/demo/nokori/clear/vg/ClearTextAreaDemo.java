@@ -15,6 +15,12 @@ import nokori.clear.windows.GLFWException;
 import nokori.clear.windows.Window;
 import nokori.clear.windows.WindowManager;
 
+import static nokori.clear.vg.widget.text.ClearEscapeSequences.*;
+
+/**
+ * This demo show-cases the TextArea functionality available in ClearVG.
+ *
+ */
 public class ClearTextAreaDemo extends ClearApplication {
 
 	private static final int WINDOW_WIDTH = 1280;
@@ -55,13 +61,19 @@ public class ClearTextAreaDemo extends ClearApplication {
 	protected String getText() {
 		String s = "";
 		
-		for (int i = 0; i < 50; i++) {
-			if (i > 0) {
+		for (int j = 0; j < 50; j++) {
+			if (j > 0) {
 				s += "\n\n";
 			}
 			
-			s += "	\02\05#FF7F50Hello World!\01 \04This is entry number " + i + ".\01	";
-			s += "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ";
+			String b = Character.toString(ESCAPE_SEQUENCE_BOLD);
+			String c = Character.toString(ESCAPE_SEQUENCE_COLOR);
+			String i = Character.toString(ESCAPE_SEQUENCE_ITALIC);
+			String r = Character.toString(ESCAPE_SEQUENCE_RESET);
+			
+			//You can either tab or use \t - either works. You can also reference escape sequences via strings or use the constants I've provided.
+			s += b + c + "#FF7F50Hello World!" + r + " " + i + "This is entry number " + j + ":" + r + "\n";
+			s += "\tLorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ";
 			s += "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. ";
 			s += "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.";
 		}

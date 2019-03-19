@@ -13,6 +13,10 @@ public class TextAreaInputSettings {
 	
 	private boolean editingEnabled = true;
 	
+	//If true, users can edit the formatting of the text (setting bold, italics, etc). This is disabled automatically by widgets like the Auto-Formatter (for syntax highlighting).
+	//Spacing commands like \n and \t aren't affected by this, however.
+	private boolean manualFormattingEnabled = true;
+	
 	private boolean backspaceEnabled = true;
 	private boolean tabEnabled = true;
 	private boolean returnEnabled = true;
@@ -28,7 +32,6 @@ public class TextAreaInputSettings {
 	private boolean redoEnabled = true;
 	
 	private boolean arrowKeysEnabled = true;
-	
 	
 	/*
 	 * 
@@ -68,6 +71,14 @@ public class TextAreaInputSettings {
 
 	public void setEditingEnabled(boolean editingEnabled) {
 		this.editingEnabled = editingEnabled;
+	}
+	
+	public boolean isManualFormattingEnabled() {
+		return manualFormattingEnabled;
+	}
+
+	public void setManualFormattingEnabled(boolean manualFormattingEnabled) {
+		this.manualFormattingEnabled = manualFormattingEnabled;
 	}
 
 	public boolean isBackspaceEnabled() {

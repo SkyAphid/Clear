@@ -35,20 +35,46 @@ public class ClearEscapeSequences {
 	 * This is a hard-coded escape sequence to signify a HEX color. Usage looks like this: <code>\05#FFFFFF</code>
 	 */
 	public static final char ESCAPE_SEQUENCE_COLOR = '\05';
+	public static final int ESCAPE_SEQUENCE_COLOR_LENGTH = 1 + ClearColor.HEX_COLOR_LENGTH;
 	
 	public static final char[] ESCAPE_SEQUENCES = {
 		ESCAPE_SEQUENCE_RESET, ESCAPE_SEQUENCE_BOLD, ESCAPE_SEQUENCE_LIGHT, ESCAPE_SEQUENCE_ITALIC, ESCAPE_SEQUENCE_COLOR	
 	};
 	
-	public static HashMap<String, String> initDefault() {
+	public static HashMap<String, String> initDefault(boolean showEscapeSequences) {
 		HashMap<String, String> specialCaseCharacters = new HashMap<>();
-		initDefaultReplacements(specialCaseCharacters);
+		
+		if (showEscapeSequences) {
+			initShowReplacements(specialCaseCharacters);
+		} else {
+			initDefaultReplacements(specialCaseCharacters);
+		}
+
 		return specialCaseCharacters;
 	}
 	
 	public static void initDefaultReplacements(HashMap<String, String> specialCaseCharacters) {
-		specialCaseCharacters.put("\n", "");
+		String blank = "";
+		
+		specialCaseCharacters.put("\n", blank);
 		specialCaseCharacters.put("\t", "    ");
+		
+		specialCaseCharacters.put(Character.toString(ESCAPE_SEQUENCE_RESET), blank);
+		specialCaseCharacters.put(Character.toString(ESCAPE_SEQUENCE_BOLD), blank);
+		specialCaseCharacters.put(Character.toString(ESCAPE_SEQUENCE_LIGHT), blank);
+		specialCaseCharacters.put(Character.toString(ESCAPE_SEQUENCE_ITALIC), blank);
+		specialCaseCharacters.put(Character.toString(ESCAPE_SEQUENCE_COLOR), blank);
+	}
+	
+	public static void initShowReplacements(HashMap<String, String> specialCaseCharacters) {
+		specialCaseCharacters.put("\n", "[newLine]");
+		specialCaseCharacters.put("\t", "[tab]");
+		
+		specialCaseCharacters.put(Character.toString(ESCAPE_SEQUENCE_RESET), "[reset]");
+		specialCaseCharacters.put(Character.toString(ESCAPE_SEQUENCE_BOLD), "[bold]");
+		specialCaseCharacters.put(Character.toString(ESCAPE_SEQUENCE_LIGHT), "[light]");
+		specialCaseCharacters.put(Character.toString(ESCAPE_SEQUENCE_ITALIC), "[italic]");
+		specialCaseCharacters.put(Character.toString(ESCAPE_SEQUENCE_COLOR), "[color]");
 	}
 	
 	public static boolean processSequence(TextAreaContentHandler textContentHandler, char c) {
@@ -95,7 +121,7 @@ public class ClearEscapeSequences {
 		
 		if (c == ESCAPE_SEQUENCE_COLOR) {
 			if (!checkOnly) {			
-				textContentHandler.skipsRequested = ClearColor.HEX_COLOR_LENGTH + 1;
+				textContentHandler.skipsRequested = ESCAPE_SEQUENCE_COLOR_LENGTH;
 				colorEscapeSequence(context, widget, textContentHandler, characterIndex, c);
 			} else {
 				textContentHandler.skipsRequested = ClearColor.HEX_COLOR_LENGTH;
@@ -107,11 +133,19 @@ public class ClearEscapeSequences {
 		return false;
 	}
 	
-	public static boolean insideSequence(char escapeSequence, StringBuilder textBuilder, int index) {
+	public static boolean insideSequence(char escapeSequence, StringBuilder textBuilder, int characterIndex) {
 		/*
 		 * Check to the left of the index. We don't have to check to the right because only commands to the left have an effect.
 		 */
-		for (int i = index; i > 0; i--) {
+		if (characterIndex > textBuilder.length()) {
+			return false;
+		}
+		
+		if (characterIndex == textBuilder.length()) {
+			characterIndex--;
+		}
+		
+		for (int i = characterIndex; i > 0; i--) {
 			char c = textBuilder.charAt(i);
 			
 			if (c == ESCAPE_SEQUENCE_RESET) {
@@ -128,52 +162,94 @@ public class ClearEscapeSequences {
 		return false;
 	}
 	
+	public static boolean isCharEscapeSequence(StringBuilder textBuilder, int characterIndex) {
+		for (int i = 0; i < ESCAPE_SEQUENCES.length; i++) {
+			char e = ESCAPE_SEQUENCES[i];
+
+			if (isCharEscapeSequence(textBuilder, characterIndex, e)) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	public static boolean isCharEscapeSequence(StringBuilder textBuilder, int characterIndex, char escapeSequence) {
+		if (characterIndex < 0 || characterIndex >= textBuilder.length()) {
+			return false;
+		}
+		
+		char c = textBuilder.charAt(characterIndex);
+		
+		//Special case check for color escape sequence since it's longer than just one character
+		if (escapeSequence == ESCAPE_SEQUENCE_COLOR) {
+			Vector2i color = colorEscapeSequenceToLeft(textBuilder, characterIndex);
+			
+			//If color isn't null, that means we found the command
+			//Otherwise just run the normal check below
+			if (color != null && color.y() > characterIndex) {
+				return true;
+			}
+		} 
+
+		//Default check if the char is an escape sequence
+		if (c == escapeSequence) {
+			return true;
+		}
+		
+		return false;
+	}
+	
 	/**
 	 * Deletes an escape sequence at the index. Also delete a reset sequence ahead if applicable.
 	 * 
 	 * @param textBuilder
-	 * @param index
+	 * @param characterIndex
 	 * @param deleteResetEscapeSequenceAhead
 	 * @return characters deleted
 	 */
-	public static int deleteSequenceAt(StringBuilder textBuilder, int index, boolean deleteResetEscapeSequenceAhead) {
-		char c = textBuilder.charAt(index);
+	public static int deleteSequenceAt(StringBuilder textBuilder, int characterIndex, boolean deleteResetEscapeSequenceAhead) {
+		char c = textBuilder.charAt(characterIndex);
 		int deleted = 0;
 		
 		if (c == ESCAPE_SEQUENCE_COLOR) {
-			Vector2i colorSequence = ClearEscapeSequences.colorEscapeSequence(textBuilder, index, true);
-			textBuilder.delete(colorSequence.x(), colorSequence.y());
-			deleted += (colorSequence.y() - colorSequence.x());
+			int start = characterIndex;
+			int end = characterIndex + ESCAPE_SEQUENCE_COLOR_LENGTH;
+			
+			if (end < textBuilder.length() && textBuilder.charAt(start+1) == '#') {
+				textBuilder.delete(characterIndex, end);
+				deleted += ESCAPE_SEQUENCE_COLOR_LENGTH;
+			}
 		} else {
-			textBuilder.deleteCharAt(index);
+			textBuilder.deleteCharAt(characterIndex);
 			deleted++;
 		}
 		
 		if (deleteResetEscapeSequenceAhead) {
-			deleted += deleteResetEscapeSequenceAhead(textBuilder, index);
+			deleted += deleteResetEscapeSequenceAhead(textBuilder, characterIndex);
 		}
 		
 		return deleted;
 	}
 	
-	public static int deleteResetEscapeSequenceAhead(StringBuilder textBuilder, int index) {
-		return deleteResetEscapeSequenceAhead(textBuilder, index, null);
+	public static int deleteResetEscapeSequenceAhead(StringBuilder textBuilder, int characterIndex) {
+		return deleteResetEscapeSequenceAhead(textBuilder, characterIndex, null);
 	}
 	
 	/**
 	 * In cases where we backspace an escape sequence, we'll want to scan ahead and delete its corresponding reset sequence if applicable.
 	 * @param textBuilder
-	 * @param index
+	 * @param characterIndex
 	 * @return how many characters were deleted (1 if the reset sequence was found and deleted, 0 if nothing was found)
 	 */
-	public static int deleteResetEscapeSequenceAhead(StringBuilder textBuilder, int index, CharProcessor processor) {
-		if (index < 0 || index >= textBuilder.length()) return 0;
+	public static int deleteResetEscapeSequenceAhead(StringBuilder textBuilder, int characterIndex, CharProcessor processor) {
+		if (characterIndex < 0 || characterIndex >= textBuilder.length()) return 0;
 		
 		/*
 		 * Check to the left to make sure there aren't any uncaught escape sequences.
 		 */
 		
-		for (int i = index; i > 0; i--) {
+		for (int i = characterIndex; i > 0; i--) {
 			char c = textBuilder.charAt(i);
 			
 			if (c == ESCAPE_SEQUENCE_RESET) {
@@ -191,7 +267,7 @@ public class ClearEscapeSequences {
 		 * If nothing was caught, scan ahead for a reset tag and delete it. If we run into another escape sequence, we quit.
 		 */
 		
-		for (int i = index; i < textBuilder.length(); i++) {
+		for (int i = characterIndex; i < textBuilder.length(); i++) {
 			char c = textBuilder.charAt(i);
 			
 			if (c == ESCAPE_SEQUENCE_RESET) {
@@ -271,12 +347,19 @@ public class ClearEscapeSequences {
 		}
 	}
 	
-	public static Vector2i colorEscapeSequence(StringBuilder textBuilder, int characterIndex, boolean checkRight) {
-		int colorLength = ClearColor.HEX_COLOR_LENGTH + 1;
+	/**
+	 * Checks for a color escape sequence at the character index
+	 * 
+	 * @param textBuilder
+	 * @param characterIndex
+	 * @param checkRight
+	 * @return
+	 */
+	public static Vector2i colorEscapeSequenceToLeft(StringBuilder textBuilder, int characterIndex) {
 		int start = -1;
 		
-		int startIndex = (checkRight ? characterIndex : characterIndex - colorLength);
-		int endIndex   = (checkRight ? characterIndex + colorLength : characterIndex);
+		int startIndex = characterIndex - ESCAPE_SEQUENCE_COLOR_LENGTH;
+		int endIndex   = characterIndex;
 		
 		for (int i = startIndex; i < endIndex; i++) {
 			if (i < 0 || i >= textBuilder.length()) continue;
@@ -295,8 +378,8 @@ public class ClearEscapeSequences {
 			}
 		}
 		
-		int end = start + colorLength;
-		
+		int end = start + ESCAPE_SEQUENCE_COLOR_LENGTH;
+
 		if (start == -1) {
 			return null;
 		}
@@ -304,7 +387,6 @@ public class ClearEscapeSequences {
 		return new Vector2i(start, end);
 	}
 
-	
 	public interface CharProcessor {
 		public void process(int index, char c);
 	}

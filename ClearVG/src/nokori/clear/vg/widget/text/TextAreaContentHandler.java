@@ -21,10 +21,19 @@ import static nokori.clear.vg.widget.text.ClearEscapeSequences.*;
  */
 public class TextAreaContentHandler {
 	
-	/**
-	 * This is a debug value that will allow you to render the underlying escape sequences in the text instead of running them.
+	/*
+	 * Debug switches
 	 */
-	protected static boolean renderEscapeSequences = true;
+	
+	/** Sets up the escape sequence replacement hashmap to show the names of the commands in the rendering for debugging purposes */
+	private static final boolean SHOW_ESCAPE_SEQUENCES = false;
+	
+	/** Disables character skipping, meaning that longer escape sequences such as HEX color setters will be displayed for debugging purposes */
+	private static final boolean SKIPPING_ENABLED = true;
+	
+	/*
+	 * Core data
+	 */
 	
 	private TextAreaWidget widget;
 	
@@ -36,7 +45,7 @@ public class TextAreaContentHandler {
 	 * 
 	 */
 	
-	private HashMap<String, String> escapeSequenceReplacements = ClearEscapeSequences.initDefault();
+	private HashMap<String, String> escapeSequenceReplacements = ClearEscapeSequences.initDefault(SHOW_ESCAPE_SEQUENCES);
 	
 	//If true, a color escape sequence was found and we need to skip ahead seven characters to accommodate a HEX value.
 	int skipsRequested = 0;
@@ -89,7 +98,7 @@ public class TextAreaContentHandler {
 	 * @param lineY - the render y
 	 * @return - the number of characters rendered
 	 */
-	public int renderLine(NanoVGContext context, int totalTextLength, String text, int startIndex, float textContentX, float lineY, float scissorY, float fontHeight) {
+	public int renderLine(NanoVGContext context, int totalTextLength, String text, int startIndex, float textContentX, float lineY, float scissorY, float fontHeight, boolean isFinalLine) {
 		long vg = context.get();
 
 		int totalCharacters = 0;
@@ -107,6 +116,10 @@ public class TextAreaContentHandler {
 
 			String c = checkEscapeSequences(context, characterIndex, text.charAt(i));
 			
+			if (!SKIPPING_ENABLED) {
+				skipsRequested = 0;
+			}
+			
 			if (skipsRequested == 0) {
 
 				// save state so that text formatting commands don't carry over into the next rendering
@@ -121,7 +134,7 @@ public class TextAreaContentHandler {
 	
 				// caret systems
 				if (widget.getInputSettings().isCaretEnabled()) {
-					forEachCharCaretLogic(vg, characterIndex, bAdvanceX, lineY, adjustedClickY, (advanceX - bAdvanceX), fontHeight);
+					forEachCharCaretLogic(vg, characterIndex, bAdvanceX, lineY, adjustedClickY, (advanceX - bAdvanceX), fontHeight, isFinalLine);
 				}
 				
 				// pop state
@@ -131,7 +144,7 @@ public class TextAreaContentHandler {
 				
 				//Character rendering is skipped, but caret logic is still checked.
 				nvgSave(vg);
-				forEachCharCaretLogic(vg, characterIndex, advanceX, lineY, adjustedClickY, 0, fontHeight);
+				forEachCharCaretLogic(vg, characterIndex, advanceX, lineY, adjustedClickY, 0, fontHeight, isFinalLine);
 				nvgRestore(vg);
 			}
 
@@ -143,7 +156,7 @@ public class TextAreaContentHandler {
 		 * For moving the caret to the very start/end of this line.
 		 */
 		int endIndex = startIndex + totalCharacters;
-		edgeCaretLogic(vg, totalTextLength, startIndex, endIndex, textContentX, advanceX, lineY, adjustedClickY, fontHeight);
+		edgeCaretLogic(vg, totalTextLength, startIndex, endIndex, textContentX, advanceX, lineY, adjustedClickY, fontHeight, isFinalLine);
 		
 		//In a special case where the caret is at the end of the entirety of the text, we render the caret at the very tail end.
 		//Normally it's rendered during normal character rendering - but if the caret is outside the text - then it won't draw otherwise.
@@ -158,17 +171,21 @@ public class TextAreaContentHandler {
 		return totalCharacters;
 	}
 	
-	private String checkEscapeSequences(NanoVGContext context, int characterIndex, char c) {
-		if (!renderEscapeSequences) {
-			String sC = Character.toString(c);
+	/**
+	 * Processes the given char and returns the modified version from the replacement hashmap if applicable.
+	 * 
+	 * @param context
+	 * @param characterIndex
+	 * @param c
+	 * @return - processed char into new string or just return the input char if a replacement isn't found
+	 */
+	public String checkEscapeSequences(NanoVGContext context, int characterIndex, char c) {
+		String sC = Character.toString(c);
 			
-			if (escapeSequenceReplacements.containsKey(sC)) {
-				return escapeSequenceReplacements.get(sC);
-			}
-			
-			if (processSequence(context, widget, this, characterIndex, c)) {
-				return "";
-			}
+		processSequence(context, widget, this, characterIndex, c);
+		
+		if (escapeSequenceReplacements.containsKey(sC)) {
+			return escapeSequenceReplacements.get(sC);
 		}
 		
 		return Character.toString(c);
@@ -201,10 +218,11 @@ public class TextAreaContentHandler {
 	/**
 	 * Handles mouse positioning of the caret within text content.
 	 */
-	private void forEachCharCaretLogic(long vg, int characterIndex, float x, float y, float adjustedClickY, float advanceW, float fontHeight) {
+	private void forEachCharCaretLogic(long vg, int characterIndex, float x, float y, float adjustedClickY, float advanceW, float fontHeight, boolean isFinalLine) {
 		
 		//Checks if the mouse click was in the bounding of this character - if so, the caret is set to this index.
-		if (updateCaret && WidgetUtil.pointWithinRectangle(caretUpdateQueue.x, caretUpdateQueue.y, x, adjustedClickY, advanceW, fontHeight)) {
+		float clickHeight = (isFinalLine ? Float.MAX_VALUE : fontHeight);
+		if (updateCaret && WidgetUtil.pointWithinRectangle(caretUpdateQueue.x, caretUpdateQueue.y, x, adjustedClickY, advanceW, clickHeight)) {
 			int bCaretPosition = caret;
 			setCaretPosition(characterIndex);
 			refreshHighlightIndex();
@@ -221,12 +239,12 @@ public class TextAreaContentHandler {
 	 * Applies extra logic at the end of line rendering for positioning the caret on the edges of a line (e.g. at the very start of a line or the very end), 
 	 * which would be somewhat difficult with just the base controls.
 	 */
-	private void edgeCaretLogic(long vg, int totalTextLength, int startIndex, int endIndex, float startX, float endX, float y, float adjustedClickY, float fontHeight) {
+	private void edgeCaretLogic(long vg, int totalTextLength, int startIndex, int endIndex, float startX, float endX, float y, float adjustedClickY, float fontHeight, boolean isFinalLine) {
 		double mX = caretUpdateQueue.x;
 		double mY = caretUpdateQueue.y;
 		
 		if (updateCaret) {
-			if (mY >= adjustedClickY && mY <= adjustedClickY + fontHeight) {
+			if (mY >= adjustedClickY && mY <= adjustedClickY + fontHeight || (mY >= adjustedClickY && isFinalLine)) {
 				//Places the caret at the very start of a line if the mouse is past the very left edge of the rendering area.
 				if (mX < startX) {
 					setCaretPosition(startIndex);
@@ -463,11 +481,12 @@ public class TextAreaContentHandler {
 	 * 
 	 */
 
-	private void deleteHighlightedContent() {
+	public void deleteHighlightedContent() {
 		if (isContentHighlighted()) {
 			widget.getTextBuilder().delete(getHighlightStartIndex(), getHighlightEndIndex());
 			setCaretPosition(getHighlightStartIndex());
 			resetHighlighting();
+			widget.requestRefresh();
 		}
 	}
 	
@@ -476,37 +495,48 @@ public class TextAreaContentHandler {
 		
 		StringBuilder textBuilder = widget.getTextBuilder();
 		
-		deleteHighlightedContent();
-
 		if (caret >= 0 && caret <= textBuilder.length()) {
+			deleteHighlightedContent();
 			textBuilder.insert(caret, character);
 			offsetCaret(1);
+			widget.requestRefresh();
 		}
-
-		widget.requestRefresh();
 	}
 	
 	public void backspaceAtCaret() {
-		offsetCaret(-backspace(caret));
+		offsetCaret(-backspace(caret), false);
 	}
 	
 	public int backspace(int position) {
+		StringBuilder textBuilder = widget.getTextBuilder();
+		boolean manualFormattingEnabled = widget.getInputSettings().isManualFormattingEnabled();
+		
+		int indicesMoved = 0;
+		int charIndex = position-1;
+		
+		while(!manualFormattingEnabled && position > 0 && isCharEscapeSequence(textBuilder, charIndex)){
+			position--;
+			charIndex = position-1;
+			indicesMoved++;
+		}
+		
 		if (position > 0) {
-			StringBuilder textBuilder = widget.getTextBuilder();
 			int charsDeleted = 0;
 			
 			/*
-			 * Backspace special case for color sequences
+			 * Backspace special cases for escape sequences
 			 */
 			
-			Vector2i colorSequence = colorEscapeSequence(textBuilder, position, false);
-			
-			if (colorSequence != null) {
-				int start = colorSequence.x();
-				int end = colorSequence.y();
-				
-				textBuilder.delete(start, end);
-				charsDeleted = (position - start);
+			if (manualFormattingEnabled) {
+				Vector2i colorSequence = colorEscapeSequenceToLeft(textBuilder, charIndex);
+
+				if (colorSequence != null) {
+					int start = colorSequence.x();
+					int end = colorSequence.y();
+
+					textBuilder.delete(start, end);
+					charsDeleted = (charIndex - start);
+				}
 			}
 			
 			/*
@@ -514,13 +544,15 @@ public class TextAreaContentHandler {
 			 */
 			
 			if (charsDeleted == 0) {
-				textBuilder.deleteCharAt(position-1);
+				textBuilder.deleteCharAt(charIndex);
 				charsDeleted = 1;
 			}
 			
-			deleteResetEscapeSequenceAhead(textBuilder, position-1);
+			deleteResetEscapeSequenceAhead(textBuilder, charIndex);
+			
 			widget.requestRefresh();
-			return charsDeleted;
+			
+			return charsDeleted + indicesMoved;
 		}
 		
 		return 0;
@@ -538,15 +570,41 @@ public class TextAreaContentHandler {
 	}
 	
 	public void newLineAtCaret() {
+		boolean offsetCaret = false;
+		
+		/*
+		 * Ensure the caret lines up with the new lines correctly. We have to add a few checks because the circumstances can very based on the user input.
+		 */
+		StringBuilder s = widget.getTextBuilder();
+		
+		int charIndex = caret-1;
+		
+		boolean isCaretInFrontOfNewLine = (charIndex-1 >= 0 && s.charAt(charIndex - 1) == '\n');
+		boolean isCaretBehindNewLine = (charIndex+1 < s.length() && s.charAt(charIndex+1) == '\n');
+
+		if (!isCaretInFrontOfNewLine || isCaretBehindNewLine) {
+			offsetCaret = true;
+		}
+		
+		/*
+		 * Add the new line.
+		 */
+		
 		newLine(caret);
-		offsetCaret(1);
+		
+		/*
+		 * Offset the caret is applicable.
+		 */
+		if (offsetCaret) {
+			offsetCaret(1);
+		}
 	}
 	
 	public void newLine(int position) {
 		StringBuilder s = widget.getTextBuilder();
 		String c = "\n";
 		
-		if (position == s.length()) {
+		if (position == s.length() && (position-1 >= 0 && s.charAt(position-1) != '\n')) {
 			c += c;
 		}
 		
@@ -605,6 +663,10 @@ public class TextAreaContentHandler {
 	}
 	
 	private void styleSelection(char escapeSequence) {
+		if (!widget.getInputSettings().isManualFormattingEnabled()) {
+			return;
+		}
+		
 		if (insideSequence(escapeSequence, widget.getTextBuilder(), caret)) {
 			return;
 		}
@@ -646,7 +708,7 @@ public class TextAreaContentHandler {
 			 * Caret offset for color sequences
 			 */
 			
-			Vector2i colorSequence = colorEscapeSequence(widget.getTextBuilder(), caret, false);
+			Vector2i colorSequence = colorEscapeSequenceToLeft(widget.getTextBuilder(), caret);
 			
 			if (colorSequence != null) {
 				int offset = (caret - colorSequence.x());
@@ -666,7 +728,9 @@ public class TextAreaContentHandler {
 	}
 	
 	public void moveCaretRight() {
-		if (caret < widget.getTextBuilder().length()) {
+		StringBuilder s = widget.getTextBuilder();
+		
+		if (caret < s.length()) {
 			resetHighlighting();
 			resetCaretFader();
 			
@@ -674,15 +738,9 @@ public class TextAreaContentHandler {
 			 * Caret offset for color sequences
 			 */
 			
-			Vector2i colorSequence = colorEscapeSequence(widget.getTextBuilder(), caret, true);
-			
-			if (colorSequence != null) {
-				int offset = (colorSequence.y() - caret);
-				
-				if (offset > 0) {
-					offsetCaret(offset);
-					return;
-				}
+			if (s.charAt(caret) == ESCAPE_SEQUENCE_COLOR) {
+				offsetCaret(ESCAPE_SEQUENCE_COLOR_LENGTH);
+				return;
 			}
 			
 			/*
@@ -740,16 +798,48 @@ public class TextAreaContentHandler {
 		return escapeSequenceReplacements;
 	}
 	
-	void offsetCaret(int offset) {
-		caret += offset;
-		/*System.err.println("offset: "+caret);
+	private void offsetCaret(int offset, boolean allowLeftMovement) {
+		setCaretPosition(caret + offset, allowLeftMovement);
+		/*System.err.println("offset: " + offset + " (" + caret + ")");
 		Thread.dumpStack();*/
 	}
 	
-	void setCaretPosition(int caret) {
-		this.caret = caret;
-		/*System.err.println("pos: "+caret);
+	void offsetCaret(int offset) {
+		offsetCaret(offset, true);
+	}
+
+	/**
+	 * Sets the caret position. If manual formatting is disabled, this command will ensure that the caret never lands on an escape sequence. 
+	 * Always use this function, never reference the caret variable directly outside of comparisons.
+	 */
+	private void setCaretPosition(int newCaret, boolean allowLeftMovement) {
+		boolean movingRight = (caret < newCaret);
+		
+		caret = newCaret;
+		
+		//If manual formatting is disabled, make sure the caret never lands on an escape sequence.
+		if (!widget.getInputSettings().isManualFormattingEnabled()) {
+			StringBuilder s = widget.getTextBuilder();
+
+			if (movingRight || !allowLeftMovement) {
+				//Skip right if moving the caret right
+				while(caret < s.length()-1 && isCharEscapeSequence(s, caret)) {
+					caret++;
+				}
+			} else {
+				//Skip left if moving the caret left
+				while(caret > 0 && isCharEscapeSequence(s, caret)) {
+					caret--;
+				}
+			}
+		}
+		
+		/*System.err.println("pos: " + this.caret);
 		Thread.dumpStack();*/
+	}
+	
+	void setCaretPosition(int newCaret) {
+		setCaretPosition(newCaret, true);
 	}
 	
 	public int getCaretPosition() {

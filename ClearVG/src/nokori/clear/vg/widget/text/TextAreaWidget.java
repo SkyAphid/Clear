@@ -67,6 +67,8 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	//We store the text in a StringBuilder to make editing perform better. toString() is called when the actual string is needed, e.g. for splitting.
 	private StringBuilder textBuilder;
 	
+	private boolean wordWrappingEnabled = true;
+	
 	//The text is then cut up into lines by font.split() for the text content handler to render. 
 	//refreshLines can be set to true to cause font.split to be called again so that the current arraylist is recycled.
 	private ArrayList<String> lines = null;
@@ -80,11 +82,15 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	
 	private float textContentX = -1f, textContentY = -1f, textContentW = -1f, textContentH = -1f;
 	
+	/*
+	 * Font Settings
+	 */
+	
 	private Font font;
 	private float fontSize;
 	private FontStyle fontStyle = FontStyle.REGULAR;
 	
-	private ClearColor fill;
+	private ClearColor defaultTextFill;
 	
 	/*
 	 * Line numbers
@@ -102,41 +108,59 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	 * Scrollbar
 	 */
 	
-	//customization
-	public static final float DEFAULT_SCROLLBAR_WIDTH = 10f;
-	private float scrollbarWidth = DEFAULT_SCROLLBAR_WIDTH;
+	//Customization
+	public static final float DEFAULT_SCROLLBAR_THICKNESS = 10f;
+	private float scrollbarThickness = DEFAULT_SCROLLBAR_THICKNESS;
 	
 	public static final float DEFAULT_SCROLLBAR_CORNER_RADIUS = 5;
 	private float scrollbarCornerRadius = DEFAULT_SCROLLBAR_CORNER_RADIUS;
 	
-	public static final float DEFAULT_SCROLLBAR_LEFT_PADDING = 50;
-	private float scrollbarLeftPadding = DEFAULT_SCROLLBAR_LEFT_PADDING;
+	public static final float DEFAULT_RIGHT_SCROLLBAR_LEFT_PADDING = 50;
+	private float verticalScrollbarLeftPadding = DEFAULT_RIGHT_SCROLLBAR_LEFT_PADDING;
 	
-	public static final float DEFAULT_SCROLLBAR_RIGHT_PADDING = 0;
-	private float scrollbarRightPadding = DEFAULT_SCROLLBAR_RIGHT_PADDING;
+	public static final float DEFAULT_BOTTOM_SCROLLBAR_TOP_PADDING = 50;
+	private float horizontalScrollbarTopPadding = DEFAULT_BOTTOM_SCROLLBAR_TOP_PADDING;
 	
 	private ClearColor scrollbarBackgroundFill = ClearColor.LIGHT_GRAY;
 	private ClearColor scrollbarFill = ClearColor.DARK_GRAY;
 	private ClearColor scrollbarHighlightFill = ClearColor.CORAL;
-	
-	//usage
-	private float scroll = 0.0f;
-	private float scrollIncrement = 0.01f;
-	private SimpleTransition scrollTransition = null;
-	
-	private static final float SCROLLBAR_MIN_HEIGHT = 60f;
-	private float scrollbarDefaultHeight;
-	private float scrollbarHeight;
-	
-	private float scrollbarX = -1f, scrollbarY = -1f;
-	
-	private boolean scrollbarActive = false;
-	private boolean scrollbarHovering = false;
-	private boolean scrollbarSelected = false;
-	
-	private ClearColor scrollbarRenderFill = new ClearColor(scrollbarFill);
-	private FillTransition scrollbarFillTransition = null;
 
+	//Vertical Scrollbar
+	private float verticalScroll = 0.0f;
+	private float verticalScrollIncrement = 0.01f;
+	private SimpleTransition verticalScrollTransition = null;
+	
+	private static final float VERTICAL_SCROLLBAR_MIN_HEIGHT = 60f;
+	private float verticalScrollbarDefaultHeight;
+	private float verticalScrollbarHeight;
+	
+	private float verticalScrollbarX = -1f, verticalScrollbarY = -1f;
+	
+	private boolean verticalScrollbarActive = false;
+	private boolean verticalScrollbarHovering = false;
+	private boolean verticalScrollbarSelected = false;
+	
+	private ClearColor verticalScrollbarRenderFill = new ClearColor(scrollbarFill);
+	private FillTransition verticalScrollbarFillTransition = null;
+	
+	//Horizontal Scrollbar
+	private float horizontalScroll = 0.0f;
+	private float horizontalScrollIncrement = 0.01f;
+	private SimpleTransition horizontalScrollTransition = null;
+	
+	private static final float HORIZONTAL_SCROLLBAR_MIN_WIDTH = 60f;
+	private float horizontalScrollbarDefaultWidth;
+	private float horizontalScrollbarWidth;
+	
+	private float horizontalScrollbarX = -1f, horizontalScrollbarY = -1f;
+	
+	private boolean horizontalScrollbarActive = false;
+	private boolean horizontalScrollbarHovering = false;
+	private boolean horizontalScrollbarSelected = false;
+	
+	private ClearColor horizontalScrollbarRenderFill = new ClearColor(scrollbarFill);
+	private FillTransition horizontalScrollbarFillTransition = null;
+	
 	/*
 	 * 
 	 * Editing
@@ -151,7 +175,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 
 	public TextAreaWidget(float x, float y, float width, float height, ClearColor fill, String text, Font font, float fontSize) {
 		super(x, y, width, height);
-		this.fill = fill;
+		this.defaultTextFill = fill;
 		this.font = font;
 		this.fontSize = fontSize;
 		
@@ -189,7 +213,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		 * Scrollbar calculations
 		 */
 		
-		float scrollbarCompleteWidth = (scrollbarLeftPadding + scrollbarWidth + scrollbarRightPadding);
+		float scrollbarCompleteWidth = (verticalScrollbarLeftPadding + scrollbarThickness);
 		
 		/*
 		 * Line number calculations
@@ -205,7 +229,8 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		 * Line split and text content area calculations
 		 */
 		
-		float lineSplitW = textContentW = width - scrollbarCompleteWidth - lineNumberCompleteWidth;
+		textContentW = width - scrollbarCompleteWidth - lineNumberCompleteWidth;
+		float lineSplitW = (wordWrappingEnabled ? textContentW : Float.MAX_VALUE);
 		
 		if (lines == null || refreshLines) {
 			font.split(context, lines = new ArrayList<>(), text, lineSplitW, fontSize, TEXT_AREA_ALIGNMENT, fontStyle);
@@ -220,17 +245,17 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		//Used for activating the I-Beam cursor
 		textContentX = x + lineNumberCompleteWidth;
 		textContentY = y;
-		textContentW = lineSplitW + scrollbarLeftPadding;
+		textContentW = width - scrollbarThickness - verticalScrollbarLeftPadding;
 		textContentH = height;
 		
 		//Scroll increment is adjusted based on the length of the text content (higher increments for more text, lower increments for less text)
-		scrollIncrement = (5f / lines.size());
+		verticalScrollIncrement = (5f / lines.size());
 		
 		float fontHeight = font.getHeight(context, fontSize, TEXT_AREA_ALIGNMENT, fontStyle);
 		float renderAreaHeight = (height / fontHeight) * fontHeight;
 		float stringHeight = font.getHeight(context, lines.size(), fontHeight, TEXT_AREA_ALIGNMENT, fontStyle);
 
-		scrollbarActive = (stringHeight > height);
+		verticalScrollbarActive = (stringHeight > height);
 		
 		/*
 		 * 
@@ -241,7 +266,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		 */
 		
 		//Scissor translation Y
-		float scissorY = -((stringHeight - renderAreaHeight) * scroll);
+		float scissorY = -((stringHeight - renderAreaHeight) * verticalScroll);
 		
 		//System.err.println(fontHeight + " " + renderAreaHeight + " " + indicesVisible + " | " + startIndex + " " + endIndex + " " + lines.size());
 		
@@ -249,7 +274,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		
 		//Text
 		nvgBeginPath(vg);
-		nvgScissor(vg, x, y, width, height);
+		nvgScissor(vg, x, y, textContentW, height);
 		nvgTranslate(vg, 0, scissorY);
 		
 		int totalCharacters = 0;
@@ -275,7 +300,8 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 			renderLineNumber(context, x, rY, lineNumberCompleteWidth, fontHeight, i);
 			
 			//Draw the text
-			totalCharacters += textContentHandler.renderLine(context, text.length(), lines.get(i), totalCharacters, textContentX, rY, scissorY, fontHeight);
+			boolean isFinalLine = (i+1 >= lines.size());
+			totalCharacters += textContentHandler.renderLine(context, text.length(), lines.get(i), totalCharacters, textContentX, rY, scissorY, fontHeight, isFinalLine);
 		}
 		
 		textContentHandler.endOfRenderingCallback();
@@ -294,11 +320,11 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	public void resetRenderConfiguration(NanoVGContext context) {
 		font.configureNVG(context, fontSize, TEXT_AREA_ALIGNMENT, fontStyle);
 		
-		fill.tallocNVG(fill -> {
+		defaultTextFill.tallocNVG(fill -> {
 			nvgFillColor(context.get(), fill);
 		});
 		
-		textContentHandler.notifyTextFillChanged(fill);
+		textContentHandler.notifyTextFillChanged(defaultTextFill);
 		textContentHandler.notifyTextStyleChanged(FontStyle.REGULAR);
 	}
 	
@@ -340,26 +366,26 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		 */
 		
 		float scrollbarMaxHeight = getHeight() * 0.75f;
-		scrollbarDefaultHeight = getHeight()/2;
-		scrollbarHeight = WidgetUtil.clamp(scrollbarDefaultHeight * (height / stringHeight), SCROLLBAR_MIN_HEIGHT, scrollbarMaxHeight);
+		verticalScrollbarDefaultHeight = getHeight()/2;
+		verticalScrollbarHeight = WidgetUtil.clamp(verticalScrollbarDefaultHeight * (height / stringHeight), VERTICAL_SCROLLBAR_MIN_HEIGHT, scrollbarMaxHeight);
 		
-		scrollbarX = (x + width) - scrollbarWidth - scrollbarRightPadding;
-		scrollbarY = (y + ((height - scrollbarHeight) * scroll));
+		verticalScrollbarX = (x + width) - scrollbarThickness;
+		verticalScrollbarY = (y + ((height - verticalScrollbarHeight) * verticalScroll));
 		
 		//Set the selected fill based on if the mouse is hovering or selecting the scrollbar
-		ClearColor currentFill = (scrollbarHovering || scrollbarSelected) ? scrollbarHighlightFill : scrollbarFill;
+		ClearColor currentFill = (verticalScrollbarHovering || verticalScrollbarSelected) ? scrollbarHighlightFill : scrollbarFill;
 		
 		//Brighten the select color if the scrollbar is selected
-		if (scrollbarSelected) {
+		if (verticalScrollbarSelected) {
 			currentFill = currentFill.multiply(0.9f);
 		}
 		
 		//Transitions the scrollbar color smoothly to the currently selected fill color
-		if (!scrollbarRenderFill.rgbMatches(currentFill) && scrollbarFillTransition == null) {
-			scrollbarFillTransition = new FillTransition(200, scrollbarRenderFill, currentFill);
-			scrollbarFillTransition.play();
-			scrollbarFillTransition.setOnCompleted(t -> {
-				scrollbarFillTransition = null;
+		if (!verticalScrollbarRenderFill.rgbMatches(currentFill) && verticalScrollbarFillTransition == null) {
+			verticalScrollbarFillTransition = new FillTransition(200, verticalScrollbarRenderFill, currentFill);
+			verticalScrollbarFillTransition.play();
+			verticalScrollbarFillTransition.setOnCompleted(t -> {
+				verticalScrollbarFillTransition = null;
 			});
 		}
 		
@@ -372,20 +398,20 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		long vg = context.get();
 		
 		NVGColor scrollbarBackgroundFill = this.scrollbarBackgroundFill.callocNVG();
-		NVGColor scrollbarFill = scrollbarRenderFill.callocNVG();
+		NVGColor scrollbarFill = verticalScrollbarRenderFill.callocNVG();
 		
 		//scrollbar background
 		nvgBeginPath(vg);
-		nvgRoundedRect(vg, scrollbarX, y, scrollbarWidth, height, scrollbarCornerRadius);
+		nvgRoundedRect(vg, verticalScrollbarX, y, scrollbarThickness, height, scrollbarCornerRadius);
 		nvgFillColor(vg, scrollbarBackgroundFill);
 		nvgFill(vg);
 		nvgClosePath(vg);
 		
 		
-		if (scrollbarActive) {
+		if (verticalScrollbarActive) {
 			//scrollbar
 			nvgBeginPath(vg);
-			nvgRoundedRect(vg, scrollbarX, scrollbarY, scrollbarWidth, scrollbarHeight, scrollbarCornerRadius);
+			nvgRoundedRect(vg, verticalScrollbarX, verticalScrollbarY, scrollbarThickness, verticalScrollbarHeight, scrollbarCornerRadius);
 			nvgFillColor(vg, scrollbarFill);
 			nvgFill(vg);
 			nvgClosePath(vg);
@@ -393,6 +419,24 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		
 		scrollbarBackgroundFill.free();
 		scrollbarFill.free();
+	}
+	
+	/**
+	 * Requests that this widget re-splice the text builder (effectively refreshing the text area with the latest text). 
+	 * This should be called every time the text in this widget is edited or otherwise changed. Keep in mind that the update doesn't happen immediately,
+	 * but rather on the next render frame - hence <code>requestRefresh()</code> and not just <code>refresh()</code>.
+	 */
+	public void requestRefresh() {
+		refreshLines = true;
+		
+		//Update Auto-Formatters
+		for (int i = 0; i < getNumChildren(); i++) {
+			Widget widget = (Widget) getChild(i);
+			
+			if (widget instanceof TextAreaAutoFormatterWidget) {
+				((TextAreaAutoFormatterWidget) widget).refresh();
+			}
+		}
 	}
 	
 	/*
@@ -424,10 +468,10 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	
 	private void scrollbarMouseButtonEvent(Window window, MouseButtonEvent event) {
 		//Set scrollbar to selected if hovering/clicked or if the mouse button is held down and it's already selected
-		if ((scrollbarHovering || scrollbarSelected) && event.isPressed() && event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-			scrollbarSelected = true;
+		if ((verticalScrollbarHovering || verticalScrollbarSelected) && event.isPressed() && event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+			verticalScrollbarSelected = true;
 		} else {
-			scrollbarSelected = false;
+			verticalScrollbarSelected = false;
 		}
 	}
 	
@@ -459,19 +503,19 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 
 	private void scrollbarMouseMotionEvent(Window window, MouseMotionEvent event) {
 		//Is mouse hovering scrollbar?
-		scrollbarHovering = (scrollbarActive && inputSettings.isScrollbarEnabled() && WidgetUtil.mouseWithinRectangle(window, scrollbarX, scrollbarY, scrollbarWidth, scrollbarHeight));
+		verticalScrollbarHovering = (verticalScrollbarActive && inputSettings.isScrollbarEnabled() && WidgetUtil.mouseWithinRectangle(window, verticalScrollbarX, verticalScrollbarY, scrollbarThickness, verticalScrollbarHeight));
 		
-		if (scrollbarHovering) {
+		if (verticalScrollbarHovering) {
 			ClearStaticResources.getCursor(Cursor.Type.HAND).apply(window);
 			resetCursor = false;
 		}
 		
 		//The scrollbar value follows mouse. 
 		//We subtract the mouse Y from the widget render Y and then divide that by the height of the widget to get a normalized value we can use for the scroller.
-		if (scrollbarSelected) {
+		if (verticalScrollbarSelected) {
 			float relativeMouseY = (float) (event.getMouseY() - getClippedY());
 			float mouseYMult = WidgetUtil.clamp((relativeMouseY  / getHeight()), 0f, 1f);
-			scroll = mouseYMult;
+			verticalScroll = mouseYMult;
 		}
 	}
 	
@@ -488,63 +532,40 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		
 		double dx = -event.getYoffset();
 
-		float start = scroll;
-		float end = (float) (scroll + (dx * scrollIncrement));
+		float start = verticalScroll;
+		float end = (float) (verticalScroll + (dx * verticalScrollIncrement));
 		
-		if (scrollTransition != null) {
-			scrollTransition.stop();
+		if (verticalScrollTransition != null) {
+			verticalScrollTransition.stop();
 		}
 		
-		scrollTransition = new SimpleTransition(100, start, end);
+		verticalScrollTransition = new SimpleTransition(100, start, end);
 		
-		scrollTransition.setProgressCallback(v -> {
-			scroll = v;
+		verticalScrollTransition.setProgressCallback(v -> {
+			verticalScroll = v;
 			
-			if (scroll < 0f) {
-				scroll = 0f;
+			if (verticalScroll < 0f) {
+				verticalScroll = 0f;
 			}
 			
-			if (scroll > 1f) {
-				scroll = 1f;
+			if (verticalScroll > 1f) {
+				verticalScroll = 1f;
 			}
 		});
 		
-		scrollTransition.play();
+		verticalScrollTransition.play();
 	}
 
 	/*
 	 * 
-	 * General Settings
+	 * Text Content
 	 * 
 	 */
-
-	/**
-	 * Requests that this widget re-splice the text builder (effectively refreshing the text area with the latest text). 
-	 * This should be called every time the text in this widget is edited or otherwise changed. Keep in mind that the update doesn't happen immediately,
-	 * but rather on the next render frame - hence <code>requestRefresh()</code> and not just <code>refresh()</code>.
-	 */
-	public void requestRefresh() {
-		refreshLines = true;
-		
-		//Update Auto-Formatters
-		for (int i = 0; i < getNumChildren(); i++) {
-			Widget widget = (Widget) getChild(i);
-			
-			if (widget instanceof TextAreaAutoFormatterWidget) {
-				((TextAreaAutoFormatterWidget) widget).refresh();
-			}
-		}
-	}
 	
-	@Override
-	public ClearColor getFill() {
-		return fill;
+	public TextAreaContentHandler getTextContentHandler() {
+		return textContentHandler;
 	}
 
-	public void setFill(ClearColor fill) {
-		this.fill = fill;
-	}
-	
 	/**
 	 * @return the StringBuilder containing the text for this TextAreaWidget. A StringBuilder is stored instead of a basic String for editing/performance purposes.
 	 */
@@ -562,6 +583,31 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		setTextBuilder(new StringBuilder(text));
 	}
 
+	public boolean isWordWrappingEnabled() {
+		return wordWrappingEnabled;
+	}
+
+	public void setWordWrappingEnabled(boolean wordWrappingEnabled) {
+		this.wordWrappingEnabled = wordWrappingEnabled;
+	}	
+	
+	/*
+	 * 
+	 * 
+	 * Font Settings
+	 * 
+	 * 
+	 */
+
+	@Override
+	public ClearColor getDefaultTextFill() {
+		return defaultTextFill;
+	}
+
+	public void setDefaultTextFill(ClearColor fill) {
+		this.defaultTextFill = fill;
+	}
+	
 	public Font getFont() {
 		return font;
 	}
@@ -579,11 +625,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		this.fontSize = fontSize;
 		lines = null;
 	}
-	
-	public TextAreaContentHandler getTextContentHandler() {
-		return textContentHandler;
-	}
-	
+
 	/**
 	 * @return the number of lines in this text area. The text split is done before rendering, so in a case where the lines list hasn't been initialized yet, -1 will be returned.
 	 */
@@ -596,15 +638,15 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	 */
 	
 	public boolean isScrollbarSelected() {
-		return scrollbarSelected;
+		return verticalScrollbarSelected;
 	}
 	
-	public float getScrollbarWidth() {
-		return scrollbarWidth;
+	public float getScrollbarThickness() {
+		return scrollbarThickness;
 	}
 
-	public void setScrollbarWidth(float scrollbarWidth) {
-		this.scrollbarWidth = scrollbarWidth;
+	public void setScrollbarThickness(float scrollbarWidth) {
+		this.scrollbarThickness = scrollbarWidth;
 	}
 
 	public float getScrollbarCornerRadius() {
@@ -615,36 +657,28 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		this.scrollbarCornerRadius = scrollbarCornerRadius;
 	}
 
-	public float getScrollbarLeftPadding() {
-		return scrollbarLeftPadding;
+	public float getVerticalScrollbarLeftPadding() {
+		return verticalScrollbarLeftPadding;
 	}
 
-	public void setScrollbarLeftPadding(float scrollbarLeftPadding) {
-		this.scrollbarLeftPadding = scrollbarLeftPadding;
-	}
-
-	public float getScrollbarRightPadding() {
-		return scrollbarRightPadding;
-	}
-
-	public void setScrollbarRightPadding(float scrollbarRightPadding) {
-		this.scrollbarRightPadding = scrollbarRightPadding;
+	public void setVerticalScrollbarLeftPadding(float scrollbarLeftPadding) {
+		this.verticalScrollbarLeftPadding = scrollbarLeftPadding;
 	}
 
 	public float getScrollIncrement() {
-		return scrollIncrement;
+		return verticalScrollIncrement;
 	}
 
 	public void setScrollIncrement(float scrollIncrement) {
-		this.scrollIncrement = scrollIncrement;
+		this.verticalScrollIncrement = scrollIncrement;
 	}
 
 	public SimpleTransition getScrollTransition() {
-		return scrollTransition;
+		return verticalScrollTransition;
 	}
 
 	public void setScrollTransition(SimpleTransition scrollTransition) {
-		this.scrollTransition = scrollTransition;
+		this.verticalScrollTransition = scrollTransition;
 	}
 
 	public ClearColor getScrollbarBackgroundFill() {
@@ -777,6 +811,14 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	public void setHighlightFill(ClearColor highlightFill) {
 		this.highlightFill = highlightFill;
 	}
+	
+	/*
+	 * 
+	 * 
+	 * Misc.
+	 * 
+	 * 
+	 */
 	
 	@Override
 	public void dispose() {

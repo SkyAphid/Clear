@@ -68,7 +68,13 @@ public class DefaultTextAreaContentInputHandler extends TextAreaContentInputHand
 		 */
 		
 		if (config.isBackspaceEnabled() && key == GLFW.GLFW_KEY_BACKSPACE) {
-			content().backspaceAtCaret();
+			
+			if (content().isContentHighlighted()) {
+				content().deleteHighlightedContent();
+			} else {
+				content().backspaceAtCaret();
+			}
+			
 			return;
 		}
 		

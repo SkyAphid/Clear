@@ -81,7 +81,7 @@ public class LabelWidget extends Widget implements FillAttachment{
 	}
 
 	@Override
-	public ClearColor getFill() {
+	public ClearColor getDefaultTextFill() {
 		return fill;
 	}
 

@@ -133,7 +133,7 @@ public class RectangleWidget extends Widget implements FillAttachment, StrokeFil
 	}
 
 	@Override
-	public ClearColor getFill() {
+	public ClearColor getDefaultTextFill() {
 		return fill;
 	}
 

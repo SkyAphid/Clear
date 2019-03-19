@@ -18,7 +18,9 @@ import static nokori.clear.vg.widget.text.ClearEscapeSequences.*;
  * syntax highlighters for your TextAreas. Keep in kind that escape sequences configured in this widget will be open to automatic editing, so there's a chance it will
  * also be removed automatically. Make sure to configure this widget to match your exact preferences if you intend on using it. Additionally, escape sequences that aren't 
  * added to this widget for management will be ignored entirely.
- * 
+ * <br><br>
+ * One more thing to keep in mind is that when this widget is active, format editing in the widget will be disabled so that the system doesn't confuse auto-formatted text 
+ * with manually formatted text.
  */
 public class TextAreaAutoFormatterWidget extends Widget {
 	
@@ -46,38 +48,52 @@ public class TextAreaAutoFormatterWidget extends Widget {
 	@Override
 	public void render(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {}
 	
-	
 	/**
 	 * This is called from TextAreaWidget's requestRefresh() function.
 	 */
+	
+	private String cS;
+
 	void refresh() {
+		//System.err.println("Auto-Formatter: Refresh start");
+		
 		if (parent instanceof TextAreaWidget) {
 			TextAreaWidget textAreaWidget = (TextAreaWidget) parent;
 			TextAreaContentHandler h = textAreaWidget.getTextContentHandler();
 			StringBuilder textBuilder = textAreaWidget.getTextBuilder();
 			
+			//Disables manual formatting so that the system isn't confused by manual formatting tags and the automatic ones added autonomously
+			textAreaWidget.getInputSettings().setManualFormattingEnabled(false);
+			
 			/*
 			 * Clean existing syntax settings
 			 */
-
+			
 			for (int i = 0; i < syntaxSettings.size(); i++) {
 				Syntax syntax = syntaxSettings.get(i);
 				
 				char escapeSequence = syntax.escapeSequence;
 				
 				for (int j = 0; j < textBuilder.length(); j++) {
-					if (textBuilder.charAt(j) == escapeSequence) {
+					char c = textBuilder.charAt(j);
+					cS = Character.toString(c);
+					
+					if (h.getEscapeSequenceReplacements().containsKey(cS)) {
+						cS = h.getEscapeSequenceReplacements().get(cS);
+					}
+					
+					if (c == escapeSequence) {
 						int deleted = deleteSequenceAt(textBuilder, j, false);
 						
-						if (j <= h.getCaretPosition()) {
+						if (j < h.getCaretPosition()) {
 							adjustCaret(h, -deleted);
-							//System.out.println("Adjust caret 1 " + -deleted);
+							//System.out.println("Auto-Formatter: Adjust caret (Deleted " + cS + ") " + -deleted);
 						}
 						
-						deleteResetEscapeSequenceAhead(textBuilder, j, (index, c) -> {
-							if (index <= h.getCaretPosition()) {
+						deleteResetEscapeSequenceAhead(textBuilder, j, (index, character) -> {
+							if (index < h.getCaretPosition()) {
 								adjustCaret(h, -1);
-								//System.out.println("Adjust caret 2");
+								//System.out.println("Auto-Formatter: Adjust caret (Deleted " + cS +  ") -1");
 							}
 						});
 					}
@@ -100,13 +116,17 @@ public class TextAreaAutoFormatterWidget extends Widget {
 					escapeSequence += syntax.instructions;
 				}
 
-				String replacement = escapeSequence + key + ESCAPE_SEQUENCE_RESET;
+				String replacement = escapeSequence + key;
 
+				if (syntax.resetMode == SyntaxResetMode.RESET_AFTER_KEY) {
+					replacement += ESCAPE_SEQUENCE_RESET;
+				}
+				
 				//Adjust caret if needed
-				replaceAll(h, textBuilder, key, replacement);
+				replaceAll(h, textBuilder, key, replacement, syntax.resetMode);
 			}
 
-			//System.err.println("Final caret position: " + h.getCaretPosition() + " (" + textAreaWidget.getTextBuilder().length() + ")");
+			//System.out.println("Auto-Formatter: Final caret position: " + h.getCaretPosition() + " (" + textAreaWidget.getTextBuilder().length() + ")");
 		} else {
 			System.err.println("WARNING: TextAreaAutoFormatterWidget (" + this + ") added to incompatble widget (" + parent + "). "
 					+ "Please add this widget to a TextAreaWidget to experience proper functionality.");
@@ -115,7 +135,7 @@ public class TextAreaAutoFormatterWidget extends Widget {
 		initialRefresh = true;
 	}
 	
-	private void replaceAll(TextAreaContentHandler h, StringBuilder sb, String regex, String replacement) {
+	private void replaceAll(TextAreaContentHandler h, StringBuilder sb, String regex, String replacement, SyntaxResetMode resetMode) {
 	    Matcher m = Pattern.compile(regex).matcher(sb);
 	    int start = 0;
 	    
@@ -133,7 +153,16 @@ public class TextAreaAutoFormatterWidget extends Widget {
 	    	if ((caret > s || caret > e) && sb.length() > cachedTextLength) {
 		    	int offset = (replacement.length() - regex.length());
 		    	adjustCaret(h, offset);
-				//System.out.println("Adjust caret 3: +" + offset);
+				//System.out.println("Auto-Formatter: Adjust caret (Replaced " + regex + " with " + replacement + "): +" + offset);
+	    	}
+	    	
+	    	//If the reset mode is after new line, find the next \n to put the reset at.
+	    	if (resetMode == SyntaxResetMode.RESET_AFTER_NEW_LINE) {
+	    		for (int i = e; i < sb.length(); i++) {
+	    			if (sb.charAt(i) == '\n' && (i + 1 < sb.length() && sb.charAt(i + 1) != ESCAPE_SEQUENCE_RESET)) {
+	    				sb.insert(i + 1, ESCAPE_SEQUENCE_RESET);
+	    			}
+	    		}
 	    	}
 	    }
 	}
@@ -144,11 +173,15 @@ public class TextAreaAutoFormatterWidget extends Widget {
 	}
 	
 	public Syntax addSyntax(String key, char escapeSequence) {
-		return addSyntax(key, escapeSequence, null);
+		return addSyntax(key, escapeSequence, null, SyntaxResetMode.RESET_AFTER_KEY);
 	}
 	
 	public Syntax addSyntax(String key, char escapeSequence, String instructions) {
-		Syntax s = new Syntax(key, escapeSequence, instructions);
+		return addSyntax(key, escapeSequence, instructions, SyntaxResetMode.RESET_AFTER_KEY);
+	}
+	
+	public Syntax addSyntax(String key, char escapeSequence, String instructions, SyntaxResetMode resetMode) {
+		Syntax s = new Syntax(key, escapeSequence, instructions, resetMode);
 		syntaxSettings.add(s);
 		return s;
 	}
@@ -220,11 +253,18 @@ public class TextAreaAutoFormatterWidget extends Widget {
 		private String key;
 		private char escapeSequence;
 		private String instructions;
+		private SyntaxResetMode resetMode;
 		
-		public Syntax(String key, char escapeSequence, String instructions) {
+		public Syntax(String key, char escapeSequence, String instructions, SyntaxResetMode resetMode) {
 			this.key = key;
 			this.escapeSequence = escapeSequence;
 			this.instructions = instructions;
+			this.resetMode = resetMode;
 		}
+	}
+	
+	public enum SyntaxResetMode {
+		RESET_AFTER_KEY,
+		RESET_AFTER_NEW_LINE
 	}
 }
