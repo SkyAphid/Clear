@@ -36,7 +36,6 @@ public class TextAreaContentHandler {
 	 */
 	
 	private TextAreaWidget widget;
-	
 	private TextAreaHistory editHistory = new TextAreaHistory();
 	
 	/*
@@ -206,7 +205,7 @@ public class TextAreaContentHandler {
 	public void refresh() {
 		colorCache.clear();
 	}
-	
+
 	/*
 	 * 
 	 * 

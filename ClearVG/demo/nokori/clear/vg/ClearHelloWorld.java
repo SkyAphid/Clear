@@ -94,7 +94,7 @@ public class ClearHelloWorld extends ClearApplication {
 
 	@Override
 	public Window createWindow(WindowManager windowManager) throws GLFWException {
-		return windowManager.createWindow("Hello World!", WINDOW_WIDTH, WINDOW_HEIGHT, true, true);
+		return windowManager.createWindow("Clear", WINDOW_WIDTH, WINDOW_HEIGHT, true, true);
 	}
 
 }

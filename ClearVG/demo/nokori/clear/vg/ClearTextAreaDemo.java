@@ -88,7 +88,10 @@ public class ClearTextAreaDemo extends ClearApplication {
 
 	@Override
 	public Window createWindow(WindowManager windowManager) throws GLFWException {
-		return windowManager.createWindow("Hello World!", WINDOW_WIDTH, WINDOW_HEIGHT, true, true);
+		return windowManager.createWindow(getTitle(), WINDOW_WIDTH, WINDOW_HEIGHT, true, true);
 	}
 
+	public String getTitle() {
+		return "Clear TextAreaWidget Demo";
+	}
 }

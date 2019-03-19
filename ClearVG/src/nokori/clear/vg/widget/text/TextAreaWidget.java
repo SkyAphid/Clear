@@ -81,7 +81,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	private TextAreaContentInputHandler textContentInputHandler;
 	
 	private float textContentX = -1f, textContentY = -1f, textContentW = -1f, textContentH = -1f;
-	
+
 	/*
 	 * Font Settings
 	 */
@@ -118,7 +118,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	public static final float DEFAULT_RIGHT_SCROLLBAR_LEFT_PADDING = 50;
 	private float verticalScrollbarLeftPadding = DEFAULT_RIGHT_SCROLLBAR_LEFT_PADDING;
 	
-	public static final float DEFAULT_BOTTOM_SCROLLBAR_TOP_PADDING = 50;
+	public static final float DEFAULT_BOTTOM_SCROLLBAR_TOP_PADDING = 10;
 	private float horizontalScrollbarTopPadding = DEFAULT_BOTTOM_SCROLLBAR_TOP_PADDING;
 	
 	private ClearColor scrollbarBackgroundFill = ClearColor.LIGHT_GRAY;
@@ -145,8 +145,6 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	
 	//Horizontal Scrollbar
 	private float horizontalScroll = 0.0f;
-	private float horizontalScrollIncrement = 0.01f;
-	private SimpleTransition horizontalScrollTransition = null;
 	
 	private static final float HORIZONTAL_SCROLLBAR_MIN_WIDTH = 60f;
 	private float horizontalScrollbarDefaultWidth;
@@ -225,6 +223,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		float maxLineNumberWidth = lineNumberFont.getTextBounds(context, tempVec, Integer.toString(maxLines)).x() + lineNumberLeftPadding;
 		float lineNumberCompleteWidth = lineNumbersEnabled ? lineNumberLeftPadding + maxLineNumberWidth + lineNumberRightPadding : 0f;
 		
+		
 		/*
 		 * Line split and text content area calculations
 		 */
@@ -242,20 +241,22 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 			refreshLines = false;
 		}
 		
-		//Used for activating the I-Beam cursor
+		/*
+		 * Text Content Bounding
+		 * 
+		 * The bounding area of the text content (used for input and scissoring)
+		 */
+		
 		textContentX = x + lineNumberCompleteWidth;
 		textContentY = y;
+		
 		textContentW = width - scrollbarThickness - verticalScrollbarLeftPadding;
 		textContentH = height;
 		
-		//Scroll increment is adjusted based on the length of the text content (higher increments for more text, lower increments for less text)
-		verticalScrollIncrement = (5f / lines.size());
+		if (!wordWrappingEnabled) {
+			textContentH -= (scrollbarThickness + horizontalScrollbarTopPadding);
+		}
 		
-		float fontHeight = font.getHeight(context, fontSize, TEXT_AREA_ALIGNMENT, fontStyle);
-		float renderAreaHeight = (height / fontHeight) * fontHeight;
-		float stringHeight = font.getHeight(context, lines.size(), fontHeight, TEXT_AREA_ALIGNMENT, fontStyle);
-
-		verticalScrollbarActive = (stringHeight > height);
 		
 		/*
 		 * 
@@ -265,7 +266,13 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		 * 
 		 */
 		
-		//Scissor translation Y
+		float fontHeight = font.getHeight(context, fontSize, TEXT_AREA_ALIGNMENT, fontStyle);
+		float renderAreaHeight = (textContentH / fontHeight) * fontHeight;
+		float stringHeight = font.getHeight(context, lines.size(), fontHeight, TEXT_AREA_ALIGNMENT, fontStyle);
+		float maxAdvance = width;
+		
+		//Scissor translation
+		float scissorX = -(((maxAdvance * 1.2f) - textContentW) * horizontalScroll);
 		float scissorY = -((stringHeight - renderAreaHeight) * verticalScroll);
 		
 		//System.err.println(fontHeight + " " + renderAreaHeight + " " + indicesVisible + " | " + startIndex + " " + endIndex + " " + lines.size());
@@ -274,8 +281,8 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		
 		//Text
 		nvgBeginPath(vg);
-		nvgScissor(vg, x, y, textContentW, height);
-		nvgTranslate(vg, 0, scissorY);
+		nvgScissor(vg, x, y, textContentW, textContentH);
+		nvgTranslate(vg, scissorX, scissorY);
 		
 		int totalCharacters = 0;
 		
@@ -284,6 +291,14 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		resetRenderConfiguration(context);
 		
 		for (int i = 0; i < lines.size(); i++) {
+			//Calculate the max advance
+			float a = (float) font.getTextBounds(context, tempVec, lines.get(i)).x();
+			
+			if (a > maxAdvance) {
+				maxAdvance = a;
+			}
+			
+			//Calculate the renderY for this line
 			float rY = textContentY + (fontHeight * i);
 			
 			//Culls text that's outside of the scissoring range. We include a bit of padding. 
@@ -296,12 +311,12 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 				continue;
 			}
 			
-			//Draw line number if applicable
-			renderLineNumber(context, x, rY, lineNumberCompleteWidth, fontHeight, i);
-			
 			//Draw the text
 			boolean isFinalLine = (i+1 >= lines.size());
 			totalCharacters += textContentHandler.renderLine(context, text.length(), lines.get(i), totalCharacters, textContentX, rY, scissorY, fontHeight, isFinalLine);
+			
+			//Draw line number if applicable
+			renderLineNumber(context, x - scissorX, rY, lineNumberCompleteWidth, fontHeight, i);
 		}
 		
 		textContentHandler.endOfRenderingCallback();
@@ -310,8 +325,22 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		nvgResetScissor(vg);
 		nvgClosePath(vg);
 
-		//Scrollbar
-		renderScrollbar(context, x, y, width, height, stringHeight/5f);
+		/*
+		 * 
+		 * Scrollbar Calculations & Rendering
+		 * 
+		 */
+		
+		//Vertical scrollbar
+		//Scroll increment is adjusted based on the length of the text content (higher increments for more text, lower increments for less text)
+		verticalScrollIncrement = (5f / lines.size());
+		verticalScrollbarActive = (stringHeight > height);
+		
+		renderVerticalScrollbar(context, x, y, width, height, stringHeight/5f);
+		
+		//Horizontal scrollbar
+		horizontalScrollbarActive = (!wordWrappingEnabled && maxAdvance > width);
+		renderHorizontalScrollbar(context, x, y, width, height, maxAdvance);
 	}
 
 	/**
@@ -357,7 +386,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		nvgRestore(vg);
 	}
 	
-	private void renderScrollbar(NanoVGContext context, float x, float y, float width, float height, float stringHeight) {
+	private void renderVerticalScrollbar(NanoVGContext context, float x, float y, float width, float height, float stringHeight) {
 		
 		/*
 		 * 
@@ -365,12 +394,14 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		 * 
 		 */
 		
-		float scrollbarMaxHeight = getHeight() * 0.75f;
+		float scrollbarBackgroundHeight = (wordWrappingEnabled ? height : height - scrollbarThickness);
+		
+		float scrollbarMaxHeight = getHeight() * 0.5f;
 		verticalScrollbarDefaultHeight = getHeight()/2;
-		verticalScrollbarHeight = WidgetUtil.clamp(verticalScrollbarDefaultHeight * (height / stringHeight), VERTICAL_SCROLLBAR_MIN_HEIGHT, scrollbarMaxHeight);
+		verticalScrollbarHeight = WidgetUtil.clamp(verticalScrollbarDefaultHeight * (scrollbarBackgroundHeight / stringHeight), VERTICAL_SCROLLBAR_MIN_HEIGHT, scrollbarMaxHeight);
 		
 		verticalScrollbarX = (x + width) - scrollbarThickness;
-		verticalScrollbarY = (y + ((height - verticalScrollbarHeight) * verticalScroll));
+		verticalScrollbarY = (y + ((scrollbarBackgroundHeight - verticalScrollbarHeight) * verticalScroll));
 		
 		//Set the selected fill based on if the mouse is hovering or selecting the scrollbar
 		ClearColor currentFill = (verticalScrollbarHovering || verticalScrollbarSelected) ? scrollbarHighlightFill : scrollbarFill;
@@ -402,7 +433,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		
 		//scrollbar background
 		nvgBeginPath(vg);
-		nvgRoundedRect(vg, verticalScrollbarX, y, scrollbarThickness, height, scrollbarCornerRadius);
+		nvgRoundedRect(vg, verticalScrollbarX, y, scrollbarThickness, scrollbarBackgroundHeight, scrollbarCornerRadius);
 		nvgFillColor(vg, scrollbarBackgroundFill);
 		nvgFill(vg);
 		nvgClosePath(vg);
@@ -412,6 +443,73 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 			//scrollbar
 			nvgBeginPath(vg);
 			nvgRoundedRect(vg, verticalScrollbarX, verticalScrollbarY, scrollbarThickness, verticalScrollbarHeight, scrollbarCornerRadius);
+			nvgFillColor(vg, scrollbarFill);
+			nvgFill(vg);
+			nvgClosePath(vg);
+		}
+		
+		scrollbarBackgroundFill.free();
+		scrollbarFill.free();
+	}
+	
+	private void renderHorizontalScrollbar(NanoVGContext context, float x, float y, float width, float height, float maxAdvance) {
+		
+		if (wordWrappingEnabled) return;
+		
+		/*
+		 * 
+		 * Calculations
+		 * 
+		 */
+		
+		float scrollbarBackgroundWidth = width - scrollbarThickness;
+		
+		float scrollbarMaxWidth = width * 0.75f;
+		horizontalScrollbarDefaultWidth = width/2;
+		horizontalScrollbarWidth = WidgetUtil.clamp(horizontalScrollbarDefaultWidth * (scrollbarBackgroundWidth / maxAdvance), HORIZONTAL_SCROLLBAR_MIN_WIDTH, scrollbarMaxWidth);
+		
+		horizontalScrollbarX = (x + ((scrollbarBackgroundWidth - horizontalScrollbarWidth) * horizontalScroll));
+		horizontalScrollbarY = (y + height) - scrollbarThickness;
+		
+		//Set the selected fill based on if the mouse is hovering or selecting the scrollbar
+		ClearColor currentFill = (horizontalScrollbarHovering || horizontalScrollbarSelected) ? scrollbarHighlightFill : scrollbarFill;
+		
+		//Brighten the select color if the scrollbar is selected
+		if (horizontalScrollbarSelected) {
+			currentFill = currentFill.multiply(0.9f);
+		}
+		
+		//Transitions the scrollbar color smoothly to the currently selected fill color
+		if (!horizontalScrollbarRenderFill.rgbMatches(currentFill) && horizontalScrollbarFillTransition == null) {
+			horizontalScrollbarFillTransition = new FillTransition(200, horizontalScrollbarRenderFill, currentFill);
+			horizontalScrollbarFillTransition.play();
+			horizontalScrollbarFillTransition.setOnCompleted(t -> {
+				horizontalScrollbarFillTransition = null;
+			});
+		}
+		
+		/*
+		 * 
+		 * Rendering
+		 * 
+		 */
+		
+		long vg = context.get();
+		
+		NVGColor scrollbarBackgroundFill = this.scrollbarBackgroundFill.callocNVG();
+		NVGColor scrollbarFill = horizontalScrollbarRenderFill.callocNVG();
+		
+		//scrollbar background
+		nvgBeginPath(vg);
+		nvgRoundedRect(vg, x, horizontalScrollbarY, scrollbarBackgroundWidth, scrollbarThickness, scrollbarCornerRadius);
+		nvgFillColor(vg, scrollbarBackgroundFill);
+		nvgFill(vg);
+		nvgClosePath(vg);
+		
+		if (horizontalScrollbarActive) {
+			//scrollbar
+			nvgBeginPath(vg);
+			nvgRoundedRect(vg, horizontalScrollbarX, horizontalScrollbarY, horizontalScrollbarWidth, scrollbarThickness, scrollbarCornerRadius); 
 			nvgFillColor(vg, scrollbarFill);
 			nvgFill(vg);
 			nvgClosePath(vg);
@@ -462,16 +560,32 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	@Override
 	public void mouseButtonEvent(Window window, MouseButtonEvent event) {
 		super.mouseButtonEvent(window, event);
-		scrollbarMouseButtonEvent(window, event);
+		
+		verticalScrollbarMouseButtonEvent(window, event);
+		horizontalScrollbarMouseButtonEvent(window, event);
+		
 		textContentInputHandler.mouseButtonEvent(window, event);
 	}
 	
-	private void scrollbarMouseButtonEvent(Window window, MouseButtonEvent event) {
+	private void verticalScrollbarMouseButtonEvent(Window window, MouseButtonEvent event) {
+		if (!verticalScrollbarActive) return;
+		
 		//Set scrollbar to selected if hovering/clicked or if the mouse button is held down and it's already selected
 		if ((verticalScrollbarHovering || verticalScrollbarSelected) && event.isPressed() && event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
 			verticalScrollbarSelected = true;
 		} else {
 			verticalScrollbarSelected = false;
+		}
+	}
+	
+	private void horizontalScrollbarMouseButtonEvent(Window window, MouseButtonEvent event) {
+		if (!horizontalScrollbarActive) return;
+		
+		//Set scrollbar to selected if hovering/clicked or if the mouse button is held down and it's already selected
+		if ((horizontalScrollbarHovering || horizontalScrollbarSelected) && event.isPressed() && event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+			horizontalScrollbarSelected = true;
+		} else {
+			horizontalScrollbarSelected = false;
 		}
 	}
 	
@@ -481,7 +595,9 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		
 		resetCursor = true;
 		
-		scrollbarMouseMotionEvent(window, event);
+		verticalScrollbarMouseMotionEvent(window, event);
+		horizontalScrollbarMouseMotionEvent(window, event);
+		
 		textContentInputHandler.mouseMotionEvent(window, event);
 		
 		/*
@@ -501,9 +617,13 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		}
 	}
 
-	private void scrollbarMouseMotionEvent(Window window, MouseMotionEvent event) {
+	private void verticalScrollbarMouseMotionEvent(Window window, MouseMotionEvent event) {
+		if (!verticalScrollbarActive) return;
+		
 		//Is mouse hovering scrollbar?
-		verticalScrollbarHovering = (verticalScrollbarActive && inputSettings.isScrollbarEnabled() && WidgetUtil.mouseWithinRectangle(window, verticalScrollbarX, verticalScrollbarY, scrollbarThickness, verticalScrollbarHeight));
+		verticalScrollbarHovering = (verticalScrollbarActive 
+				&& inputSettings.isScrollbarEnabled() 
+				&& WidgetUtil.mouseWithinRectangle(window, verticalScrollbarX, verticalScrollbarY, scrollbarThickness, verticalScrollbarHeight));
 		
 		if (verticalScrollbarHovering) {
 			ClearStaticResources.getCursor(Cursor.Type.HAND).apply(window);
@@ -519,14 +639,36 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		}
 	}
 	
+	private void horizontalScrollbarMouseMotionEvent(Window window, MouseMotionEvent event) {
+		if (!horizontalScrollbarActive) return;
+		
+		//Is mouse hovering scrollbar?
+		horizontalScrollbarHovering = (horizontalScrollbarActive 
+				&& inputSettings.isScrollbarEnabled() 
+				&& WidgetUtil.mouseWithinRectangle(window, horizontalScrollbarX, horizontalScrollbarY, horizontalScrollbarWidth, scrollbarThickness));
+		
+		if (horizontalScrollbarHovering) {
+			ClearStaticResources.getCursor(Cursor.Type.HAND).apply(window);
+			resetCursor = false;
+		}
+		
+		//The scrollbar value follows mouse. 
+		//We subtract the mouse Y from the widget render Y and then divide that by the height of the widget to get a normalized value we can use for the scroller.
+		if (horizontalScrollbarSelected) {
+			float relativeMouseX = (float) (event.getMouseX() - getClippedX());
+			float mouseXMult = WidgetUtil.clamp((relativeMouseX  / getWidth()), 0f, 1f);
+			horizontalScroll = mouseXMult;
+		}
+	}
+	
 	@Override
 	public void mouseScrollEvent(Window window, MouseScrollEvent event) {
 		super.mouseScrollEvent(window, event);
-		scrollbarMouseScrollEvent(window, event);
+		verticalScrollbarMouseScrollEvent(window, event);
 	}
 	
-	private void scrollbarMouseScrollEvent(Window window, MouseScrollEvent event) {
-		if (!isMouseWithinThisWidget(window)) {
+	private void verticalScrollbarMouseScrollEvent(Window window, MouseScrollEvent event) {
+		if (!isMouseWithinThisWidget(window) || !verticalScrollbarActive) {
 			return;
 		}
 		
@@ -634,12 +776,8 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	}
 	
 	/*
-	 * Scrollbar settings
+	 * General Scrollbar settings
 	 */
-	
-	public boolean isScrollbarSelected() {
-		return verticalScrollbarSelected;
-	}
 	
 	public float getScrollbarThickness() {
 		return scrollbarThickness;
@@ -655,30 +793,6 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 
 	public void setScrollbarCornerRadius(float scrollbarCornerRadius) {
 		this.scrollbarCornerRadius = scrollbarCornerRadius;
-	}
-
-	public float getVerticalScrollbarLeftPadding() {
-		return verticalScrollbarLeftPadding;
-	}
-
-	public void setVerticalScrollbarLeftPadding(float scrollbarLeftPadding) {
-		this.verticalScrollbarLeftPadding = scrollbarLeftPadding;
-	}
-
-	public float getScrollIncrement() {
-		return verticalScrollIncrement;
-	}
-
-	public void setScrollIncrement(float scrollIncrement) {
-		this.verticalScrollIncrement = scrollIncrement;
-	}
-
-	public SimpleTransition getScrollTransition() {
-		return verticalScrollTransition;
-	}
-
-	public void setScrollTransition(SimpleTransition scrollTransition) {
-		this.verticalScrollTransition = scrollTransition;
 	}
 
 	public ClearColor getScrollbarBackgroundFill() {
@@ -703,6 +817,74 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 
 	public void setScrollbarHighlightFill(ClearColor scrollbarHighlightFill) {
 		this.scrollbarHighlightFill = scrollbarHighlightFill;
+	}
+	
+	public boolean isScrollbarSelected() {
+		return (isHorizontalScrollbarSelected() || isVerticalScrollbarSelected());
+	}
+	
+	/*
+	 * Horizontal Scrollbar
+	 */
+	
+	public float getHorizontalScrollbarTopPadding() {
+		return horizontalScrollbarTopPadding;
+	}
+
+	public void setHorizontalScrollbarTopPadding(float horizontalScrollbarTopPadding) {
+		this.horizontalScrollbarTopPadding = horizontalScrollbarTopPadding;
+	}
+
+	public float getHorizontalScroll() {
+		return horizontalScroll;
+	}
+
+	public void setHorizontalScroll(float horizontalScroll) {
+		this.horizontalScroll = horizontalScroll;
+	}
+
+	public boolean isHorizontalScrollbarActive() {
+		return horizontalScrollbarActive;
+	}
+
+	public boolean isHorizontalScrollbarHovering() {
+		return horizontalScrollbarHovering;
+	}
+
+	public boolean isHorizontalScrollbarSelected() {
+		return horizontalScrollbarSelected;
+	}
+	
+	/*
+	 * Vertical Scrollbar
+	 */
+	
+	public float getVerticalScrollbarLeftPadding() {
+		return verticalScrollbarLeftPadding;
+	}
+
+	public void setVerticalScrollbarLeftPadding(float verticalScrollbarLeftPadding) {
+		this.verticalScrollbarLeftPadding = verticalScrollbarLeftPadding;
+	}
+
+	public float getVerticalScroll() {
+		return verticalScroll;
+	}
+
+	public void setVerticalScroll(float verticalScroll) {
+		this.verticalScroll = verticalScroll;
+	}
+
+	public boolean isVerticalScrollbarActive() {
+		return verticalScrollbarActive;
+	}
+
+	public boolean isVerticalScrollbarHovering() {
+		return verticalScrollbarHovering;
+	}
+
+	public boolean isVerticalScrollbarSelected() {
+		return verticalScrollbarSelected;
 	}
 
 	/*
