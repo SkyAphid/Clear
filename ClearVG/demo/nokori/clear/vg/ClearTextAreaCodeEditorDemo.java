@@ -31,10 +31,10 @@ public class ClearTextAreaCodeEditorDemo extends ClearTextAreaDemo {
 		//Create definitions for the highlighting. Keep in mind, the auto-formatter is a general use widget for TextAreaWidgets.
 		//In our case, we're building it to work as a syntax highlighter.
 		syntaxHighlighter.addSyntax("public void", ESCAPE_SEQUENCE_COLOR, "#950055");
-		syntaxHighlighter.addSyntax("blue", ESCAPE_SEQUENCE_COLOR, "#0026FF");
-		syntaxHighlighter.addSyntax("bold", ESCAPE_SEQUENCE_BOLD);
-		syntaxHighlighter.addSyntax("italic", ESCAPE_SEQUENCE_ITALIC);
-		syntaxHighlighter.addSyntax("light", ESCAPE_SEQUENCE_LIGHT);
+		syntaxHighlighter.addSyntax("BlueText", ESCAPE_SEQUENCE_COLOR, "#0026FF");
+		syntaxHighlighter.addSyntax("BoldText", ESCAPE_SEQUENCE_BOLD);
+		syntaxHighlighter.addSyntax("ItalicText", ESCAPE_SEQUENCE_ITALIC);
+		syntaxHighlighter.addSyntax("LightText", ESCAPE_SEQUENCE_LIGHT);
 		syntaxHighlighter.addSyntax("//", ESCAPE_SEQUENCE_COLOR, "#3F7F5F", TextAreaAutoFormatterWidget.SyntaxResetMode.RESET_AFTER_NEW_LINE);
 	}
 
@@ -42,7 +42,7 @@ public class ClearTextAreaCodeEditorDemo extends ClearTextAreaDemo {
 	protected String getText() {
 		return "public void highlightingExample() {"
 				+ "\n\t//This is a comment Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test"
-				+ "\n\tblue bold italic light normal"
+				+ "\n\tBlueText BoldText ItalicText LightText NormalText"
 				+ "\n}";
 	}
 	

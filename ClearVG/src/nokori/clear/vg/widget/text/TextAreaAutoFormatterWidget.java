@@ -160,7 +160,12 @@ public class TextAreaAutoFormatterWidget extends Widget {
 	    	if (resetMode == SyntaxResetMode.RESET_AFTER_NEW_LINE) {
 	    		for (int i = e; i < sb.length(); i++) {
 	    			if (sb.charAt(i) == '\n' && (i + 1 < sb.length() && sb.charAt(i + 1) != ESCAPE_SEQUENCE_RESET)) {
+	    				if (h.getCaretPosition() > i) {
+	    					h.offsetCaret(1);
+	    				}
+	    				
 	    				sb.insert(i + 1, ESCAPE_SEQUENCE_RESET);
+	    				break;
 	    			}
 	    		}
 	    	}

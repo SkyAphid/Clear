@@ -2,6 +2,7 @@ package nokori.clear.vg.widget.text;
 
 import static org.lwjgl.nanovg.NanoVG.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.joml.Vector2f;
@@ -9,6 +10,7 @@ import org.joml.Vector2i;
 
 import nokori.clear.vg.ClearColor;
 import nokori.clear.vg.NanoVGContext;
+import nokori.clear.vg.font.Font;
 import nokori.clear.vg.font.FontStyle;
 import nokori.clear.vg.transition.SimpleTransition;
 import nokori.clear.vg.widget.assembly.WidgetUtil;
@@ -26,10 +28,10 @@ public class TextAreaContentHandler {
 	 */
 	
 	/** Sets up the escape sequence replacement hashmap to show the names of the commands in the rendering for debugging purposes */
-	private static final boolean SHOW_ESCAPE_SEQUENCES = false;
+	private static final boolean SHOW_ESCAPE_SEQUENCES = true;
 	
 	/** Disables character skipping, meaning that longer escape sequences such as HEX color setters will be displayed for debugging purposes */
-	private static final boolean SKIPPING_ENABLED = true;
+	private static final boolean SKIPPING_ENABLED = false;
 	
 	/*
 	 * Core data
@@ -67,7 +69,10 @@ public class TextAreaContentHandler {
 	
 	private boolean updateCaret = false;
 	private Vector2f caretUpdateQueue = new Vector2f(-1, -1);
-
+	private Vector2f caretPosition = new Vector2f(-1, -1);
+	
+	private boolean requestScrollToCaret = false;
+	
 	private int caret = -1;
 
 	/*
@@ -97,7 +102,7 @@ public class TextAreaContentHandler {
 	 * @param lineY - the render y
 	 * @return - the number of characters rendered
 	 */
-	public int renderLine(NanoVGContext context, int totalTextLength, String text, int startIndex, float textContentX, float lineY, float scissorY, float fontHeight, boolean isFinalLine) {
+	public int renderLine(NanoVGContext context, int totalTextLength, int lineNumber, String text, int startIndex, float textContentX, float lineY, float scissorY, float fontHeight) {
 		long vg = context.get();
 
 		int totalCharacters = 0;
@@ -133,7 +138,7 @@ public class TextAreaContentHandler {
 	
 				// caret systems
 				if (widget.getInputSettings().isCaretEnabled()) {
-					forEachCharCaretLogic(vg, characterIndex, bAdvanceX, lineY, adjustedClickY, (advanceX - bAdvanceX), fontHeight, isFinalLine);
+					forEachCharCaretLogic(vg, characterIndex, lineNumber, bAdvanceX, lineY, adjustedClickY, (advanceX - bAdvanceX), fontHeight);
 				}
 				
 				// pop state
@@ -143,7 +148,7 @@ public class TextAreaContentHandler {
 				
 				//Character rendering is skipped, but caret logic is still checked.
 				nvgSave(vg);
-				forEachCharCaretLogic(vg, characterIndex, advanceX, lineY, adjustedClickY, 0, fontHeight, isFinalLine);
+				forEachCharCaretLogic(vg, characterIndex, lineNumber, advanceX, lineY, adjustedClickY, 0, fontHeight);
 				nvgRestore(vg);
 			}
 
@@ -154,12 +159,15 @@ public class TextAreaContentHandler {
 		/*
 		 * For moving the caret to the very start/end of this line.
 		 */
+		
 		int endIndex = startIndex + totalCharacters;
-		edgeCaretLogic(vg, totalTextLength, startIndex, endIndex, textContentX, advanceX, lineY, adjustedClickY, fontHeight, isFinalLine);
+		edgeCaretLogic(vg, totalTextLength, lineNumber, startIndex, endIndex, textContentX, advanceX, lineY, adjustedClickY, fontHeight);
 		
 		//In a special case where the caret is at the end of the entirety of the text, we render the caret at the very tail end.
 		//Normally it's rendered during normal character rendering - but if the caret is outside the text - then it won't draw otherwise.
-		if (caret == endIndex && endIndex == totalTextLength) {
+		if (caret == endIndex && endIndex == totalTextLength 
+				&& (!widget.isFinalLine(lineNumber) && !widget.getLines().get(lineNumber + 1).isEmpty() || widget.isFinalLine(lineNumber))) {
+			
 			//Highlight logic for the very end of the text.
 			highlightRenderLogic(vg, advanceX, lineY, caret);
 			
@@ -168,6 +176,30 @@ public class TextAreaContentHandler {
 		}
 		
 		return totalCharacters;
+	}
+	
+	public float calculateMaxAdvance(NanoVGContext context, float width, Font font, ArrayList<String> lines) {
+		//Calculate the max advance every time the text changes.
+		float maxAdvance = width;
+		int characterIndex = 0;
+		
+		for (int i = 0; i < lines.size(); i++) {
+			String l = lines.get(i);
+			String s = "";
+			
+			for (int j = 0; j < l.length(); j++) {
+				s += checkEscapeSequences(context, characterIndex, l.charAt(j));
+				characterIndex++;
+			}
+			
+			float a = font.getTextBounds(context, widget.tempVec, s).x();
+
+			if (a > maxAdvance) {
+				maxAdvance = a;
+			}
+		}
+		
+		return maxAdvance;
 	}
 	
 	/**
@@ -196,7 +228,7 @@ public class TextAreaContentHandler {
 	void endOfRenderingCallback() {
 		//If updateCaret is still true by the end of a rendering cycle, that means it was never successfully moved (invalid caret queue coordinates).
 		//We'll turn it off so that it doesn't get deadlocked.
-		updateCaret = false;
+		notifyCaretUpdated();
 	}
 	
 	/**
@@ -217,11 +249,11 @@ public class TextAreaContentHandler {
 	/**
 	 * Handles mouse positioning of the caret within text content.
 	 */
-	private void forEachCharCaretLogic(long vg, int characterIndex, float x, float y, float adjustedClickY, float advanceW, float fontHeight, boolean isFinalLine) {
-		
+	private void forEachCharCaretLogic(long vg, int characterIndex, int lineNumber, float x, float y, float adjustedClickY, float advanceW, float fontHeight) {
 		//Checks if the mouse click was in the bounding of this character - if so, the caret is set to this index.
-		float clickHeight = (isFinalLine ? Float.MAX_VALUE : fontHeight);
-		if (updateCaret && WidgetUtil.pointWithinRectangle(caretUpdateQueue.x, caretUpdateQueue.y, x, adjustedClickY, advanceW, clickHeight)) {
+		float clickHeight = (widget.isFinalLine(lineNumber) ? Float.MAX_VALUE : fontHeight);
+		
+		if (updateCaret && WidgetUtil.pointWithinRectangle(getCaretQueueScissoredX(), getCaretQueueScissoredY(), x, adjustedClickY, advanceW, clickHeight)) {
 			int bCaretPosition = caret;
 			setCaretPosition(characterIndex);
 			refreshHighlightIndex();
@@ -230,7 +262,7 @@ public class TextAreaContentHandler {
 				resetCaretFader();
 			}
 			
-			updateCaret = false;
+			notifyCaretUpdated();
 		}
 	}
 
@@ -238,24 +270,30 @@ public class TextAreaContentHandler {
 	 * Applies extra logic at the end of line rendering for positioning the caret on the edges of a line (e.g. at the very start of a line or the very end), 
 	 * which would be somewhat difficult with just the base controls.
 	 */
-	private void edgeCaretLogic(long vg, int totalTextLength, int startIndex, int endIndex, float startX, float endX, float y, float adjustedClickY, float fontHeight, boolean isFinalLine) {
-		double mX = caretUpdateQueue.x;
-		double mY = caretUpdateQueue.y;
+	private void edgeCaretLogic(long vg, int totalTextLength, int lineNumber, int startIndex, int endIndex, float startX, float endX, float y, float adjustedClickY, float fontHeight) {
+		double mX = getCaretQueueScissoredX();
+		double mY = getCaretQueueScissoredY();
 		
 		if (updateCaret) {
-			if (mY >= adjustedClickY && mY <= adjustedClickY + fontHeight || (mY >= adjustedClickY && isFinalLine)) {
+			//System.out.println(lineNumber + " Pass 1");
+			
+			if (mY >= adjustedClickY && mY <= adjustedClickY + fontHeight || (mY >= adjustedClickY && widget.isFinalLine(lineNumber))) {
 				//Places the caret at the very start of a line if the mouse is past the very left edge of the rendering area.
 				if (mX < startX) {
+					//System.out.println(lineNumber + " Pass 2");
+					
 					setCaretPosition(startIndex);
 					refreshHighlightIndex();
 					resetCaretFader();
-					updateCaret = false;
+					notifyCaretUpdated();
 				}
 				
 				//Places the caret on the very end of the right side of the line if the mouse is past the very right edge of the rendering area.
 				//A special case is added to put the caret past the end of the text if it's the end of the entire string.
 				if (mX > endX) {
-					if (endIndex < totalTextLength-1) {
+					//System.out.println(lineNumber + " Pass 3");
+					
+					if (endIndex < totalTextLength) {
 						setCaretPosition(endIndex-1);
 					} else {
 						setCaretPosition(endIndex);
@@ -263,7 +301,7 @@ public class TextAreaContentHandler {
 					
 					refreshHighlightIndex();
 					resetCaretFader();
-					updateCaret = false;
+					notifyCaretUpdated();
 				}
 			}
 		}
@@ -274,6 +312,8 @@ public class TextAreaContentHandler {
 	 */
 	private void renderCaret(long vg, float x, float y, float fontHeight) {
 		if (isContentHighlighted()) return;
+		
+		caretPosition.set(x, y);
 		
 		nvgSave(vg);
 		
@@ -344,6 +384,29 @@ public class TextAreaContentHandler {
 	void queueCaret(float x, float y) {
 		caretUpdateQueue.set(x, y);
 		updateCaret = true;
+	}
+	
+	private float getCaretQueueScissoredX() {
+		return caretUpdateQueue.x() - widget.getScissorX();
+	}
+	
+	private float getCaretQueueScissoredY() {
+		return caretUpdateQueue.y() - widget.getScissorY();
+	}
+	
+	/**
+	 * Sets updateCaret to false, meaning that the caret has been updated for this frame.
+	 * 
+	 * Also calls any other commands that require the up-to-date caret position data.
+	 * 
+	 * @see <code>scrollToCaret()</code>
+	 */
+	private void notifyCaretUpdated() {
+		if (requestScrollToCaret) {
+			scrollToCaret();
+			requestScrollToCaret = false;
+		}
+		updateCaret = false;
 	}
 	
 	public boolean isCaretActive() {
@@ -486,6 +549,7 @@ public class TextAreaContentHandler {
 			setCaretPosition(getHighlightStartIndex());
 			resetHighlighting();
 			widget.requestRefresh();
+			requestScrollToCaret();
 		}
 	}
 	
@@ -500,10 +564,13 @@ public class TextAreaContentHandler {
 			offsetCaret(1);
 			widget.requestRefresh();
 		}
+		
+		requestScrollToCaret();
 	}
 	
 	public void backspaceAtCaret() {
 		offsetCaret(-backspace(caret), false);
+		requestScrollToCaret();
 	}
 	
 	public int backspace(int position) {
@@ -560,6 +627,7 @@ public class TextAreaContentHandler {
 	public void tabAtCaret() {
 		tab(caret);
 		offsetCaret(1);
+		requestScrollToCaret();
 	}
 	
 	public void tab(int position) {
@@ -569,22 +637,6 @@ public class TextAreaContentHandler {
 	}
 	
 	public void newLineAtCaret() {
-		boolean offsetCaret = false;
-		
-		/*
-		 * Ensure the caret lines up with the new lines correctly. We have to add a few checks because the circumstances can very based on the user input.
-		 */
-		StringBuilder s = widget.getTextBuilder();
-		
-		int charIndex = caret-1;
-		
-		boolean isCaretInFrontOfNewLine = (charIndex-1 >= 0 && s.charAt(charIndex - 1) == '\n');
-		boolean isCaretBehindNewLine = (charIndex+1 < s.length() && s.charAt(charIndex+1) == '\n');
-
-		if (!isCaretInFrontOfNewLine || isCaretBehindNewLine) {
-			offsetCaret = true;
-		}
-		
 		/*
 		 * Add the new line.
 		 */
@@ -592,23 +644,16 @@ public class TextAreaContentHandler {
 		newLine(caret);
 		
 		/*
-		 * Offset the caret is applicable.
+		 * Set the caret to the next line index
 		 */
-		if (offsetCaret) {
-			offsetCaret(1);
-		}
+
+	 	setCaretPosition(caret + 1);
+		requestScrollToCaret();
 	}
 	
 	public void newLine(int position) {
 		StringBuilder s = widget.getTextBuilder();
-		String c = "\n";
-		
-		if (position == s.length() && (position-1 >= 0 && s.charAt(position-1) != '\n')) {
-			c += c;
-		}
-		
-		s.insert(position, c);
-		
+		s.insert(position, "\n");
 		widget.requestRefresh();
 	}
 	
@@ -637,6 +682,7 @@ public class TextAreaContentHandler {
 	
 	public void pasteClipboardAtCaret(Window window) {
 		offsetCaret(pasteClipboard(window, caret));
+		requestScrollToCaret();
 	}
 	
 	public int pasteClipboard(Window window, int position) {
@@ -702,6 +748,7 @@ public class TextAreaContentHandler {
 		if (caret > 0) {
 			resetHighlighting();
 			resetCaretFader();
+			requestScrollToCaret();
 			
 			/*
 			 * Caret offset for color sequences
@@ -732,6 +779,7 @@ public class TextAreaContentHandler {
 		if (caret < s.length()) {
 			resetHighlighting();
 			resetCaretFader();
+			requestScrollToCaret();
 			
 			/*
 			 * Caret offset for color sequences
@@ -748,6 +796,55 @@ public class TextAreaContentHandler {
 			
 			offsetCaret(1);
 		}
+	}
+	
+	/**
+	 * This function attempts to scroll the text area to the caret location.
+	 * <br><br>
+	 * It's not perfect due to the fact that NanoVG seems to supply faulty advance data for text, so this will become more unstable as the text expands. 
+	 * The good news is that it takes an absurd amount of text to be inputted before this becomes a problem. To get around it, you can either enable word wrapping 
+	 * or set line 
+	 */
+	private void scrollToCaret() {
+		
+		/*
+		 * Vertical Scroll
+		 */
+		
+		int caretLineIndex = widget.getLineIndexOfCharacterIndex(caret);
+
+		if (caretLineIndex == -1) {
+			return;
+		}
+		
+		int numLines = widget.getLines().size() - 2;
+		float vScroll = ((float) caretLineIndex / (float) numLines);
+		widget.setVerticalScroll(vScroll); 
+		
+		/*
+		 * Horizontal Scroll
+		 */
+		
+		float startScissorX = widget.getTextContentX() + (-widget.getScissorX());
+		float endScissorX = startScissorX + (widget.getTextContentW()/1.1f);
+		
+		//System.err.println(startScissorX + " " + endScissorX + " | " + caretPosition.x() + " " + widget.getMaxAdvance());
+	
+		if (caretPosition.x() < startScissorX || caretPosition.x() > endScissorX) {
+			widget.setHorizontalScroll((caretPosition.x() - (endScissorX - startScissorX)) / widget.getMaxAdvance());
+		}
+	}
+	
+	/**
+	 * Requests that the scrollbar be scrolled to an approximation of the caret location.
+	 * 
+	 * It's queued up to ensure that the scroll happens after the caret has been updated to its latest position (otherwise it'll use an outdated position).
+	 * 
+	 * @see <code>scrollToCaret()</code>
+	 * @see <code>notifyCaretUpdated()</code>
+	 */
+	private void requestScrollToCaret() {
+		requestScrollToCaret = true;
 	}
 	
 	/*
@@ -832,7 +929,7 @@ public class TextAreaContentHandler {
 				}
 			}
 		}
-		
+
 		/*System.err.println("pos: " + this.caret);
 		Thread.dumpStack();*/
 	}

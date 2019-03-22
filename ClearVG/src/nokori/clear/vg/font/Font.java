@@ -247,6 +247,10 @@ public class Font {
 			lines.add(builder.toString());
 		}
 		
+		if (string.endsWith("\n")) {
+			lines.add("");
+		}
+		
 		//System.out.println("Split end: " + lines.size());
 	}
 	

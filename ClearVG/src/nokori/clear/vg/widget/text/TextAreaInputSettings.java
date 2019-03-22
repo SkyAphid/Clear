@@ -33,6 +33,9 @@ public class TextAreaInputSettings {
 	
 	private boolean arrowKeysEnabled = true;
 	
+	private boolean verticalScrollbarEnabled = true;
+	private boolean horizontalScrollbarEnabled = true;
+	
 	/*
 	 * 
 	 * 
@@ -167,5 +170,21 @@ public class TextAreaInputSettings {
 
 	public void setArrowKeysEnabled(boolean arrowKeysEnabled) {
 		this.arrowKeysEnabled = arrowKeysEnabled;
+	}
+
+	public boolean isVerticalScrollbarEnabled() {
+		return verticalScrollbarEnabled;
+	}
+
+	public void setVerticalScrollbarEnabled(boolean verticalScrollbarEnabled) {
+		this.verticalScrollbarEnabled = verticalScrollbarEnabled;
+	}
+
+	public boolean isHorizontalScrollbarEnabled() {
+		return horizontalScrollbarEnabled;
+	}
+
+	public void setHorizontalScrollbarEnabled(boolean horizontalScrollbarEnabled) {
+		this.horizontalScrollbarEnabled = horizontalScrollbarEnabled;
 	}
 }

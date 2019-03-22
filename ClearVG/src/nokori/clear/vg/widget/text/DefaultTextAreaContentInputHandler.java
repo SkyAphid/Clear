@@ -35,6 +35,8 @@ public class DefaultTextAreaContentInputHandler extends TextAreaContentInputHand
 	}
 	
 	public void mouseButtonEvent(Window window, MouseButtonEvent event) {
+		if (widget().isScrollbarSelected()) return;
+		
 		if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT && settings().isCaretEnabled()) {
 			//This toggles highlighting mode
 			boolean bMousePressed = mousePressed;

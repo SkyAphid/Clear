@@ -55,7 +55,7 @@ import nokori.clear.windows.event.MouseScrollEvent;
  */
 public class TextAreaWidget extends Widget implements FillAttachment {
 	
-	private Vector2f tempVec = new Vector2f();
+	Vector2f tempVec = new Vector2f();
 	private boolean resetCursor = false;
 
 	/*
@@ -73,15 +73,24 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	//refreshLines can be set to true to cause font.split to be called again so that the current arraylist is recycled.
 	private ArrayList<String> lines = null;
 	private boolean refreshLines = false;
-
+	
 	//TextAreaContentHandler handles formatting and rendering of the lines created above.
 	private TextAreaContentHandler textContentHandler;
 	
 	private TextAreaInputSettings inputSettings = new TextAreaInputSettings();
 	private TextAreaContentInputHandler textContentInputHandler;
 	
+	/*
+	 * Rendering data
+	 */
+	
+	private int firstLineInView = 0;
+	
+	private float scissorX = 0f, scissorY = 0f;
+	private float cullOffset = 0f;
 	private float textContentX = -1f, textContentY = -1f, textContentW = -1f, textContentH = -1f;
-
+	private float maxAdvance = 0f;
+	
 	/*
 	 * Font Settings
 	 */
@@ -89,6 +98,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	private Font font;
 	private float fontSize;
 	private FontStyle fontStyle = FontStyle.REGULAR;
+	private float fontHeight = 0f;
 	
 	private ClearColor defaultTextFill;
 	
@@ -218,7 +228,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		 */
 		
 		//If this is the first time initialization, we'll just use 9999 as the estimated max lines. If we go over it in the future, it'll auto-correct.
-		int defaultMaxLines = 999;
+		int defaultMaxLines = 99_999;
 		int maxLines = (lines != null ? Math.max(lines.size(), defaultMaxLines) : defaultMaxLines);
 		float maxLineNumberWidth = lineNumberFont.getTextBounds(context, tempVec, Integer.toString(maxLines)).x() + lineNumberLeftPadding;
 		float lineNumberCompleteWidth = lineNumbersEnabled ? lineNumberLeftPadding + maxLineNumberWidth + lineNumberRightPadding : 0f;
@@ -234,9 +244,12 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		if (lines == null || refreshLines) {
 			font.split(context, lines = new ArrayList<>(), text, lineSplitW, fontSize, TEXT_AREA_ALIGNMENT, fontStyle);
 			
+			//Don't allow the lines array to be empty.
 			if (lines.isEmpty()) {
 				lines.add("");
 			}
+
+			maxAdvance = textContentHandler.calculateMaxAdvance(context, width, font, lines) * 1.05f;
 			
 			refreshLines = false;
 		}
@@ -257,7 +270,6 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 			textContentH -= (scrollbarThickness + horizontalScrollbarTopPadding);
 		}
 		
-		
 		/*
 		 * 
 		 * 
@@ -266,61 +278,98 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		 * 
 		 */
 		
-		float fontHeight = font.getHeight(context, fontSize, TEXT_AREA_ALIGNMENT, fontStyle);
+		//Some Misc. calculations
+		fontHeight = font.getHeight(context, fontSize, TEXT_AREA_ALIGNMENT, fontStyle);
+		
 		float renderAreaHeight = (textContentH / fontHeight) * fontHeight;
 		float stringHeight = font.getHeight(context, lines.size(), fontHeight, TEXT_AREA_ALIGNMENT, fontStyle);
-		float maxAdvance = width;
 		
-		//Scissor translation
-		float scissorX = -(((maxAdvance * 1.2f) - textContentW) * horizontalScroll);
-		float scissorY = -((stringHeight - renderAreaHeight) * verticalScroll);
-		
-		//System.err.println(fontHeight + " " + renderAreaHeight + " " + indicesVisible + " | " + startIndex + " " + endIndex + " " + lines.size());
+		/*
+		 * 
+		 * Begin path
+		 * 
+		 */
 		
 		long vg = context.get();
-		
-		//Text
 		nvgBeginPath(vg);
-		nvgScissor(vg, x, y, textContentW, textContentH);
+		
+		scissorY = -Math.max(((stringHeight - renderAreaHeight) * verticalScroll), 0f);
+		scissorX = -(maxAdvance * horizontalScroll);
+
+		float scissorW = textContentW + verticalScrollbarLeftPadding/2;
+		float scissorH = textContentH;
+		
+		nvgScissor(vg, x, y, scissorW, scissorH);
 		nvgTranslate(vg, scissorX, scissorY);
 		
+		/*
+		 * 
+		 * 
+		 * Begin Rendering
+		 * 
+		 * 
+		 */
+		
 		int totalCharacters = 0;
+		firstLineInView = -1;
+		cullOffset = fontHeight * 5;
 		
 		textContentHandler.renderHighlight(vg, textContentX, textContentW, fontHeight);
 		
 		resetRenderConfiguration(context);
 		
+		/*
+		 * Render text
+		 */
 		for (int i = 0; i < lines.size(); i++) {
-			//Calculate the max advance
-			float a = (float) font.getTextBounds(context, tempVec, lines.get(i)).x();
-			
-			if (a > maxAdvance) {
-				maxAdvance = a;
-			}
-			
 			//Calculate the renderY for this line
-			float rY = textContentY + (fontHeight * i);
+			float rY = getLineRenderY(i);
 			
 			//Culls text that's outside of the scissoring range. We include a bit of padding. 
 			//You can test the culling by commenting out the nvgScissor call above.
-			float cullY = rY + scissorY;
-			float cullOffset = fontHeight * 5;
-
-			if (cullY < (y - cullOffset) || cullY > y + height + cullOffset) {
+			if (isLineCulled(rY, height)) {
 				totalCharacters += lines.get(i).length();
 				continue;
 			}
 			
-			//Draw the text
-			boolean isFinalLine = (i+1 >= lines.size());
-			totalCharacters += textContentHandler.renderLine(context, text.length(), lines.get(i), totalCharacters, textContentX, rY, scissorY, fontHeight, isFinalLine);
+			//Sets the lines in view
+			if (firstLineInView == -1) {
+				firstLineInView = i;
+			}
 			
+			//Draw the text
+			totalCharacters += textContentHandler.renderLine(context, text.length(), i, lines.get(i), totalCharacters, textContentX, rY, scissorY, fontHeight);
+		}
+		
+		nvgResetTransform(vg);
+		nvgResetScissor(vg);
+		nvgClosePath(vg);
+		
+		/*
+		 * Render Line numbers
+		 */
+		
+		nvgBeginPath(vg);
+		
+		nvgScissor(vg, x, y, scissorW, scissorH);
+		nvgTranslate(vg, 0f, scissorY);
+		
+		for (int i = 0; i < lines.size(); i++) {
+			//Calculate the renderY for this line
+			float rY = getLineRenderY(i);
+			
+			//Culls text that's outside of the scissoring range. We include a bit of padding. 
+			//You can test the culling by commenting out the nvgScissor call above.
+			if (isLineCulled(rY, height)) {
+				continue;
+			}
+
 			//Draw line number if applicable
-			renderLineNumber(context, x - scissorX, rY, lineNumberCompleteWidth, fontHeight, i);
+			renderLineNumber(context, x, rY, lineNumberCompleteWidth, fontHeight, i);
 		}
 		
 		textContentHandler.endOfRenderingCallback();
-
+		
 		nvgResetTransform(vg);
 		nvgResetScissor(vg);
 		nvgClosePath(vg);
@@ -330,19 +379,35 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		 * Scrollbar Calculations & Rendering
 		 * 
 		 */
-		
+
 		//Vertical scrollbar
 		//Scroll increment is adjusted based on the length of the text content (higher increments for more text, lower increments for less text)
 		verticalScrollIncrement = (5f / lines.size());
-		verticalScrollbarActive = (stringHeight > height);
-		
+		verticalScrollbarActive = (inputSettings.isVerticalScrollbarEnabled() && stringHeight > height);
+
 		renderVerticalScrollbar(context, x, y, width, height, stringHeight/5f);
 		
 		//Horizontal scrollbar
-		horizontalScrollbarActive = (!wordWrappingEnabled && maxAdvance > width);
+		horizontalScrollbarActive = (inputSettings.isHorizontalScrollbarEnabled() && !wordWrappingEnabled && maxAdvance > width);
+		
 		renderHorizontalScrollbar(context, x, y, width, height, maxAdvance);
 	}
 
+	private float getLineRenderY(int lineIndex) {
+		return textContentY + (fontHeight * lineIndex);
+	}
+	
+	private boolean isLineCulled(float renderY, float height) {
+		float clipY = getClippedY();
+		float cullY = renderY + scissorY;
+
+		if (cullY < (clipY - cullOffset) || cullY > clipY + height + cullOffset) {
+			return true;
+		}
+		
+		return false;
+	}
+	
 	/**
 	 * Used by TextContentRenderer to set this TextArea back to the user's defined parameters in-between TextRenderCommands.
 	 */
@@ -635,7 +700,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		if (verticalScrollbarSelected) {
 			float relativeMouseY = (float) (event.getMouseY() - getClippedY());
 			float mouseYMult = WidgetUtil.clamp((relativeMouseY  / getHeight()), 0f, 1f);
-			verticalScroll = mouseYMult;
+			setVerticalScroll(mouseYMult);
 		}
 	}
 	
@@ -657,7 +722,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		if (horizontalScrollbarSelected) {
 			float relativeMouseX = (float) (event.getMouseX() - getClippedX());
 			float mouseXMult = WidgetUtil.clamp((relativeMouseX  / getWidth()), 0f, 1f);
-			horizontalScroll = mouseXMult;
+			setHorizontalScroll(mouseXMult);
 		}
 	}
 	
@@ -725,6 +790,71 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		setTextBuilder(new StringBuilder(text));
 	}
 
+	/**
+	 * @return the text content of this TextAreaWidget in its split arraylist form.
+	 */
+	public ArrayList<String> getLines() {
+		return lines;
+	}
+
+	public boolean isFinalLine(int lineNumber) {
+		return (lineNumber + 1 >= lines.size());
+	}
+	
+	public float getTextContentX() {
+		return textContentX;
+	}
+
+	public float getTextContentY() {
+		return textContentY;
+	}
+
+	public float getTextContentW() {
+		return textContentW;
+	}
+
+	public float getTextContentH() {
+		return textContentH;
+	}
+
+	public float getScissorX() {
+		return scissorX;
+	}
+
+	public float getScissorY() {
+		return scissorY;
+	}
+
+	public float getMaxAdvance() {
+		return maxAdvance;
+	}
+
+	public int getFirstLineInView() {
+		return firstLineInView;
+	}
+	
+	public int getLastLineInView() {
+		int linesVisible = (int) ((float) (textContentH - cullOffset) / (float) fontHeight);
+		return Math.min(lines.size(), firstLineInView + linesVisible);
+	}
+	
+	public int getLineIndexOfCharacterIndex(int charIndex) {
+		int count = 0;
+		
+		for (int i = 0; i < lines.size(); i++) {
+			int start = count;
+			int end = start + lines.get(i).length();
+			
+			if (charIndex >= start && charIndex <= end) {
+				return i;
+			}
+			
+			count = end;
+		}
+		
+		return -1;
+	}
+	
 	public boolean isWordWrappingEnabled() {
 		return wordWrappingEnabled;
 	}
@@ -740,6 +870,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	 * 
 	 * 
 	 */
+
 
 	@Override
 	public ClearColor getDefaultTextFill() {
@@ -768,13 +899,6 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		lines = null;
 	}
 
-	/**
-	 * @return the number of lines in this text area. The text split is done before rendering, so in a case where the lines list hasn't been initialized yet, -1 will be returned.
-	 */
-	public int getNumLines() {
-		return (lines != null ? lines.size() : -1);
-	}
-	
 	/*
 	 * General Scrollbar settings
 	 */
@@ -835,12 +959,20 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		this.horizontalScrollbarTopPadding = horizontalScrollbarTopPadding;
 	}
 
+	/**
+	 * @return the horizontal scrollbar value of this TextAreaWidget. The value is a normalized number between 0 and 1.
+	 */
 	public float getHorizontalScroll() {
 		return horizontalScroll;
 	}
 
+	/**
+	 * Sets the horizontal scroll.
+	 * 
+	 * @param horizontalScroll - the normalized scroll value between 0 and 1.
+	 */
 	public void setHorizontalScroll(float horizontalScroll) {
-		this.horizontalScroll = horizontalScroll;
+		this.horizontalScroll = WidgetUtil.clamp(horizontalScroll, 0f, 1f);
 	}
 
 	public boolean isHorizontalScrollbarActive() {
@@ -864,13 +996,21 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	}
 
 	public void setVerticalScrollbarLeftPadding(float verticalScrollbarLeftPadding) {
-		this.verticalScrollbarLeftPadding = verticalScrollbarLeftPadding;
+		this.verticalScrollbarLeftPadding = WidgetUtil.clamp(verticalScrollbarLeftPadding, 0f, 1f);
 	}
 
+	/**
+	 * @return the vertical scrollbar value of this TextAreaWidget. The value is a normalized number between 0 and 1.
+	 */
 	public float getVerticalScroll() {
 		return verticalScroll;
 	}
 
+	/**
+	 * Sets the vertical scroll.
+	 * 
+	 * @param verticalScroll - the normalized scroll value between 0 and 1.
+	 */
 	public void setVerticalScroll(float verticalScroll) {
 		this.verticalScroll = verticalScroll;
 	}

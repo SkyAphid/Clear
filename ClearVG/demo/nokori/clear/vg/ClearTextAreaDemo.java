@@ -72,7 +72,7 @@ public class ClearTextAreaDemo extends ClearApplication {
 			String r = Character.toString(ESCAPE_SEQUENCE_RESET);
 			
 			//You can either tab or use \t - either works. You can also reference escape sequences via strings or use the constants I've provided.
-			s += b + c + "#FF7F50Hello World!" + r + " " + i + "This is entry number " + j + ":" + r + "\n";
+			s += b + c + "#FF7F50Hello World!" + r + " " + i + "This is entry number " + j + r + "\n";
 			s += "\tLorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ";
 			s += "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. ";
 			s += "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.";
