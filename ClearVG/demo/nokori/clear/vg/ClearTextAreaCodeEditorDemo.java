@@ -27,7 +27,7 @@ public class ClearTextAreaCodeEditorDemo extends ClearTextAreaDemo {
 		//Create the auto-formatting widget and add it to the text area we want it to operate on.
 		TextAreaAutoFormatterWidget syntaxHighlighter = new TextAreaAutoFormatterWidget();
 		textAreaWidget.addChild(syntaxHighlighter);
-		
+
 		//Create definitions for the highlighting. Keep in mind, the auto-formatter is a general use widget for TextAreaWidgets.
 		//In our case, we're building it to work as a syntax highlighter.
 		syntaxHighlighter.addSyntax("public void", ESCAPE_SEQUENCE_COLOR, "#950055");
@@ -41,7 +41,7 @@ public class ClearTextAreaCodeEditorDemo extends ClearTextAreaDemo {
 	@Override
 	protected String getText() {
 		return "public void highlightingExample() {"
-				+ "\n\t//This is a comment Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test"
+				+ "\n\t//This is a comment"
 				+ "\n\tBlueText BoldText ItalicText LightText NormalText"
 				+ "\n}";
 	}

@@ -263,10 +263,15 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		textContentX = x + lineNumberCompleteWidth;
 		textContentY = y;
 		
-		textContentW = width - scrollbarThickness - verticalScrollbarLeftPadding;
+		textContentW = width;
+		
+		if (inputSettings.isVerticalScrollbarEnabled()) {
+			textContentW -= (scrollbarThickness + verticalScrollbarLeftPadding);
+		}
+		
 		textContentH = height;
 		
-		if (!wordWrappingEnabled) {
+		if (inputSettings.isHorizontalScrollbarEnabled() && !wordWrappingEnabled) {
 			textContentH -= (scrollbarThickness + horizontalScrollbarTopPadding);
 		}
 		
@@ -383,14 +388,21 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		//Vertical scrollbar
 		//Scroll increment is adjusted based on the length of the text content (higher increments for more text, lower increments for less text)
 		verticalScrollIncrement = (5f / lines.size());
-		verticalScrollbarActive = (inputSettings.isVerticalScrollbarEnabled() && stringHeight > height);
 
-		renderVerticalScrollbar(context, x, y, width, height, stringHeight/5f);
+		if (inputSettings.isVerticalScrollbarEnabled()) {
+			verticalScrollbarActive = (inputSettings.isVerticalScrollbarEnabled() && stringHeight > height);
+			renderVerticalScrollbar(context, x, y, width, height, stringHeight/5f);
+		} else {
+			verticalScrollbarActive = false;
+		}
 		
 		//Horizontal scrollbar
-		horizontalScrollbarActive = (inputSettings.isHorizontalScrollbarEnabled() && !wordWrappingEnabled && maxAdvance > width);
-		
-		renderHorizontalScrollbar(context, x, y, width, height, maxAdvance);
+		if (inputSettings.isHorizontalScrollbarEnabled()) {
+			horizontalScrollbarActive = (!wordWrappingEnabled && maxAdvance > width);
+			renderHorizontalScrollbar(context, x, y, width, height, maxAdvance);
+		} else {
+			horizontalScrollbarActive = false;
+		}
 	}
 
 	private float getLineRenderY(int lineIndex) {
@@ -687,7 +699,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		
 		//Is mouse hovering scrollbar?
 		verticalScrollbarHovering = (verticalScrollbarActive 
-				&& inputSettings.isScrollbarEnabled() 
+				&& inputSettings.isVerticalScrollbarEnabled()
 				&& WidgetUtil.mouseWithinRectangle(window, verticalScrollbarX, verticalScrollbarY, scrollbarThickness, verticalScrollbarHeight));
 		
 		if (verticalScrollbarHovering) {
@@ -709,7 +721,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		
 		//Is mouse hovering scrollbar?
 		horizontalScrollbarHovering = (horizontalScrollbarActive 
-				&& inputSettings.isScrollbarEnabled() 
+				&& inputSettings.isHorizontalScrollbarEnabled()
 				&& WidgetUtil.mouseWithinRectangle(window, horizontalScrollbarX, horizontalScrollbarY, horizontalScrollbarWidth, scrollbarThickness));
 		
 		if (horizontalScrollbarHovering) {

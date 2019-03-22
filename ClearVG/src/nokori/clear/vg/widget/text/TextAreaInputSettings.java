@@ -7,7 +7,6 @@ public class TextAreaInputSettings {
 	//This is a general toggle variable for all inputs.
 	private boolean inputEnabled = true;
 	
-	private boolean scrollbarEnabled = true;
 	private boolean caretEnabled = true;
 	private boolean highlightingEnabled = true;
 	
@@ -43,14 +42,6 @@ public class TextAreaInputSettings {
 	 * 
 	 * 
 	 */
-
-	public boolean isScrollbarEnabled() {
-		return (inputEnabled && scrollbarEnabled);
-	}
-
-	public void setScrollbarEnabled(boolean scrollbarEnabled) {
-		this.scrollbarEnabled = scrollbarEnabled;
-	}
 
 	public boolean isCaretEnabled() {
 		return (inputEnabled && caretEnabled);

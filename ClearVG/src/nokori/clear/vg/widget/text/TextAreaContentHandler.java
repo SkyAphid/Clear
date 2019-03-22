@@ -28,10 +28,10 @@ public class TextAreaContentHandler {
 	 */
 	
 	/** Sets up the escape sequence replacement hashmap to show the names of the commands in the rendering for debugging purposes */
-	private static final boolean SHOW_ESCAPE_SEQUENCES = true;
+	private static final boolean SHOW_ESCAPE_SEQUENCES = false;
 	
 	/** Disables character skipping, meaning that longer escape sequences such as HEX color setters will be displayed for debugging purposes */
-	private static final boolean SKIPPING_ENABLED = false;
+	private static final boolean SKIPPING_ENABLED = true;
 	
 	/*
 	 * Core data
