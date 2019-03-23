@@ -7,6 +7,8 @@ public class TextAreaInputSettings {
 	//This is a general toggle variable for all inputs.
 	private boolean inputEnabled = true;
 	
+	private int characterLimit = Integer.MAX_VALUE;
+	
 	private boolean caretEnabled = true;
 	private boolean highlightingEnabled = true;
 	
@@ -42,6 +44,22 @@ public class TextAreaInputSettings {
 	 * 
 	 * 
 	 */
+	
+	public boolean isInputEnabled() {
+		return inputEnabled;
+	}
+
+	public void setInputEnabled(boolean inputEnabled) {
+		this.inputEnabled = inputEnabled;
+	}
+
+	public int getCharacterLimit() {
+		return characterLimit;
+	}
+
+	public void setCharacterLimit(int characterLimit) {
+		this.characterLimit = characterLimit;
+	}
 
 	public boolean isCaretEnabled() {
 		return (inputEnabled && caretEnabled);

@@ -81,6 +81,9 @@ public abstract class ClearApplication extends WindowedApplication {
 		context.dispose();
 	}
 
+	/**
+	 * Called at the end of the program right before the rootWidgetAssembly and NanoVGContext are disposed.
+	 */
 	protected abstract void endOfNanoVGApplicationCallback();
 
 	public WidgetAssembly getRootWidgetAssembly() {

@@ -6,6 +6,8 @@ import nokori.clear.vg.NanoVGContext;
 import nokori.clear.vg.widget.listener.CharEventListener;
 import nokori.clear.vg.widget.listener.KeyEventListener;
 import nokori.clear.vg.widget.listener.MouseButtonEventListener;
+import nokori.clear.vg.widget.listener.MouseEnteredEventListener;
+import nokori.clear.vg.widget.listener.MouseExitedEventListener;
 import nokori.clear.vg.widget.listener.MouseMotionEventListener;
 import nokori.clear.vg.widget.listener.MouseScrollEventListener;
 import nokori.clear.windows.Window;
@@ -15,6 +17,8 @@ import nokori.clear.windows.event.KeyEvent;
 import nokori.clear.windows.event.MouseButtonEvent;
 import nokori.clear.windows.event.MouseMotionEvent;
 import nokori.clear.windows.event.MouseScrollEvent;
+import nokori.clear.windows.event.vg.MouseEnteredEvent;
+import nokori.clear.windows.event.vg.MouseExitedEvent;
 
 /**
  * Widgets are components that can be added to containers. The container then handles updating and rendering them. 
@@ -26,11 +30,16 @@ public abstract class Widget extends WidgetContainer {
 	protected Vector2f pos = new Vector2f(0, 0);
 	protected Vector2f size = new Vector2f(0, 0);
 	
+	private boolean inputEnabled = true;
 	private CharEventListener charEventListener = null;
 	private KeyEventListener keyEventListener = null;
 	private MouseButtonEventListener mouseButtonEventListener = null;
 	private MouseMotionEventListener mouseMotionEventListener = null;
+	private MouseEnteredEventListener mouseEnteredEventListener = null;
+	private MouseExitedEventListener mouseExitedEventListener = null;
 	private MouseScrollEventListener mouseScrollEventListener = null;
+	
+	private boolean mouseWithin = false;
 	
 	public Widget() {
 		
@@ -77,6 +86,15 @@ public abstract class Widget extends WidgetContainer {
 	 * 
 	 */
 
+	/**
+	 * @return the parent widget of this widget (meaning that the parent is a WidgetContainer containing this Widget). If this widget has no parent, then null is returned.
+	 * 
+	 * @see <code>WidgetContainer.addChild(widget)</code>
+	 */
+	public Widget getParent() {
+		return parent;
+	}
+	
 	/**
 	 * @return the x value of this Widget. Keep in mind, the way this value is used can vary between Widgets. For example, a widget inside of a WidgetContainer may be using x coordinates 
 	 * relative to being clipped to the parent (e.g. <code>x = 10</code>, <code>parent x = 100</code>, thus the correct coordinate to render to the child is <code>x = 110</code>.) 
@@ -148,9 +166,29 @@ public abstract class Widget extends WidgetContainer {
 	public float getClippedY() {
 		return (parent != null ? parent.getY() + pos.y : pos.y);
 	}
-	
+
+	/**
+	 * @return whether or not this widget is currently accepting user inputs.
+	 */
+	public boolean isInputEnabled() {
+		return inputEnabled;
+	}
+
+	/**
+	 * @param inputEnabled - enables or disables input handling
+	 * 
+	 * @see <code>isInputEnabled()</code>
+	 */
+	public void setInputEnabled(boolean inputEnabled) {
+		this.inputEnabled = inputEnabled;
+	}
+
 	public boolean isMouseWithinThisWidget(Window window) {
-		return WidgetUtil.pointWithinRectangle(window.getMouseX(), window.getMouseY(), getClippedX(), getClippedY(), getWidth(), getHeight());
+		return isPointWithinThisWidget(window.getMouseX(), window.getMouseY());
+	}
+	
+	public boolean isPointWithinThisWidget(double x, double y) {
+		return WidgetUtil.pointWithinRectangle(x, y, getClippedX(), getClippedY(), getWidth(), getHeight());
 	}
 	
 	/*
@@ -201,8 +239,32 @@ public abstract class Widget extends WidgetContainer {
 	}
 	
 	public void mouseMotionEvent(Window window, MouseMotionEvent event) {
+		/*
+		 * Standard Mouse Motion Listening
+		 */
+		
 		if (mouseMotionEventListener != null) {
 			mouseMotionEventListener.listen(event);
+		}
+		
+		/*
+		 * Mouse Entered/Exited Widget Callbacks
+		 */
+		
+		double mouseX = event.getMouseX();
+		double mouseY = event.getMouseY();
+		
+		boolean bMouseWithin = mouseWithin;
+		mouseWithin = isPointWithinThisWidget(mouseX, mouseY);
+		
+		//Mouse entered
+		if (!bMouseWithin && mouseWithin && mouseEnteredEventListener != null) {
+			mouseEnteredEventListener.listen(MouseEnteredEvent.fire(window, System.nanoTime(), mouseX, mouseY));
+		}
+		
+		//Mouse exited
+		if (bMouseWithin && !mouseWithin && mouseExitedEventListener != null) {
+			mouseExitedEventListener.listen(MouseExitedEvent.fire(window, System.nanoTime(), mouseX, mouseY));
 		}
 	}
 	
@@ -242,6 +304,22 @@ public abstract class Widget extends WidgetContainer {
 
 	public void setOnMouseMotionEvent(MouseMotionEventListener mouseMotionEventListener) {
 		this.mouseMotionEventListener = mouseMotionEventListener;
+	}
+
+	public MouseEnteredEventListener getMouseEnteredEventListener() {
+		return mouseEnteredEventListener;
+	}
+
+	public void setOnMouseEntered(MouseEnteredEventListener mouseEnteredEventListener) {
+		this.mouseEnteredEventListener = mouseEnteredEventListener;
+	}
+
+	public MouseExitedEventListener getMouseExitedEventListener() {
+		return mouseExitedEventListener;
+	}
+
+	public void setOnMouseExited(MouseExitedEventListener mouseExitedEventListener) {
+		this.mouseExitedEventListener = mouseExitedEventListener;
 	}
 
 	public MouseScrollEventListener getMouseScrollEventListener() {

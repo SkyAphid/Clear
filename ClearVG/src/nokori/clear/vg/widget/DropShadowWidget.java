@@ -48,7 +48,7 @@ public class DropShadowWidget extends RectangleWidget {
 		
 		try (MemoryStack stack = MemoryStack.stackPush()){
 			NVGColor fill = this.fill.mallocNVG(stack);
-			NVGColor transparent = ClearColor.TRANSPARENT.mallocNVG(stack);
+			NVGColor transparent = this.fill.copy().alpha(0f).mallocNVG(stack);
 
 			NVGPaint paint = NanoVG.nvgBoxGradient(vg, x + shadowRadius, y + shadowRadius, w - (shadowRadius * 2), h - (shadowRadius * 2), 4, 12, fill, transparent, NVGPaint.create());
 			NanoVG.nvgBeginPath(vg);

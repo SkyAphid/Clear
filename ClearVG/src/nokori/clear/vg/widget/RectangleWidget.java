@@ -5,8 +5,6 @@ import org.lwjgl.nanovg.NanoVG;
 import nokori.clear.vg.ClearColor;
 import nokori.clear.vg.NanoVGContext;
 import nokori.clear.vg.widget.assembly.WidgetAssembly;
-import nokori.clear.vg.widget.attachments.FillAttachment;
-import nokori.clear.vg.widget.attachments.StrokeFillAttachment;
 import nokori.clear.vg.widget.assembly.Widget;
 import nokori.clear.windows.Window;
 import nokori.clear.windows.WindowManager;
@@ -14,7 +12,7 @@ import nokori.clear.windows.WindowManager;
 /**
  * A widget that draws a rectangle at the given coordinates. It can be manually configured or set to sync up to the parent container.
  */
-public class RectangleWidget extends Widget implements FillAttachment, StrokeFillAttachment {
+public class RectangleWidget extends Widget  {
 	
 	protected float cornerRadius;
 	protected boolean syncToParent = false;
@@ -51,6 +49,10 @@ public class RectangleWidget extends Widget implements FillAttachment, StrokeFil
 	 * Manual configuration modes
 	 * 
 	 */
+	
+	public RectangleWidget(float width, float height, ClearColor fill) {
+		this(0f, 0f, width, height, fill);
+	}
 	
 	public RectangleWidget(float x, float y, float width, float height, ClearColor fill) {
 		this(x, y, width, height, 0, fill);
@@ -127,13 +129,11 @@ public class RectangleWidget extends Widget implements FillAttachment, StrokeFil
 		
 	}
 
-	@Override
 	public ClearColor getStrokeFill() {
 		return strokeFill;
 	}
 
-	@Override
-	public ClearColor getDefaultTextFill() {
+	public ClearColor getFill() {
 		return fill;
 	}
 

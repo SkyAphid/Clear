@@ -276,6 +276,14 @@ public class TextAreaContentHandler {
 		
 		if (updateCaret) {
 			//System.out.println(lineNumber + " Pass 1");
+
+			if (!widget.getParent().isPointWithinThisWidget(mX, mY)) {
+				setCaretPosition(-1);
+				resetCaretFader();
+				resetHighlighting();
+				notifyCaretUpdated();
+				return;
+			}
 			
 			if (mY >= adjustedClickY && mY <= adjustedClickY + fontHeight || (mY >= adjustedClickY && widget.isFinalLine(lineNumber))) {
 				//Places the caret at the very start of a line if the mouse is past the very left edge of the rendering area.
@@ -286,6 +294,7 @@ public class TextAreaContentHandler {
 					refreshHighlightIndex();
 					resetCaretFader();
 					notifyCaretUpdated();
+					return;
 				}
 				
 				//Places the caret on the very end of the right side of the line if the mouse is past the very right edge of the rendering area.
@@ -302,6 +311,7 @@ public class TextAreaContentHandler {
 					refreshHighlightIndex();
 					resetCaretFader();
 					notifyCaretUpdated();
+					return;
 				}
 			}
 		}
@@ -406,6 +416,7 @@ public class TextAreaContentHandler {
 			scrollToCaret();
 			requestScrollToCaret = false;
 		}
+		
 		updateCaret = false;
 	}
 	
@@ -553,6 +564,25 @@ public class TextAreaContentHandler {
 		}
 	}
 	
+	public void insertStringAtPosition(int position, String string) {
+		StringBuilder s = widget.getTextBuilder();
+		int characterLimit = widget.getInputSettings().getCharacterLimit();
+		
+		if (s.length() + string.length() < characterLimit) {
+			s.insert(position, string);
+		} else if (string.length() > 1){
+			int index = string.length();
+			
+			while(s.length() + index > characterLimit && index > 0) {
+				index--;
+			}
+			
+			if (index > 0) {
+				s.insert(position, string.substring(0, index));
+			}
+		}
+	}
+	
 	public void insertCharacterAtCaret(String character) {
 		editHistory.notifyEditing(widget, this);
 		
@@ -560,7 +590,7 @@ public class TextAreaContentHandler {
 		
 		if (caret >= 0 && caret <= textBuilder.length()) {
 			deleteHighlightedContent();
-			textBuilder.insert(caret, character);
+			insertStringAtPosition(caret, character);
 			offsetCaret(1);
 			widget.requestRefresh();
 		}
@@ -631,8 +661,7 @@ public class TextAreaContentHandler {
 	}
 	
 	public void tab(int position) {
-		String c = "\t";
-		widget.getTextBuilder().insert(position, c);
+		insertStringAtPosition(position, "\t");
 		widget.requestRefresh();
 	}
 	
@@ -652,8 +681,7 @@ public class TextAreaContentHandler {
 	}
 	
 	public void newLine(int position) {
-		StringBuilder s = widget.getTextBuilder();
-		s.insert(position, "\n");
+		insertStringAtPosition(position, "\n");
 		widget.requestRefresh();
 	}
 	
@@ -690,7 +718,7 @@ public class TextAreaContentHandler {
 		
 		String clipboard = window.getClipboardString();
 		
-		widget.getTextBuilder().insert(position, clipboard);
+		insertStringAtPosition(position, clipboard);
 		widget.requestRefresh();
 		
 		resetCaretFader();
@@ -811,28 +839,33 @@ public class TextAreaContentHandler {
 		 * Vertical Scroll
 		 */
 		
-		int caretLineIndex = widget.getLineIndexOfCharacterIndex(caret);
+		float scissorY = widget.getScissorY();
+		float scissorH = widget.getScissorH();
+		
+		float caretY = caretPosition.y() - widget.getTextContentY();
+		float caretH = widget.getFontHeight();
+		
+		float newScissorY = -WidgetUtil.clamp(-scissorY, caretY + caretH - scissorH, caretY);
+		float newVerticalScroll = -(newScissorY / widget.getMaxScissorY());
+		
+		widget.setVerticalScroll(newVerticalScroll);
 
-		if (caretLineIndex == -1) {
-			return;
-		}
-		
-		int numLines = widget.getLines().size() - 2;
-		float vScroll = ((float) caretLineIndex / (float) numLines);
-		widget.setVerticalScroll(vScroll); 
-		
 		/*
 		 * Horizontal Scroll
 		 */
 		
-		float startScissorX = widget.getTextContentX() + (-widget.getScissorX());
-		float endScissorX = startScissorX + (widget.getTextContentW()/1.1f);
+		float scissorX = widget.getScissorX();
+		float scissorW = widget.getScissorW();
 		
-		//System.err.println(startScissorX + " " + endScissorX + " | " + caretPosition.x() + " " + widget.getMaxAdvance());
-	
-		if (caretPosition.x() < startScissorX || caretPosition.x() > endScissorX) {
-			widget.setHorizontalScroll((caretPosition.x() - (endScissorX - startScissorX)) / widget.getMaxAdvance());
-		}
+		float caretX = caretPosition.x() - widget.getTextContentX();
+		float caretW = 1.0f;
+		
+		float newScissorX = -WidgetUtil.clamp(-scissorX, caretX + caretW - scissorW, caretX);
+		float newHorizontalScroll = -(newScissorX / widget.getMaxScissorX());
+		
+		widget.setHorizontalScroll(newHorizontalScroll);
+		
+		//System.out.println("ScissorX: " + scissorX + " New ScissorX: " + newScissorX + " CaretX: " + caretX +  " HScroll: " + newHorizontalScroll);
 	}
 	
 	/**

@@ -21,7 +21,18 @@ public class TextAreaHistory {
 		}
 		
 		public void apply(TextAreaWidget widget, TextAreaContentHandler textAreaContentHandler) {
-			widget.setTextBuilder(new StringBuilder(textBuilder));
+			StringBuilder s = null;
+			int characterLimit = widget.getInputSettings().getCharacterLimit();
+			
+			if (textBuilder.length() > characterLimit) {
+				s = new StringBuilder(widget.getTextBuilder().substring(0, characterLimit));
+			} else {
+				s = new StringBuilder(textBuilder);
+			}
+			
+			
+			widget.setTextBuilder(s);
+			
 			textAreaContentHandler.setCaretPosition(caret);
 		}
 	}
@@ -29,7 +40,7 @@ public class TextAreaHistory {
 	public void notifyEditing(TextAreaWidget widget, TextAreaContentHandler contentHandler) {
 		long currentTime = System.currentTimeMillis();
 		
-		if (lastEditTime == -1 || (currentTime - lastEditTime) >= STATE_SAVE_TIME) {
+		if (lastEditTime == -1 || undoStack.isEmpty() || (currentTime - lastEditTime) >= STATE_SAVE_TIME) {
 			pushState(undoStack, widget, contentHandler);
 		}
 		

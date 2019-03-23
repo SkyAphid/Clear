@@ -8,13 +8,12 @@ import nokori.clear.vg.font.Font;
 import nokori.clear.vg.font.FontStyle;
 import nokori.clear.vg.widget.assembly.Widget;
 import nokori.clear.vg.widget.assembly.WidgetAssembly;
-import nokori.clear.vg.widget.attachments.FillAttachment;
 import nokori.clear.windows.Window;
 import nokori.clear.windows.WindowManager;
 
 import static org.lwjgl.nanovg.NanoVG.*;
 
-public class LabelWidget extends Widget implements FillAttachment{
+public class LabelWidget extends Widget {
 	
 	private String text;
 	private Font font;
@@ -80,8 +79,7 @@ public class LabelWidget extends Widget implements FillAttachment{
 		
 	}
 
-	@Override
-	public ClearColor getDefaultTextFill() {
+	public ClearColor getFill() {
 		return fill;
 	}
 

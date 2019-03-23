@@ -4,9 +4,9 @@ package nokori.clear.vg.transition;
  * This transition is used to resize objects to various sizes.
  */
 public abstract class SizeTransition extends Transition {
-	private double targetWidth, targetHeight;
+	private float targetWidth, targetHeight;
 	
-	public SizeTransition(long durationInMillis, double targetWidth, double targetHeight) {
+	public SizeTransition(long durationInMillis, float targetWidth, float targetHeight) {
 		super(durationInMillis);
 		this.targetWidth = targetWidth;
 		this.targetHeight = targetHeight;
@@ -18,19 +18,33 @@ public abstract class SizeTransition extends Transition {
 		setHeight(changeSize(progress, getCurrentHeight(), targetHeight));
 	}
 	
-	private double changeSize(double progress, double current, double target) {
+	private float changeSize(float progress, float current, float target) {
 		if (current > target) {
-			double d = (current- target);
+			float d = (current- target);
 			return (target + (d * (1f - progress)));
 		} else {
-			double d = (target - current);
+			float d = (target - current);
 			return (current + (d * progress));
 		}
 	}
 	
-	protected abstract double getCurrentWidth();
-	protected abstract double getCurrentHeight();
+	/**
+	 * Override this to return the current width of whatever element is being affected by this transition so that the iteration works correctly.
+	 */
+	protected abstract float getCurrentWidth();
 	
-	protected abstract void setWidth(double width);
-	protected abstract void setHeight(double height);
+	/**
+	 * Override this to return the current height of whatever element is being affected by this transition so that the iteration works correctly.
+	 */
+	protected abstract float getCurrentHeight();
+	
+	/**
+	 * This is the callback for the width size changes.
+	 */
+	protected abstract void setWidth(float width);
+	
+	/**
+	 * This is the callback for the height size changes.
+	 */
+	protected abstract void setHeight(float height);
 }

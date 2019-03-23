@@ -44,7 +44,15 @@ public abstract class Transition {
 		return this;
 	}
 	
+	/**
+	 * Stops this Transition from playing. This function will not call the onCompletedCallback unless this transition has finished.
+	 * @return
+	 */
 	public Transition stop() {
+		if (isFinished() && completedCallback != null) {
+			completedCallback.callback(this);
+		}
+		
 		TransitionManager.remove(this);
 		isPlaying = false;
 		return this;

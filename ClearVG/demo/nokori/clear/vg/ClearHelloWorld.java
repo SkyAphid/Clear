@@ -34,7 +34,19 @@ public class ClearHelloWorld extends ClearApplication {
 	
 	@Override
 	public void init(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly, String[] args) {
-		//WidgetAssemblies act as containers for various widgets. This will allow you to "assemble" a variety of UI components.
+		/*
+		 * WidgetAssemblies act as containers for various widgets. This will allow you  to "assemble" a variety of UI components. 
+		 * 
+		 * Note: I recommend building classes that do the following assembly for you instead of redoing this entire process
+		 * every single time. Normally I'd provide classes that do this for you, but the goal of Clear is to be somewhat lightweight. 
+		 * It's best that you make your own implementations that fit your specific needs perfectly.
+		 * 
+		 * E.G. Make a class that extends WidgetAssembly and then add all of the children in its constructor.
+		 * 
+		 * If you're interested in seeing a real use-case of Clear and how I personally use it, check out my program, JDialogue, here:
+		 * https://github.com/SkyAphid/JDialogue/
+		 */
+		
 		WidgetAssembly button = new WidgetAssembly(100, 50, new WidgetClip(WidgetClip.Alignment.CENTER));
 		
 		/*

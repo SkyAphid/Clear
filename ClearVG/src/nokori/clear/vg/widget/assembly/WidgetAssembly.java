@@ -19,11 +19,11 @@ public class WidgetAssembly extends Widget {
 	protected Vector2f size = new Vector2f(0, 0);
 	
 	public WidgetAssembly() {
-		this(0, 0);
+		this(0f, 0f);
 	}
 	
 	public WidgetAssembly(float x, float y) {
-		this(x, y, 0, 0);
+		this(x, y, 0f, 0f);
 	}
 
 	public WidgetAssembly(float x, float y, float width, float height) {

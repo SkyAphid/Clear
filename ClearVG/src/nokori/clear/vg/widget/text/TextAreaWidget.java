@@ -17,7 +17,6 @@ import nokori.clear.vg.transition.SimpleTransition;
 import nokori.clear.vg.widget.assembly.Widget;
 import nokori.clear.vg.widget.assembly.WidgetAssembly;
 import nokori.clear.vg.widget.assembly.WidgetUtil;
-import nokori.clear.vg.widget.attachments.FillAttachment;
 import nokori.clear.windows.Cursor;
 import nokori.clear.windows.Window;
 import nokori.clear.windows.WindowManager;
@@ -53,7 +52,7 @@ import nokori.clear.windows.event.MouseScrollEvent;
  * 
  * If you need to edit or add new features to this text area implementation, the above list should help you in getting started on where to find functionality and how to edit it.
  */
-public class TextAreaWidget extends Widget implements FillAttachment {
+public class TextAreaWidget extends Widget {
 	
 	Vector2f tempVec = new Vector2f();
 	private boolean resetCursor = false;
@@ -86,10 +85,12 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	
 	private int firstLineInView = 0;
 	
-	private float scissorX = 0f, scissorY = 0f;
+	private float renderAreaHeight, stringHeight;
+	private float scissorX = 0f, scissorY = 0f, scissorW = 0f, scissorH = 0f;
+	
 	private float cullOffset = 0f;
 	private float textContentX = -1f, textContentY = -1f, textContentW = -1f, textContentH = -1f;
-	private float maxAdvance = 0f;
+	private float stringWidth = 0f;
 	
 	/*
 	 * Font Settings
@@ -216,13 +217,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		 */
 		
 		font.configureNVG(context, fontSize, fontStyle);
-		
-		/*
-		 * Scrollbar calculations
-		 */
-		
-		float scrollbarCompleteWidth = (verticalScrollbarLeftPadding + scrollbarThickness);
-		
+
 		/*
 		 * Line number calculations
 		 */
@@ -233,27 +228,6 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		float maxLineNumberWidth = lineNumberFont.getTextBounds(context, tempVec, Integer.toString(maxLines)).x() + lineNumberLeftPadding;
 		float lineNumberCompleteWidth = lineNumbersEnabled ? lineNumberLeftPadding + maxLineNumberWidth + lineNumberRightPadding : 0f;
 		
-		
-		/*
-		 * Line split and text content area calculations
-		 */
-		
-		textContentW = width - scrollbarCompleteWidth - lineNumberCompleteWidth;
-		float lineSplitW = (wordWrappingEnabled ? textContentW : Float.MAX_VALUE);
-		
-		if (lines == null || refreshLines) {
-			font.split(context, lines = new ArrayList<>(), text, lineSplitW, fontSize, TEXT_AREA_ALIGNMENT, fontStyle);
-			
-			//Don't allow the lines array to be empty.
-			if (lines.isEmpty()) {
-				lines.add("");
-			}
-
-			maxAdvance = textContentHandler.calculateMaxAdvance(context, width, font, lines) * 1.05f;
-			
-			refreshLines = false;
-		}
-		
 		/*
 		 * Text Content Bounding
 		 * 
@@ -263,7 +237,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		textContentX = x + lineNumberCompleteWidth;
 		textContentY = y;
 		
-		textContentW = width;
+		textContentW = width - ((textContentX + width) - (x + width));
 		
 		if (inputSettings.isVerticalScrollbarEnabled()) {
 			textContentW -= (scrollbarThickness + verticalScrollbarLeftPadding);
@@ -277,6 +251,26 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		
 		/*
 		 * 
+		 * Line split and text content area calculations
+		 * 
+		 */
+		
+		if (lines == null || refreshLines) {
+			float lineSplitW = (wordWrappingEnabled ? textContentW : Float.MAX_VALUE);
+			font.split(context, lines = new ArrayList<>(), text, lineSplitW, fontSize, TEXT_AREA_ALIGNMENT, fontStyle);
+			
+			//Don't allow the lines array to be empty.
+			if (lines.isEmpty()) {
+				lines.add("");
+			}
+
+			stringWidth = textContentHandler.calculateMaxAdvance(context, textContentW, font, lines);
+			
+			refreshLines = false;
+		}
+		
+		/*
+		 * 
 		 * 
 		 * Rendering
 		 * 
@@ -286,8 +280,8 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		//Some Misc. calculations
 		fontHeight = font.getHeight(context, fontSize, TEXT_AREA_ALIGNMENT, fontStyle);
 		
-		float renderAreaHeight = (textContentH / fontHeight) * fontHeight;
-		float stringHeight = font.getHeight(context, lines.size(), fontHeight, TEXT_AREA_ALIGNMENT, fontStyle);
+		renderAreaHeight = (textContentH / fontHeight) * fontHeight;
+		stringHeight = font.getHeight(context, lines.size(), fontHeight, TEXT_AREA_ALIGNMENT, fontStyle);
 		
 		/*
 		 * 
@@ -298,13 +292,13 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		long vg = context.get();
 		nvgBeginPath(vg);
 		
-		scissorY = -Math.max(((stringHeight - renderAreaHeight) * verticalScroll), 0f);
-		scissorX = -(maxAdvance * horizontalScroll);
+		scissorY = -Math.max((getMaxScissorY() * verticalScroll), 0f);
+		scissorX = -(getMaxScissorX() * horizontalScroll);
 
-		float scissorW = textContentW + verticalScrollbarLeftPadding/2;
-		float scissorH = textContentH;
+		scissorW = textContentW + verticalScrollbarLeftPadding/2;
+		scissorH = textContentH;
 		
-		nvgScissor(vg, x, y, scissorW, scissorH);
+		nvgScissor(vg, textContentX, y, scissorW, scissorH);
 		nvgTranslate(vg, scissorX, scissorY);
 		
 		/*
@@ -398,13 +392,13 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		
 		//Horizontal scrollbar
 		if (inputSettings.isHorizontalScrollbarEnabled()) {
-			horizontalScrollbarActive = (!wordWrappingEnabled && maxAdvance > width);
-			renderHorizontalScrollbar(context, x, y, width, height, maxAdvance);
+			horizontalScrollbarActive = (!wordWrappingEnabled && stringWidth > textContentW);
+			renderHorizontalScrollbar(context, x + lineNumberCompleteWidth, y, width - lineNumberCompleteWidth, height, stringWidth);
 		} else {
 			horizontalScrollbarActive = false;
 		}
 	}
-
+	
 	private float getLineRenderY(int lineIndex) {
 		return textContentY + (fontHeight * lineIndex);
 	}
@@ -444,7 +438,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		float bgWidth = lineNumberCompleteWidth - lineNumberRightPadding;
 		float bgHeight = fontHeight + 1f; //adds a teensy bit of padding to prevent minor rounding errors when scrolling. May cause issues if the background has transparency enabled.
 		
-		if (lineNumberBackgroundFill != ClearColor.TRANSPARENT) {
+		if (lineNumberBackgroundFill.getAlpha() > 0f) {
 			lineNumberBackgroundFill.tallocNVG(bgFill -> {
 				nvgBeginPath(vg);
 				nvgFillColor(vg, bgFill);
@@ -479,6 +473,12 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		
 		verticalScrollbarX = (x + width) - scrollbarThickness;
 		verticalScrollbarY = (y + ((scrollbarBackgroundHeight - verticalScrollbarHeight) * verticalScroll));
+		
+		/*
+		 * 
+		 * Colors
+		 * 
+		 */
 		
 		//Set the selected fill based on if the mouse is hovering or selecting the scrollbar
 		ClearColor currentFill = (verticalScrollbarHovering || verticalScrollbarSelected) ? scrollbarHighlightFill : scrollbarFill;
@@ -529,7 +529,7 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		scrollbarFill.free();
 	}
 	
-	private void renderHorizontalScrollbar(NanoVGContext context, float x, float y, float width, float height, float maxAdvance) {
+	private void renderHorizontalScrollbar(NanoVGContext context, float x, float y, float width, float height, float stringWidth) {
 		
 		if (wordWrappingEnabled) return;
 		
@@ -543,10 +543,16 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		
 		float scrollbarMaxWidth = width * 0.75f;
 		horizontalScrollbarDefaultWidth = width/2;
-		horizontalScrollbarWidth = WidgetUtil.clamp(horizontalScrollbarDefaultWidth * (scrollbarBackgroundWidth / maxAdvance), HORIZONTAL_SCROLLBAR_MIN_WIDTH, scrollbarMaxWidth);
+		horizontalScrollbarWidth = WidgetUtil.clamp(horizontalScrollbarDefaultWidth * (scrollbarBackgroundWidth / stringWidth), HORIZONTAL_SCROLLBAR_MIN_WIDTH, scrollbarMaxWidth);
 		
 		horizontalScrollbarX = (x + ((scrollbarBackgroundWidth - horizontalScrollbarWidth) * horizontalScroll));
 		horizontalScrollbarY = (y + height) - scrollbarThickness;
+		
+		/*
+		 * 
+		 * Colors
+		 * 
+		 */
 		
 		//Set the selected fill based on if the mouse is hovering or selecting the scrollbar
 		ClearColor currentFill = (horizontalScrollbarHovering || horizontalScrollbarSelected) ? scrollbarHighlightFill : scrollbarFill;
@@ -624,24 +630,24 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	
 	@Override
 	public void charEvent(Window window, CharEvent event) {
-		super.charEvent(window, event);
 		textContentInputHandler.charEvent(window, event);
+		super.charEvent(window, event);
 	}
 	
 	@Override
 	public void keyEvent(Window window, KeyEvent event) {
-		super.keyEvent(window, event);
 		textContentInputHandler.keyEvent(window, event);
+		super.keyEvent(window, event);
 	}
 	
 	@Override
 	public void mouseButtonEvent(Window window, MouseButtonEvent event) {
-		super.mouseButtonEvent(window, event);
-		
 		verticalScrollbarMouseButtonEvent(window, event);
 		horizontalScrollbarMouseButtonEvent(window, event);
 		
 		textContentInputHandler.mouseButtonEvent(window, event);
+		
+		super.mouseButtonEvent(window, event);
 	}
 	
 	private void verticalScrollbarMouseButtonEvent(Window window, MouseButtonEvent event) {
@@ -668,8 +674,6 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	
 	@Override
 	public void mouseMotionEvent(Window window, MouseMotionEvent event) {
-		super.mouseMotionEvent(window, event);
-		
 		resetCursor = true;
 		
 		verticalScrollbarMouseMotionEvent(window, event);
@@ -692,6 +696,8 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 			ClearStaticResources.getCursor(Cursor.Type.ARROW).apply(window);
 			resetCursor = false;
 		}
+		
+		super.mouseMotionEvent(window, event);
 	}
 
 	private void verticalScrollbarMouseMotionEvent(Window window, MouseMotionEvent event) {
@@ -710,8 +716,8 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		//The scrollbar value follows mouse. 
 		//We subtract the mouse Y from the widget render Y and then divide that by the height of the widget to get a normalized value we can use for the scroller.
 		if (verticalScrollbarSelected) {
-			float relativeMouseY = (float) (event.getMouseY() - getClippedY());
-			float mouseYMult = WidgetUtil.clamp((relativeMouseY  / getHeight()), 0f, 1f);
+			float relativeMouseY = (float) (event.getMouseY() - textContentY);
+			float mouseYMult = WidgetUtil.clamp((relativeMouseY  / textContentH), 0f, 1f);
 			setVerticalScroll(mouseYMult);
 		}
 	}
@@ -732,16 +738,16 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		//The scrollbar value follows mouse. 
 		//We subtract the mouse Y from the widget render Y and then divide that by the height of the widget to get a normalized value we can use for the scroller.
 		if (horizontalScrollbarSelected) {
-			float relativeMouseX = (float) (event.getMouseX() - getClippedX());
-			float mouseXMult = WidgetUtil.clamp((relativeMouseX  / getWidth()), 0f, 1f);
+			float relativeMouseX = (float) (event.getMouseX() - textContentX);
+			float mouseXMult = WidgetUtil.clamp((relativeMouseX  / textContentW), 0f, 1f);
 			setHorizontalScroll(mouseXMult);
 		}
 	}
 	
 	@Override
 	public void mouseScrollEvent(Window window, MouseScrollEvent event) {
-		super.mouseScrollEvent(window, event);
 		verticalScrollbarMouseScrollEvent(window, event);
+		super.mouseScrollEvent(window, event);
 	}
 	
 	private void verticalScrollbarMouseScrollEvent(Window window, MouseScrollEvent event) {
@@ -829,16 +835,36 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		return textContentH;
 	}
 
-	public float getScissorX() {
+	float getScissorX() {
 		return scissorX;
 	}
 
-	public float getScissorY() {
+	float getScissorY() {
 		return scissorY;
 	}
+	
+	float getScissorW() {
+		return scissorW;
+	}
 
-	public float getMaxAdvance() {
-		return maxAdvance;
+	float getScissorH() {
+		return scissorH;
+	}
+	
+	float getMaxScissorY() {
+		return (stringHeight - renderAreaHeight);
+	}
+	
+	float getMaxScissorX() {
+		return (stringWidth - textContentW);
+	}
+
+	public float getStringWidth() {
+		return stringWidth;
+	}
+
+	public float getStringHeight() {
+		return stringHeight;
 	}
 
 	public int getFirstLineInView() {
@@ -884,7 +910,6 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 	 */
 
 
-	@Override
 	public ClearColor getDefaultTextFill() {
 		return defaultTextFill;
 	}
@@ -911,6 +936,10 @@ public class TextAreaWidget extends Widget implements FillAttachment {
 		lines = null;
 	}
 
+	float getFontHeight() {
+		return fontHeight;
+	}
+	
 	/*
 	 * General Scrollbar settings
 	 */
