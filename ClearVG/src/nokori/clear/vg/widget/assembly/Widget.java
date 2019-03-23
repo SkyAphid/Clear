@@ -215,17 +215,24 @@ public abstract class Widget extends WidgetContainer {
 	
 	/*
 	 * 
-	 * Input Callbacks
+	 * Input
 	 * 
 	 * 
 	 */
+	
+	/**
+	 * @return true if the mouse is currently hovering over this widget
+	 */
+	public boolean isMouseWithin() {
+		return mouseWithin;
+	}
 
 	public void charEvent(Window window, CharEvent event) {
 		if (charEventListener != null) {
 			charEventListener.listen(event);
 		}
 	}
-	
+
 	public void keyEvent(Window window, KeyEvent event) {
 		if (keyEventListener != null) {
 			keyEventListener.listen(event);
@@ -310,7 +317,7 @@ public abstract class Widget extends WidgetContainer {
 		return mouseEnteredEventListener;
 	}
 
-	public void setOnMouseEntered(MouseEnteredEventListener mouseEnteredEventListener) {
+	public void setOnMouseEnteredEvent(MouseEnteredEventListener mouseEnteredEventListener) {
 		this.mouseEnteredEventListener = mouseEnteredEventListener;
 	}
 
@@ -318,7 +325,7 @@ public abstract class Widget extends WidgetContainer {
 		return mouseExitedEventListener;
 	}
 
-	public void setOnMouseExited(MouseExitedEventListener mouseExitedEventListener) {
+	public void setOnMouseExitedEvent(MouseExitedEventListener mouseExitedEventListener) {
 		this.mouseExitedEventListener = mouseExitedEventListener;
 	}
 
