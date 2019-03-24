@@ -14,6 +14,8 @@ public abstract class Transition {
 	private long startStamp;
 	private long endStamp;
 	
+	private Object linkedObject = null;
+	
 	TransitionCompletedCallback completedCallback = null;
 	
 	public Transition(long durationInMillis) {
@@ -35,6 +37,8 @@ public abstract class Transition {
 		if (isPlaying) {
 			stop();
 		}
+		
+		TransitionManager.removeLinkedTransitions(linkedObject);
 		
 		startStamp = System.currentTimeMillis();
 		endStamp = startStamp + durationInMillis;
@@ -91,5 +95,24 @@ public abstract class Transition {
 	
 	public boolean isFinished() {
 		return (isPlaying && System.currentTimeMillis() > endStamp);
+	}
+
+	/**
+	 * @return the linked Object
+	 * @see <code>setLinkedObject(object)</code>
+	 */
+	public Object getLinkedObject() {
+		return linkedObject;
+	}
+
+	/**
+	 * Setting a linked object will cause this Transition to be associated with that object. If you attempt to make another Transition and play it when it has the 
+	 * same linkedObject, then this Transition will be stopped and deleted automatically by the TransitionManager. The purpose of this system is to prevent 
+	 * two contradicting Transitions (e.g. fading in/fading out) from playing at the same time, so that the user doesn't have to manually check for this.
+	 * 
+	 * @param linkedObject
+	 */
+	public void setLinkedObject(Object linkedObject) {
+		this.linkedObject = linkedObject;
 	}
 }

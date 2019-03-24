@@ -203,8 +203,8 @@ public class TextAreaWidget extends Widget {
 	public void render(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
 		float x = getClippedX();
 		float y = getClippedY();
-		float width = size.x;
-		float height = size.y;
+		float width = getWidth();
+		float height = getHeight();
 		
 		String text = textBuilder.toString();
 
@@ -674,28 +674,19 @@ public class TextAreaWidget extends Widget {
 	
 	@Override
 	public void mouseMotionEvent(Window window, MouseMotionEvent event) {
-		resetCursor = true;
+		resetCursorIfApplicable(window);
 		
+		//I-Beam for when the mouse is hovering the text content
+		if (inputSettings.isCaretEnabled() && WidgetUtil.mouseWithinRectangle(window, textContentX - lineNumberRightPadding, textContentY, textContentW, textContentH)) {
+			applyCursor(window, Cursor.Type.I_BEAM);
+		}
+		
+		//Scrollbars
 		verticalScrollbarMouseMotionEvent(window, event);
 		horizontalScrollbarMouseMotionEvent(window, event);
 		
+		//Text content motion events
 		textContentInputHandler.mouseMotionEvent(window, event);
-		
-		/*
-		 * Change the cursor icon 
-		 */
-		
-		if (inputSettings.isCaretEnabled()) {
-			if (WidgetUtil.mouseWithinRectangle(window, textContentX - lineNumberRightPadding, textContentY, textContentW, textContentH)) {
-				ClearStaticResources.getCursor(Cursor.Type.I_BEAM).apply(window);
-				resetCursor = false;
-			}
-		}
-		
-		if (resetCursor) {
-			ClearStaticResources.getCursor(Cursor.Type.ARROW).apply(window);
-			resetCursor = false;
-		}
 		
 		super.mouseMotionEvent(window, event);
 	}
@@ -709,8 +700,7 @@ public class TextAreaWidget extends Widget {
 				&& WidgetUtil.mouseWithinRectangle(window, verticalScrollbarX, verticalScrollbarY, scrollbarThickness, verticalScrollbarHeight));
 		
 		if (verticalScrollbarHovering) {
-			ClearStaticResources.getCursor(Cursor.Type.HAND).apply(window);
-			resetCursor = false;
+			applyCursor(window, Cursor.Type.HAND);
 		}
 		
 		//The scrollbar value follows mouse. 
@@ -731,8 +721,7 @@ public class TextAreaWidget extends Widget {
 				&& WidgetUtil.mouseWithinRectangle(window, horizontalScrollbarX, horizontalScrollbarY, horizontalScrollbarWidth, scrollbarThickness));
 		
 		if (horizontalScrollbarHovering) {
-			ClearStaticResources.getCursor(Cursor.Type.HAND).apply(window);
-			resetCursor = false;
+			applyCursor(window, Cursor.Type.HAND);
 		}
 		
 		//The scrollbar value follows mouse. 
@@ -780,7 +769,19 @@ public class TextAreaWidget extends Widget {
 		
 		verticalScrollTransition.play();
 	}
-
+	
+	private void applyCursor(Window window, Cursor.Type type) {
+		ClearStaticResources.getCursor(type).apply(window);
+		resetCursor = true;
+	}
+	
+	private void resetCursorIfApplicable(Window window) {
+		if (resetCursor) {
+			ClearStaticResources.getCursor(Cursor.Type.ARROW).apply(window);
+			resetCursor = false;
+		}
+	}
+	
 	/*
 	 * 
 	 * Text Content

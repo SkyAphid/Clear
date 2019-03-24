@@ -13,6 +13,22 @@ public class TransitionManager {
 		return activeTransitions.remove(transition);
 	}
 	
+	static void removeLinkedTransitions(Object linkedObject) {
+		if (linkedObject == null || activeTransitions.isEmpty()) {
+			return;
+		}
+		
+		for (int i = 0; i < activeTransitions.size(); i++) {
+			Transition t = activeTransitions.get(i);
+			
+			if (t.getLinkedObject() == linkedObject) {
+				t.stop();
+				activeTransitions.remove(t);
+				i--;
+			}
+		}
+	}
+	
 	public static void tick() {
 		for (int i = 0; i < activeTransitions.size(); i++) {
 			Transition t = activeTransitions.get(i);

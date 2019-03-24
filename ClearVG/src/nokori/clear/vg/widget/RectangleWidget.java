@@ -82,10 +82,7 @@ public class RectangleWidget extends Widget  {
 	@Override
 	public void tick(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
 		if (syncToParent) {
-			pos.x = 0;
-			pos.y = 0;
-			size.x = parent.getWidth();
-			size.y = parent.getHeight();
+			getPosition().set(parent.getPosition());
 		}
 	}
 

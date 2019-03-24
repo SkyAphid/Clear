@@ -10,12 +10,30 @@ import nokori.clear.windows.event.MouseButtonEvent;
 import nokori.clear.windows.event.MouseMotionEvent;
 import nokori.clear.windows.event.MouseScrollEvent;
 
-public abstract class WidgetContainer {
+/**
+ * WidgetContainers are used to manage groups of Widgets in one class. By default, Widgets always extend this class so that it can contain children. 
+ * However, sometimes problems can be solved by using a WidgetContainer by itself. Just remember that a WidgetContainer by itself isn't a working Widget.
+ */
+public class WidgetContainer {
 	
 	protected ArrayList<Widget> children = new ArrayList<>();
 	
 	private boolean tickChildren = true;
 	private boolean renderChildren = true;
+	
+	/**
+	 * This is a lambda function that allows outside classes to quickly iterate through all of the Widgets contained by this object.
+	 * @param processor -> the lambda class, taking in only one argument: the current widget
+	 */
+	public void iterateChildren(WidgetProcessor processor) {
+		for (Widget w : children) {
+			processor.process(w);
+		}
+	}
+	
+	private interface WidgetProcessor {
+		public void process(Widget w);
+	}
 	
 	public void tickChildren(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
 		for (Widget w : children) {
@@ -93,6 +111,19 @@ public abstract class WidgetContainer {
 		
 	}
 
+	/**
+	 * All of the Widgets in the given container will be copied over to this one. 
+	 * Be careful when using this, it's not recommended that Widgets be the children of multiple Widgets at one time. 
+	 * However, it's fine if the Widget is the child of one Widget but contained by multiple detached WidgetContainers by themselves.
+	 * 
+	 * @param container
+	 */
+	public void addChildren(WidgetContainer container) {
+		for (Widget w : container.children) {
+			addChild(w);
+		}
+	}
+	
 	public void addChild(Widget... widget) {
 		for (int i = 0; i < widget.length; i++) {
 			Widget w = widget[i];

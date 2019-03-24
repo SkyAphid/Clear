@@ -79,6 +79,46 @@ public class LabelWidget extends Widget {
 		
 	}
 
+	public String getText() {
+		return text;
+	}
+
+	public void setText(String text) {
+		this.text = text;
+	}
+
+	public Font getFont() {
+		return font;
+	}
+
+	public void setFont(Font font) {
+		this.font = font;
+	}
+
+	public FontStyle getStyle() {
+		return style;
+	}
+
+	public void setStyle(FontStyle style) {
+		this.style = style;
+	}
+
+	public float getFontSize() {
+		return fontSize;
+	}
+
+	public void setFontSize(float fontSize) {
+		this.fontSize = fontSize;
+	}
+
+	public int getTextAlignment() {
+		return textAlignment;
+	}
+
+	public void setTextAlignment(int textAlignment) {
+		this.textAlignment = textAlignment;
+	}
+
 	public ClearColor getFill() {
 		return fill;
 	}

@@ -1,6 +1,6 @@
 package nokori.clear.vg.widget.assembly;
 
-import org.joml.Vector2f;
+import org.joml.Vector4f;
 
 import nokori.clear.vg.NanoVGContext;
 import nokori.clear.vg.widget.listener.CharEventListener;
@@ -27,9 +27,8 @@ public abstract class Widget extends WidgetContainer {
 	
 	protected Widget parent = null;
 	
-	protected Vector2f pos = new Vector2f(0, 0);
-	protected Vector2f size = new Vector2f(0, 0);
-	
+	private Vector4f pos = new Vector4f(0, 0, 0, 0);
+
 	private boolean inputEnabled = true;
 	private CharEventListener charEventListener = null;
 	private KeyEventListener keyEventListener = null;
@@ -48,8 +47,8 @@ public abstract class Widget extends WidgetContainer {
 	public Widget(float x, float y, float width, float height) {
 		pos.x = x;
 		pos.y = y;
-		size.x = width;
-		size.y = height;
+		pos.z = x + width;
+		pos.w = y + height;
 	}
 	
 	/**
@@ -96,6 +95,13 @@ public abstract class Widget extends WidgetContainer {
 	}
 	
 	/**
+	 * @return the vector data containing this Widgets coordinate position in this order: x, y, z, w = minX, minY, maxX, maxY
+	 */
+	public Vector4f getPosition() {
+		return pos;
+	}
+
+	/**
 	 * @return the x value of this Widget. Keep in mind, the way this value is used can vary between Widgets. For example, a widget inside of a WidgetContainer may be using x coordinates 
 	 * relative to being clipped to the parent (e.g. <code>x = 10</code>, <code>parent x = 100</code>, thus the correct coordinate to render to the child is <code>x = 110</code>.) 
 	 * To get the render x for a "clipped" widget inside of a parent widget, use <code>getClippedX()</code> instead.
@@ -112,9 +118,15 @@ public abstract class Widget extends WidgetContainer {
 	 * @param x
 	 */
 	public void setX(float x) {
+		float width = getWidth();
 		pos.x = x;
+		pos.z = x + width;
 	}
 
+	public void offsetX(float xOffset) {
+		setX(getX() + xOffset);
+	}
+	
 	/**
 	 * @return the y value of this Widget. Keep in mind, the way this value is used can vary between Widgets. For example, a widget inside of a WidgetContainer may be using y coordinates 
 	 * relative to being clipped to the parent (e.g. <code>y = 10</code>, <code>parent y = 100</code>, thus the correct coordinate to render to the child is <code>y = 110</code>.) 
@@ -132,39 +144,47 @@ public abstract class Widget extends WidgetContainer {
 	 * @param y
 	 */
 	public void setY(float y) {
+		float height = getHeight();
 		pos.y = y;
+		pos.w = y + height;
+	}
+	
+	public void offsetY(float yOffset) {
+		setY(getY() + yOffset);
 	}
 
 	public float getWidth() {
-		return size.x();
+		return (pos.z - pos.x);
 	}
 
 	public void setWidth(float width) {
-		size.x = width;
+		pos.z = pos.x + width;
 	}
 
 	public float getHeight() {
-		return size.y();
+		return (pos.w - pos.y);
 	}
 
 	public void setHeight(float height) {
-		size.y = height;
+		pos.w = pos.y + height;
 	}
 	
 	/**
 	 * @return an x value that takes into account the parent widgets position (if applicable). Used to make sure that child widgets are rendered in the parents bounds appropriately. 
+	 * e.g. <code>clippedX = parent.getX() + widget.getX()</code>
 	 * @see getX()
 	 */
 	public float getClippedX() {
-		return (parent != null ? parent.getX() + pos.x : pos.x);
+		return (parent != null ? parent.getClippedX() + pos.x : pos.x);
 	}
 	
 	/**
 	 * @return an y value that takes into account the parent widgets position (if applicable). Used to make sure that child widgets are rendered in the parents bounds appropriately.
+	 * 	 * e.g. <code>clippedY = parent.getY() + widget.getY()</code>
 	 * @see getY()
 	 */
 	public float getClippedY() {
-		return (parent != null ? parent.getY() + pos.y : pos.y);
+		return (parent != null ? parent.getClippedY() + pos.y : pos.y);
 	}
 
 	/**
@@ -175,18 +195,32 @@ public abstract class Widget extends WidgetContainer {
 	}
 
 	/**
-	 * @param inputEnabled - enables or disables input handling
+	 * Toggles whether or not input is being accepted by this widget. 
 	 * 
+	 * @param inputEnabled - enables or disables input handling
 	 * @see <code>isInputEnabled()</code>
 	 */
 	public void setInputEnabled(boolean inputEnabled) {
 		this.inputEnabled = inputEnabled;
 	}
 
+	/**
+	 * Checks if the mouse is within this widget on the fly by using the data stored in the given Window (rather than using the cached state).
+	 * 
+	 * @param window
+	 * @return true if the Window's mouse coordinates fall within this widget.
+	 */
 	public boolean isMouseWithinThisWidget(Window window) {
 		return isPointWithinThisWidget(window.getMouseX(), window.getMouseY());
 	}
 	
+	/**
+	 * Checks if the given coordinates are within this widget.
+	 * 
+	 * @param x - the X screen coordinate
+	 * @param y - the Y screen coordinate
+	 * @return - true if the coordinates are within this widget
+	 */
 	public boolean isPointWithinThisWidget(double x, double y) {
 		return WidgetUtil.pointWithinRectangle(x, y, getClippedX(), getClippedY(), getWidth(), getHeight());
 	}
@@ -221,10 +255,19 @@ public abstract class Widget extends WidgetContainer {
 	 */
 	
 	/**
-	 * @return true if the mouse is currently hovering over this widget
+	 * @return true if the mouse if the mouseWithin flag is true (set via the last mouse motion event call).
 	 */
-	public boolean isMouseWithin() {
+	public boolean isMouseWithinThisWidget() {
 		return mouseWithin;
+	}
+	
+	/**
+	 * Resets the flag that controls onMouseEntered()/onMouseExited() indicating whether or not the mouse is hovering this widget to false. 
+	 * The primary use of this function is in situations where <code>setInputEnabled(false)</code> is called and the flag needs to be reset manually. 
+	 * This isn't done automatically in case the user wants to cache the state of the flag before input was disabled to check later.
+	 */
+	public void resetIsMouseWithin() {
+		mouseWithin = false;
 	}
 
 	public void charEvent(Window window, CharEvent event) {

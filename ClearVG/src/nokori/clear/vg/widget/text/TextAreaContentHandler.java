@@ -251,7 +251,7 @@ public class TextAreaContentHandler {
 	 */
 	private void forEachCharCaretLogic(long vg, int characterIndex, int lineNumber, float x, float y, float adjustedClickY, float advanceW, float fontHeight) {
 		//Checks if the mouse click was in the bounding of this character - if so, the caret is set to this index.
-		float clickHeight = (widget.isFinalLine(lineNumber) ? Float.MAX_VALUE : fontHeight);
+		float clickHeight = (widget.isFinalLine(lineNumber) && (widget.isMouseWithinThisWidget() || isHighlighting()) ? Float.MAX_VALUE : fontHeight);
 		
 		if (updateCaret && WidgetUtil.pointWithinRectangle(getCaretQueueScissoredX(), getCaretQueueScissoredY(), x, adjustedClickY, advanceW, clickHeight)) {
 			int bCaretPosition = caret;
@@ -276,8 +276,11 @@ public class TextAreaContentHandler {
 		
 		if (updateCaret) {
 			//System.out.println(lineNumber + " Pass 1");
+			
+			//If this causes weird behavior in the future, change it to where it only takes the widget itself into account and remove the parent check
+			boolean withinBounds = (widget.getParent() != null && widget.getParent().isPointWithinThisWidget(mX, mY) || widget.isPointWithinThisWidget(mX, mY));
 
-			if (!widget.getParent().isPointWithinThisWidget(mX, mY)) {
+			if (!withinBounds && !isHighlighting()) {
 				setCaretPosition(-1);
 				resetCaretFader();
 				resetHighlighting();
@@ -544,6 +547,10 @@ public class TextAreaContentHandler {
 	
 	public boolean isContentHighlighted(int index) {
 		return (isContentHighlighted() && index >= getHighlightStartIndex() && index < getHighlightEndIndex());
+	}
+	
+	public boolean isHighlighting() {
+		return (highlightIndex1 != -1 || highlightIndex2 != -1);
 	}
 	
 	/*

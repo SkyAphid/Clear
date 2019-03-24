@@ -19,16 +19,16 @@ import nokori.clear.windows.GLFWException;
 import nokori.clear.windows.Window;
 import nokori.clear.windows.WindowManager;
 
-public class ClearHelloWorld extends ClearApplication {
+public class ClearHelloWorldDemo extends ClearApplication {
 
 	private static final int WINDOW_WIDTH = 256;
 	private static final int WINDOW_HEIGHT = 256;
 	
 	public static void main(String[] args) {
-		ClearApplication.launch(new ClearHelloWorld(), args);
+		ClearApplication.launch(new ClearHelloWorldDemo(), args);
 	}
 
-	public ClearHelloWorld() {
+	public ClearHelloWorldDemo() {
 		super(new WidgetAssembly());
 	}
 	
