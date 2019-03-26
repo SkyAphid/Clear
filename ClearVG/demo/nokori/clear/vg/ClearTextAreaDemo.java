@@ -41,7 +41,7 @@ public class ClearTextAreaDemo extends ClearApplication {
 		//WidgetAssemblies act as containers for various widgets. This will allow you to "assemble" a variety of UI components.
 		WidgetAssembly button = new WidgetAssembly(1000, 500, new WidgetClip(WidgetClip.Alignment.CENTER));
 		
-		button.addChild(new DropShadowWidget(ClearColor.LIGHT_BLACK));
+		button.addChild(new DropShadowWidget());
 		button.addChild(new RectangleWidget(ClearColor.WHITE_SMOKE, ClearColor.LIGHT_GRAY));
 		
 		try {
@@ -67,12 +67,12 @@ public class ClearTextAreaDemo extends ClearApplication {
 			}
 			
 			String b = Character.toString(ESCAPE_SEQUENCE_BOLD);
-			String c = Character.toString(ESCAPE_SEQUENCE_COLOR);
+			String c = Character.toString(ESCAPE_SEQUENCE_COLOR) + "#FF7F50";
 			String i = Character.toString(ESCAPE_SEQUENCE_ITALIC);
 			String r = Character.toString(ESCAPE_SEQUENCE_RESET);
 			
 			//You can either tab or use \t - either works. You can also reference escape sequences via strings or use the constants I've provided.
-			s += b + c + "#FF7F50Hello World!" + r + " " + i + "This is entry number " + j + r + "\n";
+			s += b + c + "Hello World!" + r + " " + i + "This is entry number " + j + r + "\n";
 			s += "\tLorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ";
 			s += "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. ";
 			s += "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.";

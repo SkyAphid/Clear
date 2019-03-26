@@ -2,6 +2,7 @@ package nokori.clear.vg.widget.text;
 
 import org.lwjgl.glfw.GLFW;
 
+import nokori.clear.vg.ClearStaticResources;
 import nokori.clear.windows.Window;
 import nokori.clear.windows.event.CharEvent;
 import nokori.clear.windows.event.KeyEvent;
@@ -23,7 +24,7 @@ public class DefaultTextAreaContentInputHandler extends TextAreaContentInputHand
 	}
 	
 	public void mouseMotionEvent(Window window, MouseMotionEvent event) {
-		if (mousePressed && !widget().isScrollbarSelected()) {
+		if (mousePressed && !widget().isScrollbarSelected() && ClearStaticResources.getFocusedWidget() == widget()) {
 			content().queueCaret((float) event.getMouseX(), (float) event.getMouseY());
 		} else {
 			mousePressed = false;
@@ -37,7 +38,7 @@ public class DefaultTextAreaContentInputHandler extends TextAreaContentInputHand
 	public void mouseButtonEvent(Window window, MouseButtonEvent event) {
 		if (widget().isScrollbarSelected()) return;
 		
-		if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT && settings().isCaretEnabled()) {
+		if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT && ClearStaticResources.canFocus(widget()) && settings().isCaretEnabled()) {
 			//This toggles highlighting mode
 			boolean bMousePressed = mousePressed;
 			mousePressed = event.isPressed();
@@ -93,9 +94,16 @@ public class DefaultTextAreaContentInputHandler extends TextAreaContentInputHand
 		 * Return
 		 */
 		
-		if (config.isReturnEnabled() && key == GLFW.GLFW_KEY_ENTER) {
-			content().newLineAtCaret();
-			return;
+		if (key == GLFW.GLFW_KEY_ENTER) {
+			if (config.returnEndsEditing()) {
+				content().endEditing();
+				return;
+			}
+			
+			if (config.isReturnEnabled()) {
+				content().newLineAtCaret();
+				return;
+			}
 		}
 		
 		/*

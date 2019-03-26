@@ -5,6 +5,7 @@ import org.lwjgl.nanovg.NanoVG;
 import nokori.clear.vg.ClearColor;
 import nokori.clear.vg.NanoVGContext;
 import nokori.clear.vg.widget.assembly.WidgetAssembly;
+import nokori.clear.vg.widget.assembly.WidgetSynch;
 import nokori.clear.vg.widget.assembly.Widget;
 import nokori.clear.windows.Window;
 import nokori.clear.windows.WindowManager;
@@ -14,11 +15,8 @@ import nokori.clear.windows.WindowManager;
  */
 public class RectangleWidget extends Widget  {
 	
-	protected float cornerRadius;
-	protected boolean syncToParent = false;
-	
 	protected ClearColor fill, strokeFill;
-	
+	protected float cornerRadius;
 	private float strokeWidth = 1.0f;
 	
 	/*
@@ -41,7 +39,7 @@ public class RectangleWidget extends Widget  {
 	
 	public RectangleWidget(float cornerRadius, ClearColor fill, ClearColor strokeFill) {
 		this(0, 0, 0, 0, cornerRadius, fill, strokeFill);
-		syncToParent = true;
+		addChild(new WidgetSynch());
 	}
 	
 	/*
@@ -80,11 +78,7 @@ public class RectangleWidget extends Widget  {
 	 */
 	
 	@Override
-	public void tick(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
-		if (syncToParent) {
-			getPosition().set(parent.getPosition());
-		}
-	}
+	public void tick(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {}
 
 	@Override
 	public void render(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
@@ -95,22 +89,27 @@ public class RectangleWidget extends Widget  {
 		float w = getWidth();
 		float h = getHeight();
 		
-		fill.tallocNVG(fill -> {
-			NanoVG.nvgBeginPath(vg);
-			NanoVG.nvgRoundedRect(vg, x, y, w, h, cornerRadius);
-			NanoVG.nvgFillColor(vg, fill);
-			NanoVG.nvgFill(vg);
-			
-			if (strokeFill != null) {
-				strokeFill.tallocNVG(strokeFill -> {
-					NanoVG.nvgStrokeWidth(vg, strokeWidth);
-					NanoVG.nvgStrokeColor(vg, strokeFill);
-					NanoVG.nvgStroke(vg);
-				});
-			}
-			
-			NanoVG.nvgClosePath(vg);
-		});
+		if (fill != null) {
+			fill.tallocNVG(fill -> {
+				NanoVG.nvgBeginPath(vg);
+				NanoVG.nvgRoundedRect(vg, x, y, w, h, cornerRadius);
+				NanoVG.nvgFillColor(vg, fill);
+				NanoVG.nvgFill(vg);
+				NanoVG.nvgClosePath(vg);
+			});
+		}
+		
+		if (strokeFill != null) {
+			strokeFill.tallocNVG(strokeFill -> {
+				NanoVG.nvgBeginPath(vg);
+				NanoVG.nvgRoundedRect(vg, x, y, w, h, cornerRadius);
+				NanoVG.nvgStrokeWidth(vg, strokeWidth);
+				NanoVG.nvgStrokeColor(vg, strokeFill);
+				NanoVG.nvgStroke(vg);
+				NanoVG.nvgClosePath(vg);
+			});
+		}
+		
 	}
 	
 	public float getStrokeWidth() {

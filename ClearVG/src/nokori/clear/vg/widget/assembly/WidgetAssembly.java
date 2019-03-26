@@ -13,23 +13,36 @@ import nokori.clear.windows.WindowManager;
 public class WidgetAssembly extends Widget {
 	
 	private ClearColor backgroundFill = null;
+	private boolean syncToWindow = false;
 	
+	/**
+	 * This creates a Widget Assembly that will synchronize its size with the window it's in. If you want to make a shapeless container for widgets, 
+	 * I recommend using a WidgetContainer instead.
+	 */
 	public WidgetAssembly() {
-		this(0f, 0f);
+		this(0f, 0f, 0f, 0f);
+		syncToWindow = true;
 	}
 	
-	public WidgetAssembly(float x, float y) {
-		this(x, y, 0f, 0f);
-	}
-
+	/**
+	 * Creates a WidgetAssembly with the given dimensions.
+	 * 
+	 * @param x
+	 * @param y
+	 * @param width
+	 * @param height
+	 */
 	public WidgetAssembly(float x, float y, float width, float height) {
 		super(x, y, width, height);
 	}
 	
-	public WidgetAssembly(WidgetClip widgetClip) {
-		addChild(widgetClip);
-	}
-	
+	/**
+	 * Creates a WidgetAssembly with the given width and height and configures it to use the given WidgetClip for positioning.
+	 * 
+	 * @param width
+	 * @param height
+	 * @param widgetClip
+	 */
 	public WidgetAssembly(float width, float height, WidgetClip widgetClip) {
 		super(0, 0, width, height);
 		addChild(widgetClip);
@@ -37,7 +50,10 @@ public class WidgetAssembly extends Widget {
 
 	@Override
 	public void tick(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
-		
+		if (syncToWindow) {
+			getPosition().set(0, 0);
+			getSize().set(window.getFramebufferWidth(), window.getFramebufferHeight());
+		}
 	}
 	
 	@Override
@@ -57,18 +73,6 @@ public class WidgetAssembly extends Widget {
 				NanoVG.nvgClosePath(vg);
 			});
 		}
-	}
-	
-	@Override
-	protected void addChildCallback(Widget widget) {
-		super.addChildCallback(widget);
-		//resizeWidthHeight();
-	}
-
-	@Override
-	protected void removeChildCallback(Widget widget) {
-		super.removeChildCallback(widget);
-		//resizeWidthHeight();
 	}
 
 	public void setBackgroundFill(ClearColor backgroundFill) {

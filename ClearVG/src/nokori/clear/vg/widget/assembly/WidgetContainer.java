@@ -118,12 +118,16 @@ public class WidgetContainer {
 	 * 
 	 * @param container
 	 */
-	public void addChildren(WidgetContainer container) {
+	public void addAllChildrenOfContainer(WidgetContainer container) {
 		for (Widget w : container.children) {
 			addChild(w);
 		}
 	}
 	
+	/**
+	 * Adds the given Widget objects to this WidgetContainer as a child, meaning that this WidgetContainer will be in charge of ticking and rendering that Widget. 
+	 * This is sensitive to order. The first added Widget is updated/rendered first, the last added Widget is updated/rendered last. Keep that in mind when creating interfaces.
+	 */
 	public void addChild(Widget... widget) {
 		for (int i = 0; i < widget.length; i++) {
 			Widget w = widget[i];

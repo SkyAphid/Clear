@@ -1,7 +1,6 @@
 package nokori.clear.vg.widget.assembly;
 
-import org.joml.Vector4f;
-
+import org.joml.Vector2f;
 import nokori.clear.vg.NanoVGContext;
 import nokori.clear.vg.widget.listener.CharEventListener;
 import nokori.clear.vg.widget.listener.KeyEventListener;
@@ -27,7 +26,8 @@ public abstract class Widget extends WidgetContainer {
 	
 	protected Widget parent = null;
 	
-	private Vector4f pos = new Vector4f(0, 0, 0, 0);
+	private Vector2f pos = new Vector2f(0f, 0f);
+	private Vector2f size = new Vector2f(0f, 0f);
 
 	private boolean inputEnabled = true;
 	private CharEventListener charEventListener = null;
@@ -47,8 +47,8 @@ public abstract class Widget extends WidgetContainer {
 	public Widget(float x, float y, float width, float height) {
 		pos.x = x;
 		pos.y = y;
-		pos.z = x + width;
-		pos.w = y + height;
+		size.x = width;
+		size.y = height;
 	}
 	
 	/**
@@ -93,12 +93,13 @@ public abstract class Widget extends WidgetContainer {
 	public Widget getParent() {
 		return parent;
 	}
-	
-	/**
-	 * @return the vector data containing this Widgets coordinate position in this order: x, y, z, w = minX, minY, maxX, maxY
-	 */
-	public Vector4f getPosition() {
+
+	public Vector2f getPosition() {
 		return pos;
+	}
+
+	public Vector2f getSize() {
+		return size;
 	}
 
 	/**
@@ -118,9 +119,7 @@ public abstract class Widget extends WidgetContainer {
 	 * @param x
 	 */
 	public void setX(float x) {
-		float width = getWidth();
 		pos.x = x;
-		pos.z = x + width;
 	}
 
 	public void offsetX(float xOffset) {
@@ -144,9 +143,7 @@ public abstract class Widget extends WidgetContainer {
 	 * @param y
 	 */
 	public void setY(float y) {
-		float height = getHeight();
 		pos.y = y;
-		pos.w = y + height;
 	}
 	
 	public void offsetY(float yOffset) {
@@ -154,19 +151,19 @@ public abstract class Widget extends WidgetContainer {
 	}
 
 	public float getWidth() {
-		return (pos.z - pos.x);
+		return size.x;
 	}
 
 	public void setWidth(float width) {
-		pos.z = pos.x + width;
+		size.x = width;
 	}
 
 	public float getHeight() {
-		return (pos.w - pos.y);
+		return size.y;
 	}
 
 	public void setHeight(float height) {
-		pos.w = pos.y + height;
+		size.y = height;
 	}
 	
 	/**
@@ -237,6 +234,7 @@ public abstract class Widget extends WidgetContainer {
 	protected void addChildCallback(Widget widget) {
 		if (widget.parent != null) {
 			System.err.println("WARNING: Widget (" + widget + ") has two parents: " + this +", " + widget.parent + "\nThis is likely to result in erratic behavior.");
+			Thread.dumpStack();
 		}
 		
 		widget.parent = this;

@@ -5,6 +5,7 @@ import org.lwjgl.nanovg.NanoVG;
 
 import static org.lwjgl.nanovg.NanoVG.*;
 
+import nokori.clear.vg.ClearColor;
 import nokori.clear.vg.NanoVGContext;
 import nokori.clear.windows.Window;
 
@@ -25,7 +26,13 @@ public class WidgetUtil {
 	}
 	
 	public static void nvgRect(long vg, float x, float y, float width, float height) {
-		nvgRect(vg, null, x, y, width, height);
+		nvgRect(vg, (NVGColor) null, x, y, width, height);
+	}
+	
+	public static void nvgRect(long vg, ClearColor fill, float x, float y, float width, float height) {
+		fill.tallocNVG(f -> {
+			nvgRect(vg, f, x, y, width, height);
+		});
 	}
 
 	/**

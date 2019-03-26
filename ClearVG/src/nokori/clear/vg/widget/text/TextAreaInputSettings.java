@@ -20,7 +20,9 @@ public class TextAreaInputSettings {
 	
 	private boolean backspaceEnabled = true;
 	private boolean tabEnabled = true;
+	
 	private boolean returnEnabled = true;
+	private boolean returnEndsEditing = false;
 	
 	private boolean copyEnabled = true;
 	private boolean cutEnabled = true;
@@ -115,6 +117,14 @@ public class TextAreaInputSettings {
 
 	public void setReturnEnabled(boolean returnEnabled) {
 		this.returnEnabled = returnEnabled;
+	}
+
+	public boolean returnEndsEditing() {
+		return returnEndsEditing;
+	}
+
+	public void setReturnEndsEditing(boolean returnExitsEditing) {
+		this.returnEndsEditing = returnExitsEditing;
 	}
 
 	public boolean isCopyEnabled() {

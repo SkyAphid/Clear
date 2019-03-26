@@ -7,6 +7,13 @@ import nokori.clear.windows.event.MouseButtonEvent;
 
 import static nokori.clear.vg.ClearStaticResources.*;
 
+/**
+ * DraggableWidgetAssemblies are exactly what the name implies. It's a WidgetAssembly that can be dragged with the mouse. 
+ * With the right settings, you can put a bunch of DraggableWidgetAssembly objects in one DraggableWidgetAssembly and create a system 
+ * where nodes are draggable inside of a canvas that is pannable. 
+ * <br><br>
+ * Check out <code>ClearDraggableWidgetDemo.java</code> to see an example of this in action.
+ */
 public class DraggableWidgetAssembly extends WidgetAssembly {
 
 	private boolean dragging = false;
@@ -78,8 +85,10 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 	}
 
 	/**
+	 * This value determines whether or not the mouse has to actually be within the bounds of this Widget for the dragging functionality to be activated. 
+	 * Disabling this can have some advantages, such as when you want to be able to drag an entire canvas around.
+	 * 
 	 * @param requiresMouseToBeWithinWidgetToDrag
-	 * @see <code>requiresMouseToBeWithinWidgetToDrag()</code>
 	 */
 	public void setRequiresMouseToBeWithinWidgetToDrag(boolean requiresMouseToBeWithinWidgetToDrag) {
 		this.requiresMouseToBeWithinWidgetToDrag = requiresMouseToBeWithinWidgetToDrag;
@@ -94,8 +103,10 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 	}
 
 	/**
+	 * If this is set to true, this widget won't take into consideration whether or not the mouse is hovering one of its children widgets before allowing 
+	 * the user to drag it. Otherwise, if this is false, you won't be able to drag the widget if the mouse is hovering another widget within this widget.
+	 * 
 	 * @param ignoreChildrenWidgets
-	 * @see <code>ignoreChildrenWidgets()</code>
 	 */
 	public void setIgnoreChildrenWidgets(boolean ignoreChildrenWidgets) {
 		this.ignoreChildrenWidgets = ignoreChildrenWidgets;

@@ -9,6 +9,7 @@ import org.joml.Vector2f;
 import org.joml.Vector2i;
 
 import nokori.clear.vg.ClearColor;
+import nokori.clear.vg.ClearStaticResources;
 import nokori.clear.vg.NanoVGContext;
 import nokori.clear.vg.font.Font;
 import nokori.clear.vg.font.FontStyle;
@@ -228,7 +229,8 @@ public class TextAreaContentHandler {
 	void endOfRenderingCallback() {
 		//If updateCaret is still true by the end of a rendering cycle, that means it was never successfully moved (invalid caret queue coordinates).
 		//We'll turn it off so that it doesn't get deadlocked.
-		notifyCaretUpdated();
+		//Also automatically unfocus this widget if the caret is no longer in the text bounding
+		notifyCaretUpdated(caret >= 0 && caret < widget.getTextBuilder().length());
 	}
 	
 	/**
@@ -252,8 +254,8 @@ public class TextAreaContentHandler {
 	private void forEachCharCaretLogic(long vg, int characterIndex, int lineNumber, float x, float y, float adjustedClickY, float advanceW, float fontHeight) {
 		//Checks if the mouse click was in the bounding of this character - if so, the caret is set to this index.
 		float clickHeight = (widget.isFinalLine(lineNumber) && (widget.isMouseWithinThisWidget() || isHighlighting()) ? Float.MAX_VALUE : fontHeight);
-		
-		if (updateCaret && WidgetUtil.pointWithinRectangle(getCaretQueueScissoredX(), getCaretQueueScissoredY(), x, adjustedClickY, advanceW, clickHeight)) {
+
+		if (updateCaret && WidgetUtil.pointWithinRectangle(caretUpdateQueue.x, caretUpdateQueue.y, x, adjustedClickY, advanceW, clickHeight)) {
 			int bCaretPosition = caret;
 			setCaretPosition(characterIndex);
 			refreshHighlightIndex();
@@ -262,7 +264,7 @@ public class TextAreaContentHandler {
 				resetCaretFader();
 			}
 			
-			notifyCaretUpdated();
+			notifyCaretUpdated(true);
 		}
 	}
 
@@ -271,8 +273,8 @@ public class TextAreaContentHandler {
 	 * which would be somewhat difficult with just the base controls.
 	 */
 	private void edgeCaretLogic(long vg, int totalTextLength, int lineNumber, int startIndex, int endIndex, float startX, float endX, float y, float adjustedClickY, float fontHeight) {
-		double mX = getCaretQueueScissoredX();
-		double mY = getCaretQueueScissoredY();
+		double mX = caretUpdateQueue.x;
+		double mY = caretUpdateQueue.y;
 		
 		if (updateCaret) {
 			//System.out.println(lineNumber + " Pass 1");
@@ -281,10 +283,7 @@ public class TextAreaContentHandler {
 			boolean withinBounds = (widget.getParent() != null && widget.getParent().isPointWithinThisWidget(mX, mY) || widget.isPointWithinThisWidget(mX, mY));
 
 			if (!withinBounds && !isHighlighting()) {
-				setCaretPosition(-1);
-				resetCaretFader();
-				resetHighlighting();
-				notifyCaretUpdated();
+				endEditing();
 				return;
 			}
 			
@@ -296,7 +295,7 @@ public class TextAreaContentHandler {
 					setCaretPosition(startIndex);
 					refreshHighlightIndex();
 					resetCaretFader();
-					notifyCaretUpdated();
+					notifyCaretUpdated(true);
 					return;
 				}
 				
@@ -313,7 +312,7 @@ public class TextAreaContentHandler {
 					
 					refreshHighlightIndex();
 					resetCaretFader();
-					notifyCaretUpdated();
+					notifyCaretUpdated(true);
 					return;
 				}
 			}
@@ -393,18 +392,10 @@ public class TextAreaContentHandler {
 		caretFadeTransition.setStartAndEnd(1f, 0f);
 		caretFadeTransition.play();
 	}
-	
+
 	void queueCaret(float x, float y) {
 		caretUpdateQueue.set(x, y);
 		updateCaret = true;
-	}
-	
-	private float getCaretQueueScissoredX() {
-		return caretUpdateQueue.x() - widget.getScissorX();
-	}
-	
-	private float getCaretQueueScissoredY() {
-		return caretUpdateQueue.y() - widget.getScissorY();
 	}
 	
 	/**
@@ -412,12 +403,19 @@ public class TextAreaContentHandler {
 	 * 
 	 * Also calls any other commands that require the up-to-date caret position data.
 	 * 
+	 * @param focusWidget - if true, this widget will be set as the focused widget. If false, this widget will be unfocused.
 	 * @see <code>scrollToCaret()</code>
 	 */
-	private void notifyCaretUpdated() {
+	private void notifyCaretUpdated(boolean focusWidget) {
 		if (requestScrollToCaret) {
 			scrollToCaret();
 			requestScrollToCaret = false;
+		}
+		
+		if (focusWidget) {
+			ClearStaticResources.setFocusedWidget(widget);
+		} else if(ClearStaticResources.getFocusedWidget() == widget) {
+			ClearStaticResources.setFocusedWidget(null);
 		}
 		
 		updateCaret = false;
@@ -425,6 +423,20 @@ public class TextAreaContentHandler {
 	
 	public boolean isCaretActive() {
 		return (widget.getInputSettings().isEditingEnabled() && widget.getInputSettings().isCaretEnabled() && caret >= 0);
+	}
+	
+	/**
+	 * Removes the caret, resets highlighting, and unfocuses the parent widget if applicable
+	 */
+	public void endEditing() {
+		setCaretPosition(-1);
+		resetCaretFader();
+		resetHighlighting();
+		notifyCaretUpdated(false);
+		
+		if (ClearStaticResources.getFocusedWidget() == widget) {
+			ClearStaticResources.setFocusedWidget(null);
+		}
 	}
 	
 	/*
@@ -847,7 +859,7 @@ public class TextAreaContentHandler {
 		 */
 		
 		float scissorY = widget.getScissorY();
-		float scissorH = widget.getScissorH();
+		float scissorH = widget.getTextContentH();
 		
 		float caretY = caretPosition.y() - widget.getTextContentY();
 		float caretH = widget.getFontHeight();
@@ -862,7 +874,7 @@ public class TextAreaContentHandler {
 		 */
 		
 		float scissorX = widget.getScissorX();
-		float scissorW = widget.getScissorW();
+		float scissorW = widget.getTextContentW();
 		
 		float caretX = caretPosition.x() - widget.getTextContentX();
 		float caretW = 1.0f;

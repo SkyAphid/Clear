@@ -55,7 +55,7 @@ public class ClearHelloWorldDemo extends ClearApplication {
 		
 		float cornerRadius = 3f;
 		
-		button.addChild(new DropShadowWidget(cornerRadius, ClearColor.LIGHT_BLACK));
+		button.addChild(new DropShadowWidget(cornerRadius));
 		button.addChild(new RectangleWidget(cornerRadius, ClearColor.CORAL));
 		
 		/*

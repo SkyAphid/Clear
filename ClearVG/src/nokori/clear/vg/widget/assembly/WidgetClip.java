@@ -27,17 +27,14 @@ public class WidgetClip extends Widget {
 
 	@Override
 	public void tick(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
-		if (parent == null) return;
-		
-		Widget wParent = parent.parent;
-		
-		float containerWidth = window.getFramebufferWidth();
-		float containerHeight = window.getFramebufferHeight();
-		
-		if (wParent != rootWidgetAssembly) {
-			containerWidth = wParent.getWidth();
-			containerHeight = wParent.getHeight();
+		if (parent == null || parent.parent == null) {
+			System.err.println("WARNING: WidgetClip isn't attached to another Widget, or that Widget isn't attached to another Widget!"
+					+ "\nBoth must be present for a WidgetClip to work correctly! (Heirarchy: Widget -> Child Widget -> Widget Clip)");
+			return;
 		}
+		
+		float containerWidth = parent.parent.getWidth();
+		float containerHeight = parent.parent.getHeight();
 		
 		float centerX = containerWidth/2 - parent.getWidth()/2;
 		float centerY = containerHeight/2 - parent.getHeight()/2;

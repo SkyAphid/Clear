@@ -11,6 +11,7 @@ import nokori.clear.windows.Cursor.Type;;
  */
 public class ClearStaticResources {
 	private static Widget focusedWidget = null;
+	private static Widget hoveringWidget = null;
 	
 	private static Cursor[] loadedCursors;
 	
@@ -21,12 +22,21 @@ public class ClearStaticResources {
 	public static void setFocusedWidget(Widget focusedWidget) {
 		ClearStaticResources.focusedWidget = focusedWidget;
 	}
-	
-	/**
-	 * @return true if there is no currently focused widget, or the currently focused widget is the one that is passed in.
-	 */
+
 	public static boolean canFocus(Widget widget) {
 		return (focusedWidget == null || focusedWidget == widget);
+	}
+	
+	public static Widget getHoveringWidget() {
+		return focusedWidget;
+	}
+
+	public static void setHoveringWidget(Widget hoveringWidget) {
+		ClearStaticResources.hoveringWidget = hoveringWidget;
+	}
+
+	public static boolean isHoveringWidget() {
+		return hoveringWidget != null;
 	}
 	
 	/**

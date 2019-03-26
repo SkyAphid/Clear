@@ -35,6 +35,7 @@ public class ClearDraggableWidgetDemo extends ClearApplication {
 			/*
 			 * Create canvas that can be panned around
 			 */
+			
 			DraggableWidgetAssembly canvas = new DraggableWidgetAssembly();
 			canvas.setRequiresMouseToBeWithinWidgetToDrag(false);
 			

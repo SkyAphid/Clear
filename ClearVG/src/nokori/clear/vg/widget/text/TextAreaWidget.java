@@ -61,7 +61,7 @@ public class TextAreaWidget extends Widget {
 	 * Text rendering
 	 */
 	
-	private static final int TEXT_AREA_ALIGNMENT = Font.DEFAULT_TEXT_ALIGNMENT;
+	protected static final int TEXT_AREA_ALIGNMENT = Font.DEFAULT_TEXT_ALIGNMENT;
 	
 	//We store the text in a StringBuilder to make editing perform better. toString() is called when the actual string is needed, e.g. for splitting.
 	private StringBuilder textBuilder;
@@ -86,7 +86,7 @@ public class TextAreaWidget extends Widget {
 	private int firstLineInView = 0;
 	
 	private float renderAreaHeight, stringHeight;
-	private float scissorX = 0f, scissorY = 0f, scissorW = 0f, scissorH = 0f;
+	private float scissorX = 0f, scissorY = 0f;
 	
 	private float cullOffset = 0f;
 	private float textContentX = -1f, textContentY = -1f, textContentW = -1f, textContentH = -1f;
@@ -98,7 +98,7 @@ public class TextAreaWidget extends Widget {
 	
 	private Font font;
 	private float fontSize;
-	private FontStyle fontStyle = FontStyle.REGULAR;
+	private FontStyle defaultFontStyle = FontStyle.REGULAR;
 	private float fontHeight = 0f;
 	
 	private ClearColor defaultTextFill;
@@ -106,7 +106,7 @@ public class TextAreaWidget extends Widget {
 	/*
 	 * Line numbers
 	 */
-	
+
 	private boolean lineNumbersEnabled = true;
 	private Font lineNumberFont;
 	private FontStyle lineNumberFontStyle = FontStyle.REGULAR;
@@ -126,17 +126,14 @@ public class TextAreaWidget extends Widget {
 	public static final float DEFAULT_SCROLLBAR_CORNER_RADIUS = 5;
 	private float scrollbarCornerRadius = DEFAULT_SCROLLBAR_CORNER_RADIUS;
 	
-	public static final float DEFAULT_RIGHT_SCROLLBAR_LEFT_PADDING = 50;
-	private float verticalScrollbarLeftPadding = DEFAULT_RIGHT_SCROLLBAR_LEFT_PADDING;
-	
-	public static final float DEFAULT_BOTTOM_SCROLLBAR_TOP_PADDING = 10;
-	private float horizontalScrollbarTopPadding = DEFAULT_BOTTOM_SCROLLBAR_TOP_PADDING;
-	
 	private ClearColor scrollbarBackgroundFill = ClearColor.LIGHT_GRAY;
 	private ClearColor scrollbarFill = ClearColor.DARK_GRAY;
 	private ClearColor scrollbarHighlightFill = ClearColor.CORAL;
 
 	//Vertical Scrollbar
+	public static final float DEFAULT_RIGHT_SCROLLBAR_LEFT_PADDING = 20;
+	private float verticalScrollbarLeftPadding = DEFAULT_RIGHT_SCROLLBAR_LEFT_PADDING;
+	
 	private float verticalScroll = 0.0f;
 	private float verticalScrollIncrement = 0.01f;
 	private SimpleTransition verticalScrollTransition = null;
@@ -155,6 +152,9 @@ public class TextAreaWidget extends Widget {
 	private FillTransition verticalScrollbarFillTransition = null;
 	
 	//Horizontal Scrollbar
+	public static final float DEFAULT_BOTTOM_SCROLLBAR_TOP_PADDING = 10;
+	private float horizontalScrollbarTopPadding = DEFAULT_BOTTOM_SCROLLBAR_TOP_PADDING;
+	
 	private float horizontalScroll = 0.0f;
 	
 	private static final float HORIZONTAL_SCROLLBAR_MIN_WIDTH = 60f;
@@ -197,7 +197,9 @@ public class TextAreaWidget extends Widget {
 	}
 
 	@Override
-	public void tick(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {}
+	public void tick(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
+		//System.out.println(ClearStaticResources.getFocusedWidget());
+	}
 
 	@Override
 	public void render(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
@@ -216,7 +218,7 @@ public class TextAreaWidget extends Widget {
 		 * 
 		 */
 		
-		font.configureNVG(context, fontSize, fontStyle);
+		font.configureNVG(context, fontSize, defaultFontStyle);
 
 		/*
 		 * Line number calculations
@@ -257,7 +259,7 @@ public class TextAreaWidget extends Widget {
 		
 		if (lines == null || refreshLines) {
 			float lineSplitW = (wordWrappingEnabled ? textContentW : Float.MAX_VALUE);
-			font.split(context, lines = new ArrayList<>(), text, lineSplitW, fontSize, TEXT_AREA_ALIGNMENT, fontStyle);
+			font.split(context, lines = new ArrayList<>(), text, lineSplitW, fontSize, TEXT_AREA_ALIGNMENT, defaultFontStyle);
 			
 			//Don't allow the lines array to be empty.
 			if (lines.isEmpty()) {
@@ -278,10 +280,10 @@ public class TextAreaWidget extends Widget {
 		 */
 		
 		//Some Misc. calculations
-		fontHeight = font.getHeight(context, fontSize, TEXT_AREA_ALIGNMENT, fontStyle);
+		fontHeight = font.getHeight(context, fontSize, TEXT_AREA_ALIGNMENT, defaultFontStyle);
 		
 		renderAreaHeight = (textContentH / fontHeight) * fontHeight;
-		stringHeight = font.getHeight(context, lines.size(), fontHeight, TEXT_AREA_ALIGNMENT, fontStyle);
+		stringHeight = font.getHeight(context, lines.size(), fontHeight, TEXT_AREA_ALIGNMENT, defaultFontStyle);
 		
 		/*
 		 * 
@@ -290,15 +292,15 @@ public class TextAreaWidget extends Widget {
 		 */
 		
 		long vg = context.get();
+		
+		//WidgetUtil.nvgRect(vg, ClearColor.RED, x, y, width, height);
+
 		nvgBeginPath(vg);
 		
 		scissorY = -Math.max((getMaxScissorY() * verticalScroll), 0f);
 		scissorX = -(getMaxScissorX() * horizontalScroll);
 
-		scissorW = textContentW + verticalScrollbarLeftPadding/2;
-		scissorH = textContentH;
-		
-		nvgScissor(vg, textContentX, y, scissorW, scissorH);
+		nvgScissor(vg, textContentX, textContentY, textContentW, textContentH);
 		nvgTranslate(vg, scissorX, scissorY);
 		
 		/*
@@ -350,7 +352,7 @@ public class TextAreaWidget extends Widget {
 		
 		nvgBeginPath(vg);
 		
-		nvgScissor(vg, x, y, scissorW, scissorH);
+		nvgScissor(vg, x, y, textContentW, textContentH);
 		nvgTranslate(vg, 0f, scissorY);
 		
 		for (int i = 0; i < lines.size(); i++) {
@@ -418,7 +420,7 @@ public class TextAreaWidget extends Widget {
 	 * Used by TextContentRenderer to set this TextArea back to the user's defined parameters in-between TextRenderCommands.
 	 */
 	public void resetRenderConfiguration(NanoVGContext context) {
-		font.configureNVG(context, fontSize, TEXT_AREA_ALIGNMENT, fontStyle);
+		font.configureNVG(context, fontSize, TEXT_AREA_ALIGNMENT, defaultFontStyle);
 		
 		defaultTextFill.tallocNVG(fill -> {
 			nvgFillColor(context.get(), fill);
@@ -844,14 +846,6 @@ public class TextAreaWidget extends Widget {
 		return scissorY;
 	}
 	
-	float getScissorW() {
-		return scissorW;
-	}
-
-	float getScissorH() {
-		return scissorH;
-	}
-	
 	float getMaxScissorY() {
 		return (stringHeight - renderAreaHeight);
 	}
@@ -917,6 +911,14 @@ public class TextAreaWidget extends Widget {
 
 	public void setDefaultTextFill(ClearColor fill) {
 		this.defaultTextFill = fill;
+	}
+	
+	public FontStyle getDefaultFontStyle() {
+		return defaultFontStyle;
+	}
+
+	public void setDefaultFontStyle(FontStyle defaultFontStyle) {
+		this.defaultFontStyle = defaultFontStyle;
 	}
 	
 	public Font getFont() {
