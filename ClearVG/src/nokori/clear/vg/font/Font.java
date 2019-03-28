@@ -136,12 +136,44 @@ public class Font {
 		}
 	}
 	
+	/**
+	 * Get's the font height using the given settings.
+	 * 
+	 * @param context
+	 * @param fontSize
+	 * @param textAlignment
+	 * @param fontStyle
+	 * @return
+	 */
 	public float getHeight(NanoVGContext context, float fontSize, FontStyle fontStyle) {
 		return getHeight(context, fontSize, DEFAULT_TEXT_ALIGNMENT, fontStyle);
 	}
 	
+	/**
+	 * Get's the font height using the given settings.
+	 * 
+	 * @param context
+	 * @param fontSize
+	 * @param textAlignment
+	 * @param fontStyle
+	 * @return
+	 */
 	public float getHeight(NanoVGContext context, float fontSize, int textAlignment, FontStyle fontStyle) {
 		configureNVG(context, fontSize, textAlignment, fontStyle);
+		return getHeight(context);
+	}
+	
+	/**
+	 * Get's the font height using the current NanoVG settings. This function will assume the font has already been set up either by using <code>configureNVG</code> or manually 
+	 * through NanoVG directly.
+	 * 
+	 * @param context
+	 * @param fontSize
+	 * @param textAlignment
+	 * @param fontStyle
+	 * @return
+	 */
+	public float getHeight(NanoVGContext context) {
 		nvgTextMetrics(context.get(), null, null, tempBuffer);
 		return tempBuffer.get(0);
 	}

@@ -30,6 +30,7 @@ public abstract class Widget extends WidgetContainer {
 	private Vector2f size = new Vector2f(0f, 0f);
 
 	private boolean inputEnabled = true;
+	
 	private CharEventListener charEventListener = null;
 	private KeyEventListener keyEventListener = null;
 	private MouseButtonEventListener mouseButtonEventListener = null;
@@ -37,6 +38,14 @@ public abstract class Widget extends WidgetContainer {
 	private MouseEnteredEventListener mouseEnteredEventListener = null;
 	private MouseExitedEventListener mouseExitedEventListener = null;
 	private MouseScrollEventListener mouseScrollEventListener = null;
+	
+	private CharEventListener internalCharEventListener = null;
+	private KeyEventListener internalKeyEventListener = null;
+	private MouseButtonEventListener internalMouseButtonEventListener = null;
+	private MouseMotionEventListener internalMouseMotionEventListener = null;
+	private MouseEnteredEventListener internalMouseEnteredEventListener = null;
+	private MouseExitedEventListener internalMouseExitedEventListener = null;
+	private MouseScrollEventListener internalMouseScrollEventListener = null;
 	
 	private boolean mouseWithin = false;
 	
@@ -185,7 +194,7 @@ public abstract class Widget extends WidgetContainer {
 	}
 
 	/**
-	 * @return whether or not this widget is currently accepting user inputs.
+	 * @return whether or not this widget is currently visible to any inputs.
 	 */
 	public boolean isInputEnabled() {
 		return inputEnabled;
@@ -219,7 +228,7 @@ public abstract class Widget extends WidgetContainer {
 	 * @return - true if the coordinates are within this widget
 	 */
 	public boolean isPointWithinThisWidget(double x, double y) {
-		return WidgetUtil.pointWithinRectangle(x, y, getClippedX(), getClippedY(), getWidth(), getHeight());
+		return WidgetUtils.pointWithinRectangle(x, y, getClippedX(), getClippedY(), getWidth(), getHeight());
 	}
 	
 	/*
@@ -272,17 +281,29 @@ public abstract class Widget extends WidgetContainer {
 		if (charEventListener != null) {
 			charEventListener.listen(event);
 		}
+		
+		if (internalCharEventListener != null) {
+			internalCharEventListener.listen(event);
+		}
 	}
 
 	public void keyEvent(Window window, KeyEvent event) {
 		if (keyEventListener != null) {
 			keyEventListener.listen(event);
 		}
+		
+		if (internalKeyEventListener != null) {
+			internalKeyEventListener.listen(event);
+		}
 	}
 	
 	public void mouseButtonEvent(Window window, MouseButtonEvent event) {
 		if (mouseButtonEventListener != null) {
 			mouseButtonEventListener.listen(event);
+		}
+		
+		if (internalMouseButtonEventListener != null) {
+			internalMouseButtonEventListener.listen(event);
 		}
 	}
 	
@@ -306,13 +327,29 @@ public abstract class Widget extends WidgetContainer {
 		mouseWithin = isPointWithinThisWidget(mouseX, mouseY);
 		
 		//Mouse entered
-		if (!bMouseWithin && mouseWithin && mouseEnteredEventListener != null) {
-			mouseEnteredEventListener.listen(MouseEnteredEvent.fire(window, System.nanoTime(), mouseX, mouseY));
+		if (!bMouseWithin && mouseWithin) {
+			MouseEnteredEvent e = MouseEnteredEvent.fire(window, System.nanoTime(), mouseX, mouseY);
+			
+			if (mouseEnteredEventListener != null) {
+				mouseEnteredEventListener.listen(e);
+			}
+			
+			if (internalMouseEnteredEventListener != null) {
+				internalMouseEnteredEventListener.listen(e);
+			}
 		}
 		
 		//Mouse exited
-		if (bMouseWithin && !mouseWithin && mouseExitedEventListener != null) {
-			mouseExitedEventListener.listen(MouseExitedEvent.fire(window, System.nanoTime(), mouseX, mouseY));
+		if (bMouseWithin && !mouseWithin) {
+			MouseExitedEvent e = MouseExitedEvent.fire(window, System.nanoTime(), mouseX, mouseY);
+			
+			if (mouseExitedEventListener != null) {
+				mouseExitedEventListener.listen(e);
+			}
+			
+			if (internalMouseExitedEventListener != null) {
+				internalMouseExitedEventListener.listen(e);
+			}
 		}
 	}
 	
@@ -320,8 +357,22 @@ public abstract class Widget extends WidgetContainer {
 		if (mouseScrollEventListener != null) {
 			mouseScrollEventListener.listen(event);
 		}
+		
+		if (internalMouseScrollEventListener != null) {
+			internalMouseScrollEventListener.listen(event);
+		}
 	}
 
+	/*
+	 * 
+	 * 
+	 * User Event Listeners
+	 * 
+	 * These listeners allow users to extend the functionality of Widgets with extra inputs.
+	 * 
+	 * 
+	 */
+	
 	public CharEventListener getCharEventListener() {
 		return charEventListener;
 	}
@@ -377,5 +428,73 @@ public abstract class Widget extends WidgetContainer {
 	public void setOnMouseScrollEvent(MouseScrollEventListener mouseScrollEventListener) {
 		this.mouseScrollEventListener = mouseScrollEventListener;
 	}
+	
+	/*
+	 * 
+	 * 
+	 * Internal Event Listeners
+	 * 
+	 * These event listeners are only available to the Widget itself for the purpose of adding new functionality. 
+	 * These prevent newly added functions from being overriden by user-extensions.
+	 * 
+	 */
+	
+
+	protected CharEventListener getInternalCharEventListener() {
+		return internalCharEventListener;
+	}
+
+	protected void setOnInternalCharEvent(CharEventListener internalCharEventListener) {
+		this.internalCharEventListener = internalCharEventListener;
+	}
+
+	protected KeyEventListener getInternalKeyEventListener() {
+		return internalKeyEventListener;
+	}
+
+	protected void setOnInternalKeyEvent(KeyEventListener internalKeyEventListener) {
+		this.internalKeyEventListener = internalKeyEventListener;
+	}
+
+	protected MouseButtonEventListener getInternalMouseButtonEventListener() {
+		return internalMouseButtonEventListener;
+	}
+
+	protected void setOnInternalMouseButtonEvent(MouseButtonEventListener internalMouseButtonEventListener) {
+		this.internalMouseButtonEventListener = internalMouseButtonEventListener;
+	}
+
+	protected MouseMotionEventListener getInternalMouseMotionEventListener() {
+		return internalMouseMotionEventListener;
+	}
+
+	protected void setOnInternalMouseMotionEvent(MouseMotionEventListener internalMouseMotionEventListener) {
+		this.internalMouseMotionEventListener = internalMouseMotionEventListener;
+	}
+
+	protected MouseEnteredEventListener getInternalMouseEnteredEventListener() {
+		return internalMouseEnteredEventListener;
+	}
+
+	protected void setOnInternalMouseEnteredEvent(MouseEnteredEventListener internalMouseEnteredEventListener) {
+		this.internalMouseEnteredEventListener = internalMouseEnteredEventListener;
+	}
+
+	protected MouseExitedEventListener getInternalMouseExitedEventListener() {
+		return internalMouseExitedEventListener;
+	}
+
+	protected void setOnInternalMouseExitedEvent(MouseExitedEventListener internalMouseExitedEventListener) {
+		this.internalMouseExitedEventListener = internalMouseExitedEventListener;
+	}
+
+	protected MouseScrollEventListener getInternalMouseScrollEventListener() {
+		return internalMouseScrollEventListener;
+	}
+
+	protected void setOnInternalMouseScrollEvent(MouseScrollEventListener internalMouseScrollEventListener) {
+		this.internalMouseScrollEventListener = internalMouseScrollEventListener;
+	}
+	
 
 }

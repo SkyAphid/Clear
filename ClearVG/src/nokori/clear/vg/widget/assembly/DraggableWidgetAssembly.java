@@ -28,9 +28,11 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 	public DraggableWidgetAssembly(float x, float y, float width, float height) {
 		super(x, y, width, height);
 		
-		setOnMouseButtonEvent(e -> {
+		setOnInternalMouseButtonEvent(e -> {
 			boolean bDragging = dragging;
 			dragging = (canDrag(e.getWindow()) && canFocus(this) && isDragButtonEvent(e));
+			
+			//System.err.println(canDrag(e.getWindow()) + " " + canFocus(this) + " " + isDragButtonEvent(e));
 
 			//If we start dragging, focus on this widget
 			if (!bDragging && dragging) {
@@ -59,7 +61,7 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 			for (int i = 0; i < children.size(); i++) {
 				Widget w = children.get(i);
 
-				if (w.isMouseWithinThisWidget(window)) {
+				if (w.isMouseWithinThisWidget(window) && w.isInputEnabled()) {
 					hoveringChildren = true;
 					break;
 				}

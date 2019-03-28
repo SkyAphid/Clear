@@ -15,14 +15,23 @@ public class WidgetClip extends Widget {
 	private Alignment alignment;
 	private float xPadding, yPadding;
 	
+	private boolean xModdingEnabled;
+	private boolean yModdingEnabled;
+	
 	public WidgetClip(Alignment alignment) {
 		this(alignment, 0f, 0f);
 	}
 	
 	public WidgetClip(Alignment alignment, float xPadding, float yPadding) {
+		this(alignment, xPadding, yPadding, true, true);
+	}
+	
+	public WidgetClip(Alignment alignment, float xPadding, float yPadding, boolean xModdingEnabled, boolean yModdingEnabled) {
 		this.alignment = alignment;
 		this.xPadding = xPadding;
 		this.yPadding = yPadding;
+		this.xModdingEnabled = xModdingEnabled;
+		this.yModdingEnabled = yModdingEnabled;
 	}
 
 	@Override
@@ -92,8 +101,53 @@ public class WidgetClip extends Widget {
 		clipX += xPadding;
 		clipY += yPadding;
 
-		parent.setX(clipX);
-		parent.setY(clipY);
+		if (xModdingEnabled) {
+			parent.setX(clipX);
+		}
+
+		if (yModdingEnabled) {
+			parent.setY(clipY);
+		}
+	}
+
+	public Alignment getAlignment() {
+		return alignment;
+	}
+
+	public void setAlignment(Alignment alignment) {
+		this.alignment = alignment;
+	}
+
+	public float getxPadding() {
+		return xPadding;
+	}
+
+	public void setxPadding(float xPadding) {
+		this.xPadding = xPadding;
+	}
+
+	public float getyPadding() {
+		return yPadding;
+	}
+
+	public void setyPadding(float yPadding) {
+		this.yPadding = yPadding;
+	}
+
+	public boolean isxModdingEnabled() {
+		return xModdingEnabled;
+	}
+
+	public void setxModdingEnabled(boolean xModdingEnabled) {
+		this.xModdingEnabled = xModdingEnabled;
+	}
+
+	public boolean isyModdingEnabled() {
+		return yModdingEnabled;
+	}
+
+	public void setyModdingEnabled(boolean yModdingEnabled) {
+		this.yModdingEnabled = yModdingEnabled;
 	}
 
 	@Override

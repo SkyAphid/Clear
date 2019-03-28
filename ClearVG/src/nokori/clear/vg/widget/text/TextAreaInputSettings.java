@@ -4,6 +4,9 @@ package nokori.clear.vg.widget.text;
  * Contains all input settings for a text area. This class allows you to customize all inputs for a text area in-depth and switch them in and out as needed.
  */
 public class TextAreaInputSettings {
+	
+	private TextAreaWidget widget;
+	
 	//This is a general toggle variable for all inputs.
 	private boolean inputEnabled = true;
 	
@@ -47,12 +50,20 @@ public class TextAreaInputSettings {
 	 * 
 	 */
 	
+	public TextAreaInputSettings(TextAreaWidget widget) {
+		this.widget = widget;
+	}
+	
 	public boolean isInputEnabled() {
 		return inputEnabled;
 	}
 
 	public void setInputEnabled(boolean inputEnabled) {
 		this.inputEnabled = inputEnabled;
+		
+		if (!inputEnabled) {
+			widget.getTextContentHandler().endEditing();
+		}
 	}
 
 	public int getCharacterLimit() {
@@ -85,6 +96,10 @@ public class TextAreaInputSettings {
 
 	public void setEditingEnabled(boolean editingEnabled) {
 		this.editingEnabled = editingEnabled;
+		
+		if (!editingEnabled) {
+			widget.getTextContentHandler().endEditing();
+		}
 	}
 	
 	public boolean isManualFormattingEnabled() {
@@ -192,7 +207,7 @@ public class TextAreaInputSettings {
 	}
 
 	public boolean isVerticalScrollbarEnabled() {
-		return verticalScrollbarEnabled;
+		return (inputEnabled && verticalScrollbarEnabled);
 	}
 
 	public void setVerticalScrollbarEnabled(boolean verticalScrollbarEnabled) {
@@ -200,7 +215,7 @@ public class TextAreaInputSettings {
 	}
 
 	public boolean isHorizontalScrollbarEnabled() {
-		return horizontalScrollbarEnabled;
+		return (inputEnabled && horizontalScrollbarEnabled);
 	}
 
 	public void setHorizontalScrollbarEnabled(boolean horizontalScrollbarEnabled) {

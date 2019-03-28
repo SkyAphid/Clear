@@ -4,7 +4,7 @@ import org.joml.Vector4f;
 import org.lwjgl.nanovg.NVGColor;
 import org.lwjgl.system.MemoryStack;
 
-import nokori.clear.vg.widget.assembly.WidgetUtil;
+import nokori.clear.vg.widget.assembly.WidgetUtils;
 
 /**
  * This class is a wrapper for NVGColor that allows for short-hand customization and allocation.
@@ -210,19 +210,19 @@ public class ClearColor {
 	}
 	
 	public float getRed() {
-		return WidgetUtil.clamp(color.x(), 0f, 1f);
+		return WidgetUtils.clamp(color.x(), 0f, 1f);
 	}
 	
 	public float getGreen() {
-		return WidgetUtil.clamp(color.y(), 0f, 1f);
+		return WidgetUtils.clamp(color.y(), 0f, 1f);
 	}
 	
 	public float getBlue() {
-		return WidgetUtil.clamp(color.z(), 0f, 1f);
+		return WidgetUtils.clamp(color.z(), 0f, 1f);
 	}
 	
 	public float getAlpha() {
-		return WidgetUtil.clamp(color.w(), 0f, 1f);
+		return WidgetUtils.clamp(color.w(), 0f, 1f);
 	}
 
 	public String toHEX() {

@@ -9,7 +9,7 @@ import nokori.clear.vg.ClearColor;
 import nokori.clear.vg.NanoVGContext;
 import nokori.clear.windows.Window;
 
-public class WidgetUtil {
+public class WidgetUtils {
 	
 	/**
 	 * Shorthand way to render rectangles with NanoVG.

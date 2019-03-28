@@ -27,8 +27,25 @@ public class ClearStaticResources {
 		return (focusedWidget == null || focusedWidget == widget);
 	}
 	
+	public static boolean isFocused(Widget widget) {
+		return (focusedWidget == widget);
+	}
+	
+	public static boolean isFocused() {
+		return (focusedWidget != null);
+	}
+	
+	public static boolean clearFocusIfApplicable(Widget widget) {
+		if (isFocused(widget)) {
+			setFocusedWidget(null);
+			return true;
+		}
+		
+		return false;
+	}
+	
 	public static Widget getHoveringWidget() {
-		return focusedWidget;
+		return hoveringWidget;
 	}
 
 	public static void setHoveringWidget(Widget hoveringWidget) {

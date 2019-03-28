@@ -52,6 +52,7 @@ public class TextFieldWidget extends TextAreaWidget {
 		getInputSettings().setVerticalScrollbarEnabled(false);
 		getInputSettings().setHorizontalScrollbarEnabled(false);
 		getInputSettings().setReturnEnabled(false);
+		getInputSettings().setReturnEndsEditing(true);
 		getInputSettings().setTabEnabled(false);
 	}
 

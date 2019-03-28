@@ -12,34 +12,20 @@ import nokori.clear.windows.event.MouseMotionEvent;
  */
 public abstract class TextAreaContentInputHandler {
 	
-	protected TextAreaWidget textAreaWidget;
-	protected TextAreaContentHandler textAreaContentHandler;
+	protected TextAreaWidget widget;
+	protected TextAreaContentHandler contentHandler;
 	
 	public TextAreaContentInputHandler(TextAreaWidget textAreaWidget, TextAreaContentHandler textAreaContentHandler) {
-		this.textAreaWidget = textAreaWidget;
-		this.textAreaContentHandler = textAreaContentHandler;
+		this.widget = textAreaWidget;
+		this.contentHandler = textAreaContentHandler;
 	}
-	
-	/**
-	 * This is a shortcut function for getting the TextAreaWidget linked to this input handler.
-	 */
-	protected TextAreaWidget widget() {
-		return textAreaWidget;
-	}
-	
-	/**
-	 * This is a shortcut function for getting the TextAreaContentHandler linked to this input handler.
-	 */
-	protected TextAreaContentHandler content() {
-		return textAreaContentHandler;
-	}
-	
+
 	/**
 	 * This is a shortcut function for getting the TextAreaInputSettings in the linked TextAreaWidget. It's recommended that these settings be considered
 	 * when handling inputs so that the user can easily enable/disable features.
 	 */
 	protected TextAreaInputSettings settings() {
-		return textAreaWidget.getInputSettings();
+		return widget.getInputSettings();
 	}
 	
 	public abstract void charEvent(Window window, CharEvent event);

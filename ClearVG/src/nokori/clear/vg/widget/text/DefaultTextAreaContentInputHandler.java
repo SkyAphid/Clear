@@ -3,6 +3,7 @@ package nokori.clear.vg.widget.text;
 import org.lwjgl.glfw.GLFW;
 
 import nokori.clear.vg.ClearStaticResources;
+import nokori.clear.vg.widget.assembly.Widget;
 import nokori.clear.windows.Window;
 import nokori.clear.windows.event.CharEvent;
 import nokori.clear.windows.event.KeyEvent;
@@ -18,28 +19,46 @@ public class DefaultTextAreaContentInputHandler extends TextAreaContentInputHand
 	}
 
 	public void charEvent(Window window, CharEvent event) {
-		if (settings().isEditingEnabled()) {
-			content().insertCharacterAtCaret(event.getCharString());
+		if (ClearStaticResources.isFocused(widget) && settings().isEditingEnabled()) {
+			contentHandler.insertCharacterAtCaret(event.getCharString());
 		}
 	}
 	
 	public void mouseMotionEvent(Window window, MouseMotionEvent event) {
-		if (mousePressed && !widget().isScrollbarSelected() && ClearStaticResources.getFocusedWidget() == widget()) {
-			content().queueCaret((float) event.getMouseX(), (float) event.getMouseY());
+		if (mousePressed && !widget.isScrollbarSelected() && ClearStaticResources.isFocused(widget)) {
+			contentHandler.queueCaret((float) event.getMouseX(), (float) event.getMouseY());
 		} else {
-			mousePressed = false;
-			
-			if (widget().isScrollbarSelected()) {
-				content().resetHighlighting();
-			}
+			reset(widget.isScrollbarSelected());
 		}
 	}
 	
 	public void mouseButtonEvent(Window window, MouseButtonEvent event) {
-		if (widget().isScrollbarSelected()) return;
+		if (widget.isScrollbarSelected()) return;
 		
-		if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT && ClearStaticResources.canFocus(widget()) && settings().isCaretEnabled()) {
-			//This toggles highlighting mode
+		if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT && settings().isCaretEnabled()) {
+			
+			/*
+			 * Re-focusing for other Text Areas
+			 * 
+			 * Allows us to seamlessly move the caret between text areas
+			 */
+			
+			Widget focused = ClearStaticResources.getFocusedWidget();
+			
+			if (event.isPressed() && widget.isMouseWithinThisWidget(window) 
+					&& focused instanceof TextAreaWidget && focused != widget) {
+				
+				((TextAreaWidget) focused).endEditing();
+			}
+			
+			if (!ClearStaticResources.canFocus(widget)) {
+				reset(true);
+				return;
+			}
+			
+			/*
+			 * Caret Placement & Highlighting
+			 */
 			boolean bMousePressed = mousePressed;
 			mousePressed = event.isPressed();
 
@@ -47,21 +66,28 @@ public class DefaultTextAreaContentInputHandler extends TextAreaContentInputHand
 				//This queues up caret repositioning based on the mouse coordinates
 				//Update the caret positioning on next render when we have the character
 				//locations available
-				content().queueCaret((float) event.getMouseX(), (float) event.getMouseY());
-
+				contentHandler.queueCaret((float) event.getMouseX(), (float) event.getMouseY());
+				
 				// If the mouse wasn't previously pressed, reset the highlighting.
 				if (!bMousePressed) {
-					content().resetHighlighting();
+					contentHandler.resetHighlighting();
 				}
 			}
 		} else {
-			mousePressed = false;
-			content().resetHighlighting();
+			reset(true);
 		}
 	}
-
+	
+	public void reset(boolean resetHighlighting) {
+		mousePressed = false;
+		
+		if (resetHighlighting) {
+			contentHandler.resetHighlighting();
+		}
+	}
+	
 	public void keyEvent(Window window, KeyEvent event) {
-		if (!event.isPressed()) return;
+		if (!ClearStaticResources.isFocused(widget) || !event.isPressed()) return;
 		
 		int key = event.getKey();
 		TextAreaInputSettings config = settings();
@@ -72,10 +98,10 @@ public class DefaultTextAreaContentInputHandler extends TextAreaContentInputHand
 		
 		if (config.isBackspaceEnabled() && key == GLFW.GLFW_KEY_BACKSPACE) {
 			
-			if (content().isContentHighlighted()) {
-				content().deleteHighlightedContent();
+			if (contentHandler.isContentHighlighted()) {
+				contentHandler.deleteHighlightedContent();
 			} else {
-				content().backspaceAtCaret();
+				contentHandler.backspaceAtCaret();
 			}
 			
 			return;
@@ -86,7 +112,7 @@ public class DefaultTextAreaContentInputHandler extends TextAreaContentInputHand
 		 */
 		
 		if (config.isTabEnabled() && key == GLFW.GLFW_KEY_TAB) {
-			content().tabAtCaret();
+			contentHandler.tabAtCaret();
 			return;
 		}
 		
@@ -96,12 +122,12 @@ public class DefaultTextAreaContentInputHandler extends TextAreaContentInputHand
 		
 		if (key == GLFW.GLFW_KEY_ENTER) {
 			if (config.returnEndsEditing()) {
-				content().endEditing();
+				contentHandler.endEditing();
 				return;
 			}
 			
 			if (config.isReturnEnabled()) {
-				content().newLineAtCaret();
+				contentHandler.newLineAtCaret();
 				return;
 			}
 		}
@@ -116,7 +142,7 @@ public class DefaultTextAreaContentInputHandler extends TextAreaContentInputHand
 			 */
 			
 			if (config.isCopyEnabled() && event.getKey() == GLFW.GLFW_KEY_C) {
-				content().copySelectionToClipboard(window);
+				contentHandler.copySelectionToClipboard(window);
 				return;
 			}
 			
@@ -125,7 +151,7 @@ public class DefaultTextAreaContentInputHandler extends TextAreaContentInputHand
 			 */
 			
 			if (config.isCutEnabled() && event.getKey() == GLFW.GLFW_KEY_X) {
-				content().cutSelectionToClipboard(window);
+				contentHandler.cutSelectionToClipboard(window);
 				return;
 			}
 			
@@ -134,7 +160,7 @@ public class DefaultTextAreaContentInputHandler extends TextAreaContentInputHand
 			 */
 			
 			if (config.isPasteEnabled() && event.getKey() == GLFW.GLFW_KEY_V) {
-				content().pasteClipboardAtCaret(window);
+				contentHandler.pasteClipboardAtCaret(window);
 				return;
 			}
 			
@@ -143,7 +169,7 @@ public class DefaultTextAreaContentInputHandler extends TextAreaContentInputHand
 			 */
 			
 			if (config.isBoldEnabled() && event.getKey() == GLFW.GLFW_KEY_B) {
-				content().boldenSelection();
+				contentHandler.boldenSelection();
 				return;
 			}
 			
@@ -152,7 +178,7 @@ public class DefaultTextAreaContentInputHandler extends TextAreaContentInputHand
 			 */
 			
 			if (config.isItalicEnabled() && event.getKey() == GLFW.GLFW_KEY_I) {
-				content().italicizeSelection();
+				contentHandler.italicizeSelection();
 				return;
 			}
 			
@@ -161,7 +187,7 @@ public class DefaultTextAreaContentInputHandler extends TextAreaContentInputHand
 			 */
 			
 			if (config.isUndoEnabled() && event.getKey() == GLFW.GLFW_KEY_Z) {
-				content().undo();
+				contentHandler.undo();
 				return;
 			}
 			
@@ -170,7 +196,7 @@ public class DefaultTextAreaContentInputHandler extends TextAreaContentInputHand
 			 */
 			
 			if (config.isRedoEnabled() && event.getKey() == GLFW.GLFW_KEY_Y) {
-				content().redo();
+				contentHandler.redo();
 				return;
 			}
 		}
@@ -182,13 +208,13 @@ public class DefaultTextAreaContentInputHandler extends TextAreaContentInputHand
 		if (config.isArrowKeysEnabled()) {
 			//Move caret right
 			if (key == GLFW.GLFW_KEY_RIGHT) {
-				content().moveCaretRight();
+				contentHandler.moveCaretRight();
 				return;
 			}
 			
 			//Move caret left
 			if (key == GLFW.GLFW_KEY_LEFT) {
-				content().moveCaretLeft();
+				contentHandler.moveCaretLeft();
 				return;
 			}
 		}

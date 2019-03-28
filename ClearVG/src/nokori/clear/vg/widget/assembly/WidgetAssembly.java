@@ -13,15 +13,20 @@ import nokori.clear.windows.WindowManager;
 public class WidgetAssembly extends Widget {
 	
 	private ClearColor backgroundFill = null;
-	private boolean syncToWindow = false;
 	
+
 	/**
-	 * This creates a Widget Assembly that will synchronize its size with the window it's in. If you want to make a shapeless container for widgets, 
-	 * I recommend using a WidgetContainer instead.
+	 * Creates a WidgetAssembly with no dimensions (0, 0, 0, 0)
+	 * 
+	 * @param addWidgetSynch - if set to true, a WidgetSynch will be added to this WidgetAssembly that will synchronize its position/dimensions 
+	 * either with its parent Widget or the program window.
 	 */
-	public WidgetAssembly() {
+	public WidgetAssembly(boolean addWidgetSynch) {
 		this(0f, 0f, 0f, 0f);
-		syncToWindow = true;
+		
+		if (addWidgetSynch) {
+			addChild(new WidgetSynch());
+		}
 	}
 	
 	/**
@@ -49,12 +54,7 @@ public class WidgetAssembly extends Widget {
 	}
 
 	@Override
-	public void tick(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
-		if (syncToWindow) {
-			getPosition().set(0, 0);
-			getSize().set(window.getFramebufferWidth(), window.getFramebufferHeight());
-		}
-	}
+	public void tick(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {}
 	
 	@Override
 	public void render(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {

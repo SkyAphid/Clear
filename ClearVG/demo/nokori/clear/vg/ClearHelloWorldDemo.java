@@ -29,7 +29,7 @@ public class ClearHelloWorldDemo extends ClearApplication {
 	}
 
 	public ClearHelloWorldDemo() {
-		super(new WidgetAssembly());
+		super(new WidgetAssembly(true));
 	}
 	
 	@Override

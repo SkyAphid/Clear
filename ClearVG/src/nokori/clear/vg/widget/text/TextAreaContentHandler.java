@@ -14,7 +14,7 @@ import nokori.clear.vg.NanoVGContext;
 import nokori.clear.vg.font.Font;
 import nokori.clear.vg.font.FontStyle;
 import nokori.clear.vg.transition.SimpleTransition;
-import nokori.clear.vg.widget.assembly.WidgetUtil;
+import nokori.clear.vg.widget.assembly.WidgetUtils;
 import nokori.clear.windows.Window;
 
 import static nokori.clear.vg.widget.text.ClearEscapeSequences.*;
@@ -136,7 +136,7 @@ public class TextAreaContentHandler {
 				// render text
 				float bAdvanceX = advanceX;
 				advanceX = nvgText(vg, advanceX, lineY, c);
-	
+				
 				// caret systems
 				if (widget.getInputSettings().isCaretEnabled()) {
 					forEachCharCaretLogic(vg, characterIndex, lineNumber, bAdvanceX, lineY, adjustedClickY, (advanceX - bAdvanceX), fontHeight);
@@ -155,6 +155,16 @@ public class TextAreaContentHandler {
 
 			// add this character to total characters rendered
 			totalCharacters++;
+		}
+		
+		/*
+		 * Underline
+		 */
+		
+		if (widget.getUnderlineFill() != null) {
+			nvgSave(vg);
+			WidgetUtils.nvgRect(vg, widget.getUnderlineFill(), textContentX, lineY + fontHeight + widget.getUnderlineYPadding(), widget.getWidth(), widget.getUnderlineThickness());
+			nvgRestore(vg);
 		}
 		
 		/*
@@ -230,7 +240,7 @@ public class TextAreaContentHandler {
 		//If updateCaret is still true by the end of a rendering cycle, that means it was never successfully moved (invalid caret queue coordinates).
 		//We'll turn it off so that it doesn't get deadlocked.
 		//Also automatically unfocus this widget if the caret is no longer in the text bounding
-		notifyCaretUpdated(caret >= 0 && caret < widget.getTextBuilder().length());
+		notifyCaretUpdated(false);
 	}
 	
 	/**
@@ -255,7 +265,10 @@ public class TextAreaContentHandler {
 		//Checks if the mouse click was in the bounding of this character - if so, the caret is set to this index.
 		float clickHeight = (widget.isFinalLine(lineNumber) && (widget.isMouseWithinThisWidget() || isHighlighting()) ? Float.MAX_VALUE : fontHeight);
 
-		if (updateCaret && WidgetUtil.pointWithinRectangle(caretUpdateQueue.x, caretUpdateQueue.y, x, adjustedClickY, advanceW, clickHeight)) {
+		float clickX = caretUpdateQueue.x - widget.getScissorX();
+		float clickY = caretUpdateQueue.y;
+		
+		if (updateCaret && WidgetUtils.pointWithinRectangle(clickX, clickY, x, adjustedClickY, advanceW, clickHeight)) {
 			int bCaretPosition = caret;
 			setCaretPosition(characterIndex);
 			refreshHighlightIndex();
@@ -280,7 +293,7 @@ public class TextAreaContentHandler {
 			//System.out.println(lineNumber + " Pass 1");
 			
 			//If this causes weird behavior in the future, change it to where it only takes the widget itself into account and remove the parent check
-			boolean withinBounds = (widget.getParent() != null && widget.getParent().isPointWithinThisWidget(mX, mY) || widget.isPointWithinThisWidget(mX, mY));
+			boolean withinBounds = widget.isPointWithinThisWidget(mX, mY); /*(widget.getParent() != null && widget.getParent().isPointWithinThisWidget(mX, mY) || */;
 
 			if (!withinBounds && !isHighlighting()) {
 				endEditing();
@@ -356,7 +369,7 @@ public class TextAreaContentHandler {
 			
 			switch(this.currentTextStyle) {
 			case BOLD:
-				WidgetUtil.nvgRect(vg, fill, x, y, defaultLineThickness * 2f, fontHeight);
+				WidgetUtils.nvgRect(vg, fill, x, y, defaultLineThickness * 2f, fontHeight);
 				break;
 			case ITALIC:
 				float thickness = defaultLineThickness;
@@ -369,14 +382,14 @@ public class TextAreaContentHandler {
 				float botX = x;
 				float botX2 = x + thickness;
 				
-				WidgetUtil.nvgShape(vg, fill, topX, topY, topX2, topY, botX2, botY, botX, botY);
+				WidgetUtils.nvgShape(vg, fill, topX, topY, topX2, topY, botX2, botY, botX, botY);
 				break;
 			case LIGHT:
-				WidgetUtil.nvgRect(vg, fill, x, y, defaultLineThickness/2f, fontHeight);
+				WidgetUtils.nvgRect(vg, fill, x, y, defaultLineThickness/2f, fontHeight);
 				break;
 			case REGULAR:
 			default:
-				WidgetUtil.nvgRect(vg, fill, x, y, defaultLineThickness, fontHeight);
+				WidgetUtils.nvgRect(vg, fill, x, y, defaultLineThickness, fontHeight);
 				break;
 			}
 		});
@@ -414,13 +427,14 @@ public class TextAreaContentHandler {
 		
 		if (focusWidget) {
 			ClearStaticResources.setFocusedWidget(widget);
-		} else if(ClearStaticResources.getFocusedWidget() == widget) {
-			ClearStaticResources.setFocusedWidget(null);
 		}
-		
+
 		updateCaret = false;
 	}
 	
+	/**
+	 * @return true if the caret is active (the caret position is greater than -1 and less than the text length)
+	 */
 	public boolean isCaretActive() {
 		return (widget.getInputSettings().isEditingEnabled() && widget.getInputSettings().isCaretEnabled() && caret >= 0);
 	}
@@ -429,14 +443,19 @@ public class TextAreaContentHandler {
 	 * Removes the caret, resets highlighting, and unfocuses the parent widget if applicable
 	 */
 	public void endEditing() {
+		//Call editing ended callback
+		if (isCaretActive() && widget.editingEndedCallback != null) {
+			widget.editingEndedCallback.process();
+		}
+		
+		//Reset caret & highlighting
 		setCaretPosition(-1);
 		resetCaretFader();
 		resetHighlighting();
 		notifyCaretUpdated(false);
 		
-		if (ClearStaticResources.getFocusedWidget() == widget) {
-			ClearStaticResources.setFocusedWidget(null);
-		}
+		//Clear focus
+		ClearStaticResources.clearFocusIfApplicable(widget);
 	}
 	
 	/*
@@ -518,7 +537,7 @@ public class TextAreaContentHandler {
 						w = (highlightEndPos.x - x);
 					}
 					
-					WidgetUtil.nvgRect(vg, fill, x, y, w, h);
+					WidgetUtils.nvgRect(vg, fill, x, y, w, h);
 				}
 			});
 		}
@@ -864,8 +883,8 @@ public class TextAreaContentHandler {
 		float caretY = caretPosition.y() - widget.getTextContentY();
 		float caretH = widget.getFontHeight();
 		
-		float newScissorY = -WidgetUtil.clamp(-scissorY, caretY + caretH - scissorH, caretY);
-		float newVerticalScroll = -(newScissorY / widget.getMaxScissorY());
+		float newScissorY = -WidgetUtils.clamp(-scissorY, caretY + caretH - scissorH, caretY);
+		float newVerticalScroll = -(newScissorY / Math.max(widget.getMaxScissorY(), 1.0f));
 		
 		widget.setVerticalScroll(newVerticalScroll);
 
@@ -879,12 +898,10 @@ public class TextAreaContentHandler {
 		float caretX = caretPosition.x() - widget.getTextContentX();
 		float caretW = 1.0f;
 		
-		float newScissorX = -WidgetUtil.clamp(-scissorX, caretX + caretW - scissorW, caretX);
-		float newHorizontalScroll = -(newScissorX / widget.getMaxScissorX());
+		float newScissorX = -WidgetUtils.clamp(-scissorX, caretX + caretW - scissorW, caretX);
+		float newHorizontalScroll = -(newScissorX / Math.max(widget.getMaxScissorX(), 1.0f));
 		
 		widget.setHorizontalScroll(newHorizontalScroll);
-		
-		//System.out.println("ScissorX: " + scissorX + " New ScissorX: " + newScissorX + " CaretX: " + caretX +  " HScroll: " + newHorizontalScroll);
 	}
 	
 	/**
@@ -986,10 +1003,10 @@ public class TextAreaContentHandler {
 		Thread.dumpStack();*/
 	}
 	
-	void setCaretPosition(int newCaret) {
+	public void setCaretPosition(int newCaret) {
 		setCaretPosition(newCaret, true);
 	}
-	
+
 	public int getCaretPosition() {
 		return caret;
 	}

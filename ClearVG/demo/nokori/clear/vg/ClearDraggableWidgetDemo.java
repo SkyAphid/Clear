@@ -24,7 +24,7 @@ public class ClearDraggableWidgetDemo extends ClearApplication {
 	}
 
 	public ClearDraggableWidgetDemo() {
-		super(new WidgetAssembly());
+		super(new WidgetAssembly(true));
 	}
 	
 	@Override

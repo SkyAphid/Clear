@@ -16,7 +16,7 @@ import nokori.clear.vg.transition.FillTransition;
 import nokori.clear.vg.transition.SimpleTransition;
 import nokori.clear.vg.widget.assembly.Widget;
 import nokori.clear.vg.widget.assembly.WidgetAssembly;
-import nokori.clear.vg.widget.assembly.WidgetUtil;
+import nokori.clear.vg.widget.assembly.WidgetUtils;
 import nokori.clear.windows.Cursor;
 import nokori.clear.windows.Window;
 import nokori.clear.windows.WindowManager;
@@ -73,15 +73,24 @@ public class TextAreaWidget extends Widget {
 	private ArrayList<String> lines = null;
 	private boolean refreshLines = false;
 	
+	private boolean lineSplitOverrideEnabled = false;
+	private float lineSplitOverrideWidth;
+	
 	//TextAreaContentHandler handles formatting and rendering of the lines created above.
 	private TextAreaContentHandler textContentHandler;
 	
-	private TextAreaInputSettings inputSettings = new TextAreaInputSettings();
+	private TextAreaInputSettings inputSettings;
 	private TextAreaContentInputHandler textContentInputHandler;
 	
 	/*
 	 * Rendering data
 	 */
+	
+	private ClearColor backgroundFill = null;
+	
+	private ClearColor underlineFill = null;
+	private int underlineThickness = 1;
+	private float underlineYPadding = 2f;
 	
 	private int firstLineInView = 0;
 	
@@ -178,6 +187,8 @@ public class TextAreaWidget extends Widget {
 	
 	private ClearColor highlightFill = ClearColor.CORAL;
 	
+	EditingEndedCallback editingEndedCallback = null;
+	
 	public TextAreaWidget(float width, float height, ClearColor fill, String text, Font font, float fontSize) {
 		this(0, 0, width, height, fill, text, font, fontSize);
 	}
@@ -188,9 +199,13 @@ public class TextAreaWidget extends Widget {
 		this.font = font;
 		this.fontSize = fontSize;
 		
+		lineSplitOverrideWidth = width;
+		
 		lineNumberFont = font;
 		
 		textContentHandler = new TextAreaContentHandler(this);
+		
+		inputSettings =  new TextAreaInputSettings(this);
 		textContentInputHandler = new DefaultTextAreaContentInputHandler(this, textContentHandler);
 		
 		setText(text);
@@ -218,8 +233,9 @@ public class TextAreaWidget extends Widget {
 		 * 
 		 */
 		
-		font.configureNVG(context, fontSize, defaultFontStyle);
-
+		font.configureNVG(context, fontSize, TEXT_AREA_ALIGNMENT, defaultFontStyle);
+		fontHeight = font.getHeight(context);
+		
 		/*
 		 * Line number calculations
 		 */
@@ -251,6 +267,10 @@ public class TextAreaWidget extends Widget {
 			textContentH -= (scrollbarThickness + horizontalScrollbarTopPadding);
 		}
 		
+		if (underlineFill != null) {
+			textContentH += underlineYPadding + underlineThickness;
+		}
+		
 		/*
 		 * 
 		 * Line split and text content area calculations
@@ -258,7 +278,8 @@ public class TextAreaWidget extends Widget {
 		 */
 		
 		if (lines == null || refreshLines) {
-			float lineSplitW = (wordWrappingEnabled ? textContentW : Float.MAX_VALUE);
+			float lineSplitW = (wordWrappingEnabled ? (lineSplitOverrideEnabled ? lineSplitOverrideWidth : textContentW) : Float.MAX_VALUE);
+			
 			font.split(context, lines = new ArrayList<>(), text, lineSplitW, fontSize, TEXT_AREA_ALIGNMENT, defaultFontStyle);
 			
 			//Don't allow the lines array to be empty.
@@ -279,9 +300,6 @@ public class TextAreaWidget extends Widget {
 		 * 
 		 */
 		
-		//Some Misc. calculations
-		fontHeight = font.getHeight(context, fontSize, TEXT_AREA_ALIGNMENT, defaultFontStyle);
-		
 		renderAreaHeight = (textContentH / fontHeight) * fontHeight;
 		stringHeight = font.getHeight(context, lines.size(), fontHeight, TEXT_AREA_ALIGNMENT, defaultFontStyle);
 		
@@ -293,13 +311,15 @@ public class TextAreaWidget extends Widget {
 		
 		long vg = context.get();
 		
-		//WidgetUtil.nvgRect(vg, ClearColor.RED, x, y, width, height);
+		if (backgroundFill != null) {
+			WidgetUtils.nvgRect(vg, backgroundFill, x, y, width, height);
+		}
 
 		nvgBeginPath(vg);
 		
 		scissorY = -Math.max((getMaxScissorY() * verticalScroll), 0f);
 		scissorX = -(getMaxScissorX() * horizontalScroll);
-
+		
 		nvgScissor(vg, textContentX, textContentY, textContentW, textContentH);
 		nvgTranslate(vg, scissorX, scissorY);
 		
@@ -469,9 +489,11 @@ public class TextAreaWidget extends Widget {
 		
 		float scrollbarBackgroundHeight = (wordWrappingEnabled ? height : height - scrollbarThickness);
 		
-		float scrollbarMaxHeight = getHeight() * 0.5f;
 		verticalScrollbarDefaultHeight = getHeight()/2;
-		verticalScrollbarHeight = WidgetUtil.clamp(verticalScrollbarDefaultHeight * (scrollbarBackgroundHeight / stringHeight), VERTICAL_SCROLLBAR_MIN_HEIGHT, scrollbarMaxHeight);
+		float scrollbarMaxHeight = getHeight() * 0.5f;
+		float scrollbarMinHeight = Math.min(VERTICAL_SCROLLBAR_MIN_HEIGHT, verticalScrollbarDefaultHeight);
+		
+		verticalScrollbarHeight = WidgetUtils.clamp(verticalScrollbarDefaultHeight * (scrollbarBackgroundHeight / stringHeight), scrollbarMinHeight, scrollbarMaxHeight);
 		
 		verticalScrollbarX = (x + width) - scrollbarThickness;
 		verticalScrollbarY = (y + ((scrollbarBackgroundHeight - verticalScrollbarHeight) * verticalScroll));
@@ -543,9 +565,11 @@ public class TextAreaWidget extends Widget {
 		
 		float scrollbarBackgroundWidth = width - scrollbarThickness;
 		
-		float scrollbarMaxWidth = width * 0.75f;
 		horizontalScrollbarDefaultWidth = width/2;
-		horizontalScrollbarWidth = WidgetUtil.clamp(horizontalScrollbarDefaultWidth * (scrollbarBackgroundWidth / stringWidth), HORIZONTAL_SCROLLBAR_MIN_WIDTH, scrollbarMaxWidth);
+		float scrollbarMaxWidth = width * 0.75f;
+		float scrollbarMinWidth = Math.min(HORIZONTAL_SCROLLBAR_MIN_WIDTH, horizontalScrollbarDefaultWidth);
+		
+		horizontalScrollbarWidth = WidgetUtils.clamp(horizontalScrollbarDefaultWidth * (scrollbarBackgroundWidth / stringWidth), scrollbarMinWidth, scrollbarMaxWidth);
 		
 		horizontalScrollbarX = (x + ((scrollbarBackgroundWidth - horizontalScrollbarWidth) * horizontalScroll));
 		horizontalScrollbarY = (y + height) - scrollbarThickness;
@@ -646,7 +670,7 @@ public class TextAreaWidget extends Widget {
 	public void mouseButtonEvent(Window window, MouseButtonEvent event) {
 		verticalScrollbarMouseButtonEvent(window, event);
 		horizontalScrollbarMouseButtonEvent(window, event);
-		
+			
 		textContentInputHandler.mouseButtonEvent(window, event);
 		
 		super.mouseButtonEvent(window, event);
@@ -658,8 +682,13 @@ public class TextAreaWidget extends Widget {
 		//Set scrollbar to selected if hovering/clicked or if the mouse button is held down and it's already selected
 		if ((verticalScrollbarHovering || verticalScrollbarSelected) && event.isPressed() && event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
 			verticalScrollbarSelected = true;
-		} else {
+			ClearStaticResources.setFocusedWidget(this);
+		} else if (verticalScrollbarSelected) {
 			verticalScrollbarSelected = false;
+			
+			if (!textContentHandler.isCaretActive()) {
+				ClearStaticResources.clearFocusIfApplicable(this);
+			}
 		}
 	}
 	
@@ -669,8 +698,13 @@ public class TextAreaWidget extends Widget {
 		//Set scrollbar to selected if hovering/clicked or if the mouse button is held down and it's already selected
 		if ((horizontalScrollbarHovering || horizontalScrollbarSelected) && event.isPressed() && event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
 			horizontalScrollbarSelected = true;
-		} else {
+			ClearStaticResources.setFocusedWidget(this);
+		} else if (horizontalScrollbarSelected) {
 			horizontalScrollbarSelected = false;
+			
+			if (!textContentHandler.isCaretActive()) {
+				ClearStaticResources.clearFocusIfApplicable(this);
+			}
 		}
 	}
 	
@@ -679,7 +713,7 @@ public class TextAreaWidget extends Widget {
 		resetCursorIfApplicable(window);
 		
 		//I-Beam for when the mouse is hovering the text content
-		if (inputSettings.isCaretEnabled() && WidgetUtil.mouseWithinRectangle(window, textContentX - lineNumberRightPadding, textContentY, textContentW, textContentH)) {
+		if (inputSettings.isCaretEnabled() && WidgetUtils.mouseWithinRectangle(window, textContentX, textContentY, textContentW, textContentH)) {
 			applyCursor(window, Cursor.Type.I_BEAM);
 		}
 		
@@ -699,7 +733,7 @@ public class TextAreaWidget extends Widget {
 		//Is mouse hovering scrollbar?
 		verticalScrollbarHovering = (verticalScrollbarActive 
 				&& inputSettings.isVerticalScrollbarEnabled()
-				&& WidgetUtil.mouseWithinRectangle(window, verticalScrollbarX, verticalScrollbarY, scrollbarThickness, verticalScrollbarHeight));
+				&& WidgetUtils.mouseWithinRectangle(window, verticalScrollbarX, verticalScrollbarY, scrollbarThickness, verticalScrollbarHeight));
 		
 		if (verticalScrollbarHovering) {
 			applyCursor(window, Cursor.Type.HAND);
@@ -709,7 +743,7 @@ public class TextAreaWidget extends Widget {
 		//We subtract the mouse Y from the widget render Y and then divide that by the height of the widget to get a normalized value we can use for the scroller.
 		if (verticalScrollbarSelected) {
 			float relativeMouseY = (float) (event.getMouseY() - textContentY);
-			float mouseYMult = WidgetUtil.clamp((relativeMouseY  / textContentH), 0f, 1f);
+			float mouseYMult = WidgetUtils.clamp((relativeMouseY  / textContentH), 0f, 1f);
 			setVerticalScroll(mouseYMult);
 		}
 	}
@@ -720,7 +754,7 @@ public class TextAreaWidget extends Widget {
 		//Is mouse hovering scrollbar?
 		horizontalScrollbarHovering = (horizontalScrollbarActive 
 				&& inputSettings.isHorizontalScrollbarEnabled()
-				&& WidgetUtil.mouseWithinRectangle(window, horizontalScrollbarX, horizontalScrollbarY, horizontalScrollbarWidth, scrollbarThickness));
+				&& WidgetUtils.mouseWithinRectangle(window, horizontalScrollbarX, horizontalScrollbarY, horizontalScrollbarWidth, scrollbarThickness));
 		
 		if (horizontalScrollbarHovering) {
 			applyCursor(window, Cursor.Type.HAND);
@@ -730,7 +764,7 @@ public class TextAreaWidget extends Widget {
 		//We subtract the mouse Y from the widget render Y and then divide that by the height of the widget to get a normalized value we can use for the scroller.
 		if (horizontalScrollbarSelected) {
 			float relativeMouseX = (float) (event.getMouseX() - textContentX);
-			float mouseXMult = WidgetUtil.clamp((relativeMouseX  / textContentW), 0f, 1f);
+			float mouseXMult = WidgetUtils.clamp((relativeMouseX  / textContentW), 0f, 1f);
 			setHorizontalScroll(mouseXMult);
 		}
 	}
@@ -758,15 +792,7 @@ public class TextAreaWidget extends Widget {
 		verticalScrollTransition = new SimpleTransition(100, start, end);
 		
 		verticalScrollTransition.setProgressCallback(v -> {
-			verticalScroll = v;
-			
-			if (verticalScroll < 0f) {
-				verticalScroll = 0f;
-			}
-			
-			if (verticalScroll > 1f) {
-				verticalScroll = 1f;
-			}
+			setVerticalScroll(WidgetUtils.clamp(v, 0f, 1f));
 		});
 		
 		verticalScrollTransition.play();
@@ -794,6 +820,10 @@ public class TextAreaWidget extends Widget {
 		return textContentHandler;
 	}
 
+	public void endEditing() {
+		textContentHandler.endEditing();
+	}
+	
 	/**
 	 * @return the StringBuilder containing the text for this TextAreaWidget. A StringBuilder is stored instead of a basic String for editing/performance purposes.
 	 */
@@ -818,6 +848,35 @@ public class TextAreaWidget extends Widget {
 		return lines;
 	}
 
+	/**
+	 * Sets the dimensions for the line split override.
+	 * 
+	 * @param lineSplitAreaWidth
+	 * @param lineSplitAreaHeight
+	 * @see setLineSplitOverrideEnabled()
+	 * @see isLineSplitOverrideEnabled()
+	 */
+	public void setLineSplitOverrideWidth(float lineSplitOverrideWidth) {
+		this.lineSplitOverrideWidth = lineSplitOverrideWidth;
+	}
+	
+	/**
+	 * Toggles the line split override. If true, the dimensions that the text is split with is overriden by the configured values. If false, the text is split 
+	 * by using the widget's own width and height.
+	 * 
+	 * @param lineSplitOverrideEnabled
+	 */
+	public void setLineSplitOverrideEnabled(boolean lineSplitOverrideEnabled) {
+		this.lineSplitOverrideEnabled = lineSplitOverrideEnabled;
+	}
+	
+	/**
+	 * @return true is the line split override is enabled, meaning that the text of this widget will be split using separate dimensions from the widget's actual size.
+	 */
+	public boolean isLineSplitOverrideEnabled() {
+		return lineSplitOverrideEnabled;
+	}
+	
 	public boolean isFinalLine(int lineNumber) {
 		return (lineNumber + 1 >= lines.size());
 	}
@@ -904,7 +963,6 @@ public class TextAreaWidget extends Widget {
 	 * 
 	 */
 
-
 	public ClearColor getDefaultTextFill() {
 		return defaultTextFill;
 	}
@@ -939,7 +997,7 @@ public class TextAreaWidget extends Widget {
 		lines = null;
 	}
 
-	float getFontHeight() {
+	public float getFontHeight() {
 		return fontHeight;
 	}
 	
@@ -1016,7 +1074,7 @@ public class TextAreaWidget extends Widget {
 	 * @param horizontalScroll - the normalized scroll value between 0 and 1.
 	 */
 	public void setHorizontalScroll(float horizontalScroll) {
-		this.horizontalScroll = WidgetUtil.clamp(horizontalScroll, 0f, 1f);
+		this.horizontalScroll = WidgetUtils.clamp(horizontalScroll, 0f, 1f);
 	}
 
 	public boolean isHorizontalScrollbarActive() {
@@ -1040,7 +1098,7 @@ public class TextAreaWidget extends Widget {
 	}
 
 	public void setVerticalScrollbarLeftPadding(float verticalScrollbarLeftPadding) {
-		this.verticalScrollbarLeftPadding = WidgetUtil.clamp(verticalScrollbarLeftPadding, 0f, 1f);
+		this.verticalScrollbarLeftPadding = WidgetUtils.clamp(verticalScrollbarLeftPadding, 0f, 1f);
 	}
 
 	/**
@@ -1178,6 +1236,14 @@ public class TextAreaWidget extends Widget {
 		this.highlightFill = highlightFill;
 	}
 	
+	public EditingEndedCallback getEditingEndedCallback() {
+		return editingEndedCallback;
+	}
+
+	public void setOnEditingEnded(EditingEndedCallback editingEndedCallback) {
+		this.editingEndedCallback = editingEndedCallback;
+	}
+	
 	/*
 	 * 
 	 * 
@@ -1186,8 +1252,57 @@ public class TextAreaWidget extends Widget {
 	 * 
 	 */
 	
+	/**
+	 * @return the fill for an underline that's drawn beneath the text of this widget.
+	 */
+	public ClearColor getUnderlineFill() {
+		return underlineFill;
+	}
+
+	/**
+	 * Sets a fill for an underline that's drawn beneath the text of this widget. Set to null to disable the feature.
+	 * @param underlineFill
+	 */
+	public void setUnderlineFill(ClearColor underlineFill) {
+		this.underlineFill = underlineFill;
+	}
+
+	public int getUnderlineThickness() {
+		return underlineThickness;
+	}
+
+	public void setUnderlineThickness(int underlineThickness) {
+		this.underlineThickness = underlineThickness;
+	}
+
+	public float getUnderlineYPadding() {
+		return underlineYPadding;
+	}
+
+	public void setUnderlineYPadding(float underlineYPadding) {
+		this.underlineYPadding = underlineYPadding;
+	}
+
+	/**
+	 * @return the fill that will encompass the background of the entire widget's bounds. Set to null to disable the feature.
+	 */
+	public ClearColor getBackgroundFill() {
+		return backgroundFill;
+	}
+	
+	/**
+	 * Sets a fill that will encompass the background of the entire widget's bounds. Set to null to disable the feature.
+	 * @param backgroundFill
+	 */
+	public void setBackgroundFill(ClearColor backgroundFill) {
+		this.backgroundFill = backgroundFill;
+	}
+	
 	@Override
 	public void dispose() {
 	}
+
+
+
 
 }
