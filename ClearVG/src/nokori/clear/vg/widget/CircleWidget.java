@@ -15,10 +15,11 @@ public class CircleWidget extends Widget {
 	protected ClearColor fill, strokeFill;
 	
 	public CircleWidget(ClearColor fill, float radius) {
-		this(fill, null, radius);
+		this(0f, 0f, radius, fill, null);
 	}
 	
-	public CircleWidget(ClearColor fill, ClearColor strokeFill, float radius) {
+	public CircleWidget(float x, float y, float radius, ClearColor fill, ClearColor strokeFill) {
+		super(x, y, radius * 2, radius * 2);
 		this.fill = fill;
 		this.strokeFill = strokeFill;
 		this.radius = radius;
@@ -32,7 +33,7 @@ public class CircleWidget extends Widget {
 		long vg = context.get();
 		
 		nvgBeginPath(vg);
-		nvgCircle(vg, getX() + getWidth()/2f, getY() + getHeight()/2f, radius);
+		nvgCircle(vg, getClippedX() + getWidth()/2f, getClippedY() + getHeight()/2f, radius);
 		
 		if (fill != null) {
 			fill.tallocNVG(fill -> {

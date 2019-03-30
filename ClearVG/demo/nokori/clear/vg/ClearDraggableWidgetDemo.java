@@ -10,6 +10,7 @@ import nokori.clear.vg.widget.LabelWidget;
 import nokori.clear.vg.widget.assembly.DraggableWidgetAssembly;
 import nokori.clear.vg.widget.assembly.WidgetAssembly;
 import nokori.clear.vg.widget.assembly.WidgetClip;
+import nokori.clear.vg.widget.assembly.WidgetSynch;
 import nokori.clear.windows.GLFWException;
 import nokori.clear.windows.Window;
 import nokori.clear.windows.WindowManager;
@@ -24,11 +25,12 @@ public class ClearDraggableWidgetDemo extends ClearApplication {
 	}
 
 	public ClearDraggableWidgetDemo() {
-		super(new WidgetAssembly(true));
+		super(new WidgetAssembly(new WidgetSynch()));
 	}
 	
 	@Override
 	public void init(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly, String[] args) {
+
 		try {
 			Font font = new Font("fonts/NotoSans/", "NotoSans-Regular", "NotoSans-Bold", "NotoSans-Italic", "NotoSans-Light").load(context);
 			

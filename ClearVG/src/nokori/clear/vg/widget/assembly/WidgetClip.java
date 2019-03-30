@@ -7,7 +7,7 @@ import nokori.clear.windows.WindowManager;
 public class WidgetClip extends Widget {
 	
 	public enum Alignment {
-		UPPER_LEFT, UPPER_CENTER, UPPER_RIGHT,
+		TOP_LEFT, TOP_CENTER, TOP_RIGHT,
 		CENTER_LEFT, CENTER, CENTER_RIGHT,
 		BOTTOM_LEFT, BOTTOM_CENTER, BOTTOM_RIGHT
 	};
@@ -41,7 +41,7 @@ public class WidgetClip extends Widget {
 					+ "\nBoth must be present for a WidgetClip to work correctly! (Heirarchy: Widget -> Child Widget -> Widget Clip)");
 			return;
 		}
-		
+
 		float containerWidth = parent.parent.getWidth();
 		float containerHeight = parent.parent.getHeight();
 		
@@ -82,15 +82,15 @@ public class WidgetClip extends Widget {
 			clipX = rightX;
 			clipY = centerY;
 			break;
-		case UPPER_CENTER:
+		case TOP_CENTER:
 			clipX = centerX;
 			clipY = topY;
 			break;
-		case UPPER_LEFT:
+		case TOP_LEFT:
 			clipX = leftX;
 			clipY = topY;
 			break;
-		case UPPER_RIGHT:
+		case TOP_RIGHT:
 			clipX = rightX;
 			clipY = topY;
 			break;

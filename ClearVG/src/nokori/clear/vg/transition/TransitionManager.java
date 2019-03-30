@@ -13,7 +13,7 @@ public class TransitionManager {
 		return activeTransitions.remove(transition);
 	}
 	
-	static void removeLinkedTransitions(Object linkedObject) {
+	static void removeLinkedTransitions(Transition transition, Object linkedObject) {
 		if (linkedObject == null || activeTransitions.isEmpty()) {
 			return;
 		}
@@ -21,7 +21,7 @@ public class TransitionManager {
 		for (int i = 0; i < activeTransitions.size(); i++) {
 			Transition t = activeTransitions.get(i);
 			
-			if (t.getLinkedObject() == linkedObject) {
+			if (transition.getClass() == t.getClass() && t.getLinkedObject() == linkedObject) {
 				t.stop();
 				activeTransitions.remove(t);
 				i--;

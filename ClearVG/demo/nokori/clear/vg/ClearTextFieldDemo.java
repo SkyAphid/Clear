@@ -10,6 +10,7 @@ import nokori.clear.vg.widget.DropShadowWidget;
 import nokori.clear.vg.widget.RectangleWidget;
 import nokori.clear.vg.widget.assembly.WidgetAssembly;
 import nokori.clear.vg.widget.assembly.WidgetClip;
+import nokori.clear.vg.widget.assembly.WidgetSynch;
 import nokori.clear.vg.widget.text.TextFieldWidget;
 import nokori.clear.windows.GLFWException;
 import nokori.clear.windows.Window;
@@ -31,7 +32,7 @@ public class ClearTextFieldDemo extends ClearApplication {
 	}
 
 	public ClearTextFieldDemo() {
-		super(new WidgetAssembly(true));
+		super(new WidgetAssembly(new WidgetSynch()));
 	}
 	
 	@Override

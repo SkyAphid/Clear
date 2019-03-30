@@ -61,7 +61,7 @@ public class TextAreaWidget extends Widget {
 	 * Text rendering
 	 */
 	
-	protected static final int TEXT_AREA_ALIGNMENT = Font.DEFAULT_TEXT_ALIGNMENT;
+	public static final int TEXT_AREA_ALIGNMENT = Font.DEFAULT_TEXT_ALIGNMENT;
 	
 	//We store the text in a StringBuilder to make editing perform better. toString() is called when the actual string is needed, e.g. for splitting.
 	private StringBuilder textBuilder;

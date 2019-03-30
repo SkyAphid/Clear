@@ -1,6 +1,8 @@
 package nokori.clear.vg.widget.assembly;
 
 import java.util.ArrayList;
+import java.util.Stack;
+
 import nokori.clear.vg.NanoVGContext;
 import nokori.clear.windows.Window;
 import nokori.clear.windows.WindowManager;
@@ -26,7 +28,9 @@ public class WidgetContainer {
 	 * @param processor -> the lambda class, taking in only one argument: the current widget
 	 */
 	public void iterateChildren(WidgetProcessor processor) {
-		for (Widget w : children) {
+		for (int i = 0; i < children.size(); i++) {
+			Widget w = children.get(i);
+			
 			processor.process(w);
 		}
 	}
@@ -36,7 +40,9 @@ public class WidgetContainer {
 	}
 	
 	public void tickChildren(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
-		for (Widget w : children) {
+		for (int i = 0; i < children.size(); i++) {
+			Widget w = children.get(i);
+			
 			if (tickChildren) {
 				w.tick(windowManager, window, context, rootWidgetAssembly);
 				w.tickChildren(windowManager, window, context, rootWidgetAssembly);
@@ -45,7 +51,9 @@ public class WidgetContainer {
 	}
 	
 	public void renderChildren(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
-		for (Widget w : children) {
+		for (int i = 0; i < children.size(); i++) {
+			Widget w = children.get(i);
+			
 			if (renderChildren) {
 				w.render(windowManager, window, context, rootWidgetAssembly);
 				w.renderChildren(windowManager, window, context, rootWidgetAssembly);
@@ -54,7 +62,9 @@ public class WidgetContainer {
 	}
 	
 	public void childrenCharEvent(Window window, CharEvent event) {
-		for (Widget w : children) {
+		for (int i = 0; i < children.size(); i++) {
+			Widget w = children.get(i);
+			
 			if (w.isInputEnabled()) {
 				w.charEvent(window, event);
 			}
@@ -64,7 +74,9 @@ public class WidgetContainer {
 	}
 	
 	public void childrenKeyEvent(Window window, KeyEvent event) {
-		for (Widget w : children) {
+		for (int i = 0; i < children.size(); i++) {
+			Widget w = children.get(i);
+			
 			if (w.isInputEnabled()) {
 				w.keyEvent(window, event);
 			}
@@ -74,7 +86,9 @@ public class WidgetContainer {
 	}
 	
 	public void childrenMouseButtonEvent(Window window, MouseButtonEvent event) {
-		for (Widget w : children) {
+		for (int i = 0; i < children.size(); i++) {
+			Widget w = children.get(i);
+			
 			if (w.isInputEnabled()) {
 				w.mouseButtonEvent(window, event);
 			}
@@ -84,7 +98,9 @@ public class WidgetContainer {
 	}
 	
 	public void childrenMouseMotionEvent(Window window, MouseMotionEvent event) {
-		for (Widget w : children) {
+		for (int i = 0; i < children.size(); i++) {
+			Widget w = children.get(i);
+			
 			if (w.isInputEnabled()) {
 				w.mouseMotionEvent(window, event);
 			}
@@ -94,7 +110,9 @@ public class WidgetContainer {
 	}
 	
 	public void childrenMouseScrollEvent(Window window, MouseScrollEvent event) {
-		for (Widget w : children) {
+		for (int i = 0; i < children.size(); i++) {
+			Widget w = children.get(i);
+			
 			if (w.isInputEnabled()) {
 				w.mouseScrollEvent(window, event);
 			}
@@ -124,13 +142,39 @@ public class WidgetContainer {
 		}
 	}
 	
+	public void addChildInFrontOf(Widget find, Widget... widgets) {
+		for (int i = 0; i < children.size(); i++) {
+			Widget w = children.get(i);
+			
+			if (w == find) {
+				for (int j = 0; j < widgets.length; j++) {
+					Widget child = widgets[j];
+					
+					//Insert the child into the list
+					//If the insertion point is larger than the size, just throw it onto the end
+					if (i + 1 >= children.size()) {
+						children.add(child);
+					} else {
+						children.add(i + 1, child);
+					}
+					
+					addChildCallback(child);
+				}
+				
+				return;
+			}
+		}
+		
+		System.err.println("WARNING: addChildInFrontOf() couldn't find the designated Widget.");
+	}
+	
 	/**
 	 * Adds the given Widget objects to this WidgetContainer as a child, meaning that this WidgetContainer will be in charge of ticking and rendering that Widget. 
 	 * This is sensitive to order. The first added Widget is updated/rendered first, the last added Widget is updated/rendered last. Keep that in mind when creating interfaces.
 	 */
-	public void addChild(Widget... widget) {
-		for (int i = 0; i < widget.length; i++) {
-			Widget w = widget[i];
+	public void addChild(Widget... widgets) {
+		for (int i = 0; i < widgets.length; i++) {
+			Widget w = widgets[i];
 			
 			children.add(w);
 			addChildCallback(w);
@@ -155,6 +199,22 @@ public class WidgetContainer {
 	
 	public Widget getChild(int index) {
 		return children.get(index);
+	}
+	
+	public Stack<Widget> getChildrenWithinMouse(Window window){
+		Stack<Widget> intersecting = new Stack<Widget>();
+		
+		for (int i = 0; i < children.size(); i++) {
+			Widget w = children.get(i);
+			
+			if (w.isMouseWithinThisWidget(window)) {
+				intersecting.add(w);
+			}
+			
+			intersecting.addAll(w.getChildrenWithinMouse(window));
+		}
+		
+		return intersecting;
 	}
 	
 	public int getNumChildren() {

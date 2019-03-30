@@ -16,17 +16,20 @@ public class WidgetAssembly extends Widget {
 	
 
 	/**
-	 * Creates a WidgetAssembly with no dimensions (0, 0, 0, 0)
-	 * 
-	 * @param addWidgetSynch - if set to true, a WidgetSynch will be added to this WidgetAssembly that will synchronize its position/dimensions 
-	 * either with its parent Widget or the program window.
+	 * Initializes the WidgetAssembly with the coordinates (0, 0) and the dimensions (0, 0).
 	 */
-	public WidgetAssembly(boolean addWidgetSynch) {
-		this(0f, 0f, 0f, 0f);
-		
-		if (addWidgetSynch) {
-			addChild(new WidgetSynch());
-		}
+	public WidgetAssembly() {
+		super(0f, 0f, 0f, 0f);
+	}
+	
+	/**
+	 * Creates a WidgetAssembly configured to be synchronized to its parent with a WidgetSynch. 
+
+	 * @param widgetSynch - the WidgetSynch to add to this WidgetAssembly.
+	 */
+	public WidgetAssembly(WidgetSynch widgetSynch) {
+		this();
+		addChild(widgetSynch);
 	}
 	
 	/**

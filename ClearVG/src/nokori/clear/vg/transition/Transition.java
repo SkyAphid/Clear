@@ -38,7 +38,7 @@ public abstract class Transition {
 			stop();
 		}
 		
-		TransitionManager.removeLinkedTransitions(linkedObject);
+		TransitionManager.removeLinkedTransitions(this, linkedObject);
 		
 		startStamp = System.currentTimeMillis();
 		endStamp = startStamp + durationInMillis;
@@ -106,9 +106,11 @@ public abstract class Transition {
 	}
 
 	/**
-	 * Setting a linked object will cause this Transition to be associated with that object. If you attempt to make another Transition and play it when it has the 
-	 * same linkedObject, then this Transition will be stopped and deleted automatically by the TransitionManager. The purpose of this system is to prevent 
-	 * two contradicting Transitions (e.g. fading in/fading out) from playing at the same time, so that the user doesn't have to manually check for this.
+	 * Setting a linked object will cause this Transition to be associated with that object. If you attempt to make another Transition of the same class
+	 * and play it when it has the same linkedObject, then this Transition will be stopped and deleted automatically by the TransitionManager. 
+	 * 
+	 * The purpose of this system is to prevent two contradicting Transitions (e.g. fading in/fading out) from playing at the same time, 
+	 * so that the user doesn't have to manually check for this.
 	 * 
 	 * @param linkedObject
 	 */

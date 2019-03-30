@@ -6,7 +6,9 @@ import static org.lwjgl.opengl.GL11.*;
 import org.joml.Vector4f;
 
 import nokori.clear.vg.transition.TransitionManager;
+import nokori.clear.vg.widget.assembly.Widget;
 import nokori.clear.vg.widget.assembly.WidgetAssembly;
+import nokori.clear.vg.widget.assembly.WidgetSynch;
 import nokori.clear.windows.Window;
 import nokori.clear.windows.WindowManager;
 import nokori.clear.windows.callback.CharCallback;
@@ -39,8 +41,19 @@ public abstract class ClearApplication extends WindowedApplication {
 	@Override
 	public void init(WindowManager windowManager, Window window, String[] args) {
 		ClearStaticResources.loadAllCursors();
+		
 		addInputCallbacks(window, rootWidgetAssembly);
 		context = new NanoVGContext().init();
+		
+		//Calls synch() on the roots WidgetSynch that way it's up to date for the init() function
+		for (int i = 0; i < rootWidgetAssembly.getNumChildren(); i++) {
+			Widget w = rootWidgetAssembly.getChild(i);
+			
+			if (w instanceof WidgetSynch) {
+				((WidgetSynch) w).synch(window);
+			}
+		}
+		
 		init(windowManager, window, context, rootWidgetAssembly, args);
 	}
 	

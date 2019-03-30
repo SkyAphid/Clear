@@ -1,6 +1,6 @@
 package nokori.clear.vg.util;
 
-import org.lwjgl.nanovg.NanoVG;
+import static org.lwjgl.nanovg.NanoVG.*;
 
 import nokori.clear.vg.ClearColor;
 import nokori.clear.vg.NanoVGContext;
@@ -26,18 +26,28 @@ public class BezierLineRenderer {
 			float c2x = (float) (sx + this.c2x);
 			float c2y = (float) (sy + this.c2y);
 			
-			NanoVG.nvgBeginPath(vg);
-			NanoVG.nvgMoveTo(vg, sx, sy);
-			NanoVG.nvgBezierTo(vg, c1x, c1y, c2x, c2y, ex, ey);
+			nvgBeginPath(vg);
+			nvgMoveTo(vg, sx, sy);
+			nvgBezierTo(vg, c1x, c1y, c2x, c2y, ex, ey);
 
 			strokeFill.tallocNVG(strokeFill -> {
-				NanoVG.nvgStrokeColor(vg, strokeFill);
-				NanoVG.nvgStroke(vg);
-				NanoVG.nvgStrokeWidth(vg, strokeThickness);
+				nvgStrokeColor(vg, strokeFill);
+				nvgStrokeWidth(vg, strokeThickness);
+				nvgStroke(vg);
 			});
 
-			NanoVG.nvgClosePath(vg);
+			nvgClosePath(vg);
 		}
+	}
+	
+	public void setStartAndControl1Position(float sx, float sy, float cx, float cy) {
+		setStartPosition(sx, sy);
+		setControl1Position(cx, cy);
+	}
+	
+	public void setEndAndControl2Position(float ex, float ey, float cx, float cy) {
+		setEndPosition(ex, ey);
+		setControl2Position(cx, cy);
 	}
 	
 	/**

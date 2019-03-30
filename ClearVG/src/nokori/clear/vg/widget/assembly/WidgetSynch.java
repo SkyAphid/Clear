@@ -68,7 +68,7 @@ public class WidgetSynch extends Widget {
 	/**
 	 * This checks if each synchonization type is enabled and calls the corresponding functions. This is called every frame from tick() by default.
 	 */
-	protected void synch(Window window) {
+	public void synch(Window window) {
 		if (synchX) {
 			synchX(window);
 		}
