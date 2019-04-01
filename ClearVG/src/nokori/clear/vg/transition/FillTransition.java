@@ -38,6 +38,10 @@ public class FillTransition extends Transition {
 
 	@Override
 	public void tick(float progress) {
+		blend(fromFill, toFill, storeFill, progress);
+	}
+	
+	protected void blend(ClearColor fromFill, ClearColor toFill, ClearColor storeFill, float progress) {
 		ClearColor.blend(fromFill, toFill, storeFill, progress);
 	}
 }

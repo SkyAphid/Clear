@@ -464,7 +464,7 @@ public class TextAreaWidget extends Widget {
 		float bgWidth = lineNumberCompleteWidth - lineNumberRightPadding;
 		float bgHeight = fontHeight + 1f; //adds a teensy bit of padding to prevent minor rounding errors when scrolling. May cause issues if the background has transparency enabled.
 		
-		if (lineNumberBackgroundFill.getAlpha() > 0f) {
+		if (lineNumberBackgroundFill != null && lineNumberBackgroundFill.getAlpha() > 0f) {
 			lineNumberBackgroundFill.tallocNVG(bgFill -> {
 				nvgBeginPath(vg);
 				nvgFillColor(vg, bgFill);
@@ -474,11 +474,13 @@ public class TextAreaWidget extends Widget {
 			});
 		}
 		
-		lineNumberFill.tallocNVG(fill -> {
-			lineNumberFont.configureNVG(context, fontSize, TEXT_AREA_ALIGNMENT, lineNumberFontStyle);
-			nvgFillColor(vg, fill);
-			nvgText(vg, x + lineNumberLeftPadding, y, Integer.toString(line));
-		});
+		if (lineNumberFill != null && lineNumberFill.getAlpha() > 0f) {
+			lineNumberFill.tallocNVG(fill -> {
+				lineNumberFont.configureNVG(context, fontSize, TEXT_AREA_ALIGNMENT, lineNumberFontStyle);
+				nvgFillColor(vg, fill);
+				nvgText(vg, x + lineNumberLeftPadding, y, Integer.toString(line));
+			});
+		}
 		
 		nvgRestore(vg);
 	}
@@ -634,6 +636,8 @@ public class TextAreaWidget extends Widget {
 	
 	/**
 	 * Requests that this widget re-splice the text builder (effectively refreshing the text area with the latest text). 
+	 * Make sure that this is only called after <i><b>all</b></i> editing operations are completed - lest you get strange caret positioning bugs.
+	 * <br><br>
 	 * This should be called every time the text in this widget is edited or otherwise changed. Keep in mind that the update doesn't happen immediately,
 	 * but rather on the next render frame - hence <code>requestRefresh()</code> and not just <code>refresh()</code>.
 	 */

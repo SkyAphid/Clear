@@ -29,7 +29,7 @@ public class TextAreaContentHandler {
 	 */
 	
 	/** Sets up the escape sequence replacement hashmap to show the names of the commands in the rendering for debugging purposes */
-	private static final boolean SHOW_ESCAPE_SEQUENCES = false;
+	private static final boolean SHOW_ESCAPE_SEQUENCES = true;
 	
 	/** Disables character skipping, meaning that longer escape sequences such as HEX color setters will be displayed for debugging purposes */
 	private static final boolean SKIPPING_ENABLED = true;
@@ -637,11 +637,12 @@ public class TextAreaContentHandler {
 	}
 	
 	public void backspaceAtCaret() {
-		offsetCaret(-backspace(caret), false);
+		offsetCaret(-backspace(caret, false), false);
 		requestScrollToCaret();
+		widget.requestRefresh();
 	}
 	
-	public int backspace(int position) {
+	public int backspace(int position, boolean requestRefresh) {
 		StringBuilder textBuilder = widget.getTextBuilder();
 		boolean manualFormattingEnabled = widget.getInputSettings().isManualFormattingEnabled();
 		
@@ -684,7 +685,9 @@ public class TextAreaContentHandler {
 			
 			deleteResetEscapeSequenceAhead(textBuilder, charIndex);
 			
-			widget.requestRefresh();
+			if (requestRefresh) {
+				widget.requestRefresh();
+			}
 			
 			return charsDeleted + indicesMoved;
 		}
