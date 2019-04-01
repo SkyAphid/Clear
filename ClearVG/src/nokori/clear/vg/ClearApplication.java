@@ -6,6 +6,7 @@ import static org.lwjgl.opengl.GL11.*;
 import org.joml.Vector4f;
 
 import nokori.clear.vg.transition.TransitionManager;
+import nokori.clear.vg.widget.assembly.RootWidgetAssembly;
 import nokori.clear.vg.widget.assembly.Widget;
 import nokori.clear.vg.widget.assembly.WidgetAssembly;
 import nokori.clear.vg.widget.assembly.WidgetSynch;
@@ -33,6 +34,13 @@ public abstract class ClearApplication extends WindowedApplication {
 	private NanoVGContext context;
 
 	private WidgetAssembly rootWidgetAssembly;
+	
+	/**
+	 * Initializes the ClearApplication with a RootWidgetAssembly
+	 */
+	public ClearApplication() {
+		this(new RootWidgetAssembly());
+	}
 	
 	public ClearApplication(WidgetAssembly rootWidgetAssembly) {
 		this.rootWidgetAssembly = rootWidgetAssembly;

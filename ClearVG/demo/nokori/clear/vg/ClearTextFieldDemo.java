@@ -10,7 +10,6 @@ import nokori.clear.vg.widget.DropShadowWidget;
 import nokori.clear.vg.widget.RectangleWidget;
 import nokori.clear.vg.widget.assembly.WidgetAssembly;
 import nokori.clear.vg.widget.assembly.WidgetClip;
-import nokori.clear.vg.widget.assembly.WidgetSynch;
 import nokori.clear.vg.widget.text.TextFieldWidget;
 import nokori.clear.windows.GLFWException;
 import nokori.clear.windows.Window;
@@ -31,10 +30,6 @@ public class ClearTextFieldDemo extends ClearApplication {
 		ClearApplication.launch(new ClearTextFieldDemo(), args);
 	}
 
-	public ClearTextFieldDemo() {
-		super(new WidgetAssembly(new WidgetSynch()));
-	}
-	
 	@Override
 	public void init(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly, String[] args) {
 		//WidgetAssemblies act as containers for various widgets. This will allow you to "assemble" a variety of UI components.

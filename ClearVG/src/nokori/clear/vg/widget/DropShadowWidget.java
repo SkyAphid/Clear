@@ -44,7 +44,7 @@ public class DropShadowWidget extends RectangleWidget {
 	
 	public DropShadowWidget(float cornerRadius, float shadowRadius, float shadowOffsetX, float shadowOffsetY, ClearColor fill) {
 		this(0, 0, 0, 0, cornerRadius, shadowRadius, shadowOffsetX, shadowOffsetY, fill);
-		addChild(new WidgetSynch());
+		addChild(new WidgetSynch(WidgetSynch.Mode.WITH_PARENT));
 	}
 
 	public DropShadowWidget(float x, float y, float width, float height, float cornerRadius, float shadowRadius, float shadowOffsetX, float shadowOffsetY, ClearColor fill) {

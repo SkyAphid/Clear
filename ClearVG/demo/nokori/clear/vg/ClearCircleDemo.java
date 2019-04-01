@@ -7,7 +7,6 @@ import nokori.clear.vg.NanoVGContext;
 import nokori.clear.vg.widget.CircleWidget;
 import nokori.clear.vg.widget.HalfCircleWidget;
 import nokori.clear.vg.widget.assembly.WidgetAssembly;
-import nokori.clear.vg.widget.assembly.WidgetSynch;
 import nokori.clear.windows.GLFWException;
 import nokori.clear.windows.Window;
 import nokori.clear.windows.WindowManager;
@@ -19,10 +18,6 @@ public class ClearCircleDemo extends ClearApplication {
 	
 	public static void main(String[] args) {
 		ClearApplication.launch(new ClearCircleDemo(), args);
-	}
-
-	public ClearCircleDemo() {
-		super(new WidgetAssembly(new WidgetSynch()));
 	}
 	
 	@Override

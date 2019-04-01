@@ -1,22 +1,23 @@
 package nokori.clear.vg.transition;
 
 /**
- * This Transition can be used to track a value going from the start value to the end value via the normalized progress variable.
+ * This Transition can be used to track a value going from the start value to the end value via the normalized progress variable. 
+ * It's useful for creating basic transitions.
  *
  */
-public class SimpleTransition extends Transition {
+public class TemplateTransition extends Transition {
 
 	private float start, end;
 	private float currentValue;
 	
 	private ProgressCallback callback = null;
 	
-	public SimpleTransition(long durationInMillis, float start, float end, ProgressCallback callback) {
+	public TemplateTransition(long durationInMillis, float start, float end, ProgressCallback callback) {
 		this(durationInMillis, start, end);
 		this.callback = callback;
 	}
 	
-	public SimpleTransition(long durationInMillis, float start, float end) {
+	public TemplateTransition(long durationInMillis, float start, float end) {
 		super(durationInMillis);
 		this.start = start;
 		this.end = end;

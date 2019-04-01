@@ -1,5 +1,7 @@
 package nokori.clear.vg.transition;
 
+import nokori.clear.windows.util.Stopwatch;
+
 /**
  * Transitions are objects that allow the smooth animation of Nodes via the use of timestamps.
  * 
@@ -11,8 +13,7 @@ public abstract class Transition {
 	private long durationInMillis;
 	
 	private boolean isPlaying = false;
-	private long startStamp;
-	private long endStamp;
+	private Stopwatch stopwatch = new Stopwatch();
 	
 	private Object linkedObject = null;
 	
@@ -40,8 +41,7 @@ public abstract class Transition {
 		
 		TransitionManager.removeLinkedTransitions(this, linkedObject);
 		
-		startStamp = System.currentTimeMillis();
-		endStamp = startStamp + durationInMillis;
+		stopwatch.timeInMilliseconds(durationInMillis);
 		TransitionManager.add(this);
 		isPlaying = true;
 		
@@ -81,20 +81,11 @@ public abstract class Transition {
 	 * @return a value from 0 to 1 based on the transition time.
 	 */
 	public float getProgress() {
-		long currentTime = System.currentTimeMillis();
-		
-		double maxDistance = endStamp - startStamp;
-		double distance = Math.max(endStamp - currentTime, 0);
-		
-		float progress = 1f - (float) (distance / maxDistance);
-		
-		//System.err.println(maxDistance + " " + distance + " -> " + progress);
-		
-		return progress;
+		return stopwatch.getNormalizedDistanceBetweenTime();
 	}
 	
 	public boolean isFinished() {
-		return (isPlaying && System.currentTimeMillis() > endStamp);
+		return (isPlaying && stopwatch.isCurrentTimePassedEndTime());
 	}
 
 	/**

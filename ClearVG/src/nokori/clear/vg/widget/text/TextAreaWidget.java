@@ -13,7 +13,7 @@ import nokori.clear.vg.NanoVGContext;
 import nokori.clear.vg.font.Font;
 import nokori.clear.vg.font.FontStyle;
 import nokori.clear.vg.transition.FillTransition;
-import nokori.clear.vg.transition.SimpleTransition;
+import nokori.clear.vg.transition.TemplateTransition;
 import nokori.clear.vg.widget.assembly.Widget;
 import nokori.clear.vg.widget.assembly.WidgetAssembly;
 import nokori.clear.vg.widget.assembly.WidgetUtils;
@@ -145,7 +145,7 @@ public class TextAreaWidget extends Widget {
 	
 	private float verticalScroll = 0.0f;
 	private float verticalScrollIncrement = 0.01f;
-	private SimpleTransition verticalScrollTransition = null;
+	private TemplateTransition verticalScrollTransition = null;
 	
 	private static final float VERTICAL_SCROLLBAR_MIN_HEIGHT = 60f;
 	private float verticalScrollbarDefaultHeight;
@@ -188,6 +188,10 @@ public class TextAreaWidget extends Widget {
 	private ClearColor highlightFill = ClearColor.CORAL;
 	
 	EditingEndedCallback editingEndedCallback = null;
+	
+	public TextAreaWidget(ClearColor fill, String text, Font font, float fontSize) {
+		this(0f, 0f, fill, text, font, fontSize);
+	}
 	
 	public TextAreaWidget(float width, float height, ClearColor fill, String text, Font font, float fontSize) {
 		this(0, 0, width, height, fill, text, font, fontSize);
@@ -789,7 +793,7 @@ public class TextAreaWidget extends Widget {
 			verticalScrollTransition.stop();
 		}
 		
-		verticalScrollTransition = new SimpleTransition(100, start, end);
+		verticalScrollTransition = new TemplateTransition(100, start, end);
 		
 		verticalScrollTransition.setProgressCallback(v -> {
 			setVerticalScroll(WidgetUtils.clamp(v, 0f, 1f));

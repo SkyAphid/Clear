@@ -67,9 +67,8 @@ public class WidgetContainer {
 			
 			if (w.isInputEnabled()) {
 				w.charEvent(window, event);
+				w.childrenCharEvent(window, event);
 			}
-			
-			w.childrenCharEvent(window, event);
 		}
 	}
 	
@@ -79,9 +78,8 @@ public class WidgetContainer {
 			
 			if (w.isInputEnabled()) {
 				w.keyEvent(window, event);
+				w.childrenKeyEvent(window, event);
 			}
-			
-			w.childrenKeyEvent(window, event);
 		}
 	}
 	
@@ -91,9 +89,8 @@ public class WidgetContainer {
 			
 			if (w.isInputEnabled()) {
 				w.mouseButtonEvent(window, event);
+				w.childrenMouseButtonEvent(window, event);
 			}
-			
-			w.childrenMouseButtonEvent(window, event);
 		}
 	}
 	
@@ -103,9 +100,8 @@ public class WidgetContainer {
 			
 			if (w.isInputEnabled()) {
 				w.mouseMotionEvent(window, event);
+				w.childrenMouseMotionEvent(window, event);
 			}
-			
-			w.childrenMouseMotionEvent(window, event);
 		}
 	}
 	
@@ -115,9 +111,8 @@ public class WidgetContainer {
 			
 			if (w.isInputEnabled()) {
 				w.mouseScrollEvent(window, event);
+				w.childrenMouseScrollEvent(window, event);
 			}
-			
-			w.childrenMouseScrollEvent(window, event);
 		}
 	}
 	

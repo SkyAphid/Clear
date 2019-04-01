@@ -39,7 +39,7 @@ public class RectangleWidget extends Widget  {
 	
 	public RectangleWidget(float cornerRadius, ClearColor fill, ClearColor strokeFill) {
 		this(0, 0, 0, 0, cornerRadius, fill, strokeFill);
-		addChild(new WidgetSynch());
+		addChild(new WidgetSynch(WidgetSynch.Mode.WITH_PARENT));
 	}
 	
 	/*
