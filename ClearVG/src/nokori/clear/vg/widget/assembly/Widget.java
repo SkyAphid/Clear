@@ -112,6 +112,17 @@ public abstract class Widget extends WidgetContainer {
 	}
 
 	/**
+	 * This function is the same as calling <code>setX() & setY()</code> individually.
+	 * 
+	 * @param x
+	 * @param y
+	 */
+	public void setPosition(float x, float y) {
+		setX(x);
+		setY(y);
+	}
+	
+	/**
 	 * @return the x value of this Widget. Keep in mind, the way this value is used can vary between Widgets. For example, a widget inside of a WidgetContainer may be using x coordinates 
 	 * relative to being clipped to the parent (e.g. <code>x = 10</code>, <code>parent x = 100</code>, thus the correct coordinate to render to the child is <code>x = 110</code>.) 
 	 * To get the render x for a "clipped" widget inside of a parent widget, use <code>getClippedX()</code> instead.
@@ -314,6 +325,10 @@ public abstract class Widget extends WidgetContainer {
 		
 		if (mouseMotionEventListener != null) {
 			mouseMotionEventListener.listen(event);
+		}
+		
+		if (internalMouseMotionEventListener != null) {
+			internalMouseMotionEventListener.listen(event);
 		}
 		
 		/*

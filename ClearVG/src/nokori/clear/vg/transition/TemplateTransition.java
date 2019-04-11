@@ -11,6 +11,12 @@ public class TemplateTransition extends Transition {
 	private float currentValue;
 	
 	private ProgressCallback callback = null;
+	private CurveProcessor curveProcessor = null;
+	
+	public TemplateTransition(long durationInMillis, float start, float end, ProgressCallback callback, CurveProcessor curveProcessor) {
+		this(durationInMillis, start, end, callback);
+		this.curveProcessor = curveProcessor;
+	}
 	
 	public TemplateTransition(long durationInMillis, float start, float end, ProgressCallback callback) {
 		this(durationInMillis, start, end);
@@ -48,6 +54,10 @@ public class TemplateTransition extends Transition {
 	@Override
 	public void tick(float progress) {
 		currentValue = start + ((end - start) * progress);
+		
+		if (curveProcessor != null) {
+			currentValue = curveProcessor.modifyValue(currentValue);
+		}
 
 		if (callback != null) {
 			callback.callback(currentValue);
@@ -61,6 +71,14 @@ public class TemplateTransition extends Transition {
 		this.callback = callback;
 	}
 	
+	/**
+	 * Sets a processor for the value produced by this Transition, allowing you to tweak its curve
+	 * @param curveProcessor
+	 */
+	public void setCurveProcessor(CurveProcessor curveProcessor) {
+		this.curveProcessor = curveProcessor;
+	}
+	
 	public float getCurrent() {
 		return currentValue;
 	}
@@ -68,4 +86,8 @@ public class TemplateTransition extends Transition {
 	public interface ProgressCallback {
 		public void callback(float value);
 	}
+	
+	public interface CurveProcessor {
+		public float modifyValue(float value);
+	};
 }

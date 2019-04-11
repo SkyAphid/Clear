@@ -192,6 +192,12 @@ public class WidgetContainer {
 		return widget;
 	}
 	
+	public void clearChildren() {
+		while(!children.isEmpty()){
+			removeChild(0);
+		}
+	}
+	
 	public Widget getChild(int index) {
 		return children.get(index);
 	}

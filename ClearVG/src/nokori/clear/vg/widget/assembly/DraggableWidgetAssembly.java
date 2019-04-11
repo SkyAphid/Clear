@@ -30,9 +30,11 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 		
 		setOnInternalMouseButtonEvent(e -> {
 			boolean bDragging = dragging;
-			dragging = (canDrag(e.getWindow()) && canFocus(this) && isDragButtonEvent(e));
+			dragging = (canDrag(e.getWindow()) && isFocusedOrCanFocus(this) && isDragButtonEvent(e));
 			
-			//System.err.println(canDrag(e.getWindow()) + " " + canFocus(this) + " " + isDragButtonEvent(e));
+			/*System.err.println(this + ": " + canDrag(e.getWindow()) + " " + isFocusedOrCanFocus(this) + " " + isDragButtonEvent(e) 
+					+ " = " + dragging
+					+ " | Dimensions: " + DraggableWidgetAssembly.this.getWidth() + "/" + DraggableWidgetAssembly.this.getHeight());*/
 
 			//If we start dragging, focus on this widget
 			if (!bDragging && dragging) {
@@ -45,10 +47,11 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 			}
 		});
 		
-		setOnMouseMotionEvent(e -> {
+		setOnInternalMouseMotionEvent(e -> {
 			if (dragging) {
 				setX(getX() + (float) e.getDX());
 				setY(getY() + (float) e.getDY());
+				//System.err.println(this + " Dragging: " + getX() + "/" + getY());
 			}
 		});
 	}
@@ -67,6 +70,8 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 				}
 			}
 		}
+		
+		//System.err.println("canDrag() -> " + hoveringChildren + " " + isMouseWithinThisWidget(window) + " " + requiresMouseToBeWithinWidgetToDrag);
 		
 		return ((isMouseWithinThisWidget(window) || !requiresMouseToBeWithinWidgetToDrag) && !hoveringChildren);
 	}

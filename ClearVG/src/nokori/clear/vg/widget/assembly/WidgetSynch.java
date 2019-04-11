@@ -12,7 +12,7 @@ public class WidgetSynch extends Widget {
 	
 	private Widget synchWith = null;
 	
-	private boolean synchX, synchY, synchWidth, synchHeight;
+	private boolean synchXEnabled, synchYEnabled, synchWidthEnabled, synchHeightEnabled;
 	private float xOffset, yOffset, wOffset, hOffset;
 	
 	/**
@@ -55,16 +55,16 @@ public class WidgetSynch extends Widget {
 		this(Mode.MANUAL, synchWith, true, true, true, true, xOffset, yOffset, wOffset, hOffset);
 	}
 	
-	public WidgetSynch(Widget synchWith, boolean synchX, boolean synchY, boolean synchWidth, boolean synchHeight) {
-		this(Mode.MANUAL, synchWith, synchX, synchY, synchWidth, synchHeight, 0f, 0f, 0f, 0f);
+	public WidgetSynch(Widget synchWith, boolean synchXEnabled, boolean synchYEnabled, boolean synchWidthEnabled, boolean synchHeightEnabled) {
+		this(Mode.MANUAL, synchWith, synchXEnabled, synchYEnabled, synchWidthEnabled, synchHeightEnabled, 0f, 0f, 0f, 0f);
 	}
 	
 	public WidgetSynch(Mode mode, float xOffset, float yOffset, float wOffset, float hOffset) {
 		this(mode, null, true, true, true, true, xOffset, yOffset, wOffset, hOffset);
 	}
 	
-	public WidgetSynch(Mode mode, boolean synchX, boolean synchY, boolean synchWidth, boolean synchHeight) {
-		this(mode, null, synchX, synchY, synchWidth, synchHeight, 0f, 0f, 0f, 0f);
+	public WidgetSynch(Mode mode, boolean synchXEnabled, boolean synchYEnabled, boolean synchWidthEnabled, boolean synchHeightEnabled) {
+		this(mode, null, synchXEnabled, synchYEnabled, synchWidthEnabled, synchHeightEnabled, 0f, 0f, 0f, 0f);
 	}
 	
 	/**
@@ -85,10 +85,10 @@ public class WidgetSynch extends Widget {
 		this.mode = mode;
 		this.synchWith = synchWith;
 		
-		this.synchX = synchX;
-		this.synchY = synchY;
-		this.synchWidth = synchWidth;
-		this.synchHeight = synchHeight;
+		this.synchXEnabled = synchX;
+		this.synchYEnabled = synchY;
+		this.synchWidthEnabled = synchWidth;
+		this.synchHeightEnabled = synchHeight;
 		
 		this.xOffset = xOffset;
 		this.yOffset = yOffset;
@@ -111,19 +111,19 @@ public class WidgetSynch extends Widget {
 			activeMode = Mode.WITH_WINDOW;
 		}
 		
-		if (synchX) {
+		if (synchXEnabled) {
 			synchX(window);
 		}
 		
-		if (synchY) {
+		if (synchYEnabled) {
 			synchY(window);
 		}
 		
-		if (synchWidth) {
+		if (synchWidthEnabled) {
 			synchWidth(window, activeMode);
 		}
 		
-		if (synchHeight) {
+		if (synchHeightEnabled) {
 			synchHeight(window, activeMode);
 		}
 	}
@@ -238,6 +238,38 @@ public class WidgetSynch extends Widget {
 
 	public void setHOffset(float hOffset) {
 		this.hOffset = hOffset;
+	}
+
+	public boolean isSynchXEnabled() {
+		return synchXEnabled;
+	}
+
+	public void setSynchXEnabled(boolean synchXEnabled) {
+		this.synchXEnabled = synchXEnabled;
+	}
+
+	public boolean isSynchYEnabled() {
+		return synchYEnabled;
+	}
+
+	public void setSynchYEnabled(boolean synchYEnabled) {
+		this.synchYEnabled = synchYEnabled;
+	}
+
+	public boolean isSynchWidthEnabled() {
+		return synchWidthEnabled;
+	}
+
+	public void setSynchWidthEnabled(boolean synchWidthEnabled) {
+		this.synchWidthEnabled = synchWidthEnabled;
+	}
+
+	public boolean isSynchHeightEnabled() {
+		return synchHeightEnabled;
+	}
+
+	public void setSynchHeightEnabled(boolean synchHeightEnabled) {
+		this.synchHeightEnabled = synchHeightEnabled;
 	}
 
 	@Override

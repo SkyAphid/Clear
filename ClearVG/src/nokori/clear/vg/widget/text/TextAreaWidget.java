@@ -339,10 +339,12 @@ public class TextAreaWidget extends Widget {
 		firstLineInView = -1;
 		cullOffset = fontHeight * 5;
 		
+		textContentHandler.beginFrame();
+		
 		textContentHandler.renderHighlight(vg, textContentX, textContentW, fontHeight);
 		
 		resetRenderConfiguration(context);
-		
+
 		/*
 		 * Render text
 		 */
@@ -721,7 +723,9 @@ public class TextAreaWidget extends Widget {
 		resetCursorIfApplicable(window);
 		
 		//I-Beam for when the mouse is hovering the text content
-		if (inputSettings.isCaretEnabled() && WidgetUtils.mouseWithinRectangle(window, textContentX, textContentY, textContentW, textContentH)) {
+		if (ClearStaticResources.isFocusedOrCanFocus(this) && inputSettings.isCaretEnabled() 
+				&& WidgetUtils.mouseWithinRectangle(window, textContentX, textContentY, textContentW, textContentH)) {
+			
 			applyCursor(window, Cursor.Type.I_BEAM);
 		}
 		

@@ -10,7 +10,7 @@ public class TextAreaHistory {
 	private static final long STATE_SAVE_TIME = 2000L; //Two seconds
 	
 	private long lastEditTime = -1;
-	
+
 	private static class TextState {
 		StringBuilder textBuilder;
 		int caret;

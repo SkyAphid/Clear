@@ -29,7 +29,7 @@ public class TextAreaContentHandler {
 	 */
 	
 	/** Sets up the escape sequence replacement hashmap to show the names of the commands in the rendering for debugging purposes */
-	private static final boolean SHOW_ESCAPE_SEQUENCES = true;
+	private static final boolean SHOW_ESCAPE_SEQUENCES = false;
 	
 	/** Disables character skipping, meaning that longer escape sequences such as HEX color setters will be displayed for debugging purposes */
 	private static final boolean SKIPPING_ENABLED = true;
@@ -93,6 +93,14 @@ public class TextAreaContentHandler {
 	}
 
 	/**
+	 * Configures the TextAreaContentHandler for rendering on a new frame. This function is used to reset various features back to their defaults so that data from the last frame 
+	 * doesn't carry over and cause rendering problems.
+	 */
+	public void beginFrame() {
+		skipsRequested = 0;
+	}
+	
+	/**
 	 * Renders the given line of text and returns the number of characters rendered. Font.split() has to be used before this will work.
 	 * 
 	 * @param context - NanoVG Context
@@ -124,7 +132,7 @@ public class TextAreaContentHandler {
 			if (!SKIPPING_ENABLED) {
 				skipsRequested = 0;
 			}
-			
+
 			if (skipsRequested == 0) {
 
 				// save state so that text formatting commands don't carry over into the next rendering

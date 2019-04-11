@@ -51,7 +51,7 @@ public class DefaultTextAreaContentInputHandler extends TextAreaContentInputHand
 				((TextAreaWidget) focused).endEditing();
 			}
 			
-			if (!ClearStaticResources.canFocus(widget)) {
+			if (!ClearStaticResources.isFocusedOrCanFocus(widget)) {
 				reset(true);
 				return;
 			}

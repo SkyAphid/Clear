@@ -33,6 +33,17 @@ public class TextAreaAutoFormatterWidget extends Widget {
 	
 	private boolean autoAddEnabled = true;
 	private boolean autoRemoveEnabled = true;
+	
+	public TextAreaAutoFormatterWidget() {}
+	
+	/**
+	 * This constructor allows you to pass in existing syntax settings to allow them to be shared across formatter widgets.
+	 * 
+	 * @param syntaxSettings
+	 */
+	public TextAreaAutoFormatterWidget(ArrayList<Syntax> syntaxSettings) {
+		this.syntaxSettings = syntaxSettings;
+	}
 
 	@Override
 	public void tick(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
@@ -72,6 +83,8 @@ public class TextAreaAutoFormatterWidget extends Widget {
 			for (int i = 0; i < syntaxSettings.size(); i++) {
 				Syntax syntax = syntaxSettings.get(i);
 				
+				//System.out.println("Auto-Formatter: Checking syntax -> " + syntax.key + " (" + i + ")");
+				
 				char escapeSequence = syntax.escapeSequence;
 				
 				for (int j = 0; j < textBuilder.length(); j++) {
@@ -87,13 +100,13 @@ public class TextAreaAutoFormatterWidget extends Widget {
 						
 						if (j < h.getCaretPosition()) {
 							adjustCaret(h, -deleted);
-							//System.out.println("Auto-Formatter: Adjust caret (Deleted " + cS + ") " + -deleted);
+							//System.out.println("Auto-Formatter: Adjust caret (Deleted " + c + " -> " + cS + ") " + -deleted);
 						}
 						
 						deleteResetEscapeSequenceAhead(textBuilder, j, (index, character) -> {
 							if (index < h.getCaretPosition()) {
 								adjustCaret(h, -1);
-								//System.out.println("Auto-Formatter: Adjust caret (Deleted " + cS +  ") -1");
+								//System.out.println("Auto-Formatter: Adjust caret (Deleted " + c + " -> " + cS +  ") -1");
 							}
 						});
 					}
@@ -136,38 +149,46 @@ public class TextAreaAutoFormatterWidget extends Widget {
 	}
 	
 	private void replaceAll(TextAreaContentHandler h, StringBuilder sb, String regex, String replacement, SyntaxResetMode resetMode) {
-	    Matcher m = Pattern.compile(regex).matcher(sb);
+	    Matcher m = Pattern.compile(Pattern.quote(regex)).matcher(sb);
 	    int start = 0;
 	    
 	    while (m.find(start)) {
 	    	int s = m.start();
 	    	int e = m.end();
 
-	    	//Replace the string
-	        sb.replace(s, e, replacement);
-	        start = m.start() + replacement.length();
-	        
-	        //Update caret location
-	    	int caret = h.getCaretPosition();
-	    	
-	    	if ((caret > s || caret > e) && sb.length() > cachedTextLength) {
-		    	int offset = (replacement.length() - regex.length());
-		    	adjustCaret(h, offset);
-				//System.out.println("Auto-Formatter: Adjust caret (Replaced " + regex + " with " + replacement + "): +" + offset);
-	    	}
-	    	
-	    	//If the reset mode is after new line, find the next \n to put the reset at.
-	    	if (resetMode == SyntaxResetMode.RESET_AFTER_NEW_LINE) {
-	    		for (int i = e; i < sb.length(); i++) {
-	    			if (sb.charAt(i) == '\n' && (i + 1 < sb.length() && sb.charAt(i + 1) != ESCAPE_SEQUENCE_RESET)) {
-	    				if (h.getCaretPosition() > i) {
-	    					h.offsetCaret(1);
-	    				}
-	    				
-	    				sb.insert(i + 1, ESCAPE_SEQUENCE_RESET);
-	    				break;
-	    			}
-	    		}
+	    	if (m.group().equals(regex)) {
+		    	//System.out.println("Auto-Formatter: replaceAll() match: Regex: " + regex + " Start: " + s + " End: " + e + " (" + sb.length() + ") = " + sb.substring(s, e) + " -> " + replacement);
+
+		    	//Replace the string
+		        sb.replace(s, e, replacement);
+		        start = s + replacement.length();
+		        
+		        //Update caret location
+		    	int caret = h.getCaretPosition();
+		    	
+		    	if ((caret > s || caret > e) && sb.length() > cachedTextLength) {
+			    	int offset = (replacement.length() - regex.length());
+			    	adjustCaret(h, offset);
+					//System.out.println("Auto-Formatter: Adjust caret (Replaced " + regex + " with " + replacement + "): +" + offset);
+		    	}
+		    	
+		    	//If the reset mode is after new line, find the next \n to put the reset at.
+		    	if (resetMode == SyntaxResetMode.RESET_AFTER_NEW_LINE) {
+		    		for (int i = e; i < sb.length(); i++) {
+		    			if (sb.charAt(i) == '\n' && (i + 1 < sb.length() && sb.charAt(i + 1) != ESCAPE_SEQUENCE_RESET)) {
+		    				if (h.getCaretPosition() > i) {
+		    					h.offsetCaret(1);
+		    				}
+		    				
+		    				sb.insert(i + 1, ESCAPE_SEQUENCE_RESET);
+		    				break;
+		    			}
+		    		}
+		    	}
+	    	} else {
+	    		System.err.println("Auto-Formatter: replaceAll() match failure: Regex: " + regex + " Matcher Group Result: " + m.group() + " (Does not match!)");
+	    		System.err.println("This is likely due to incorrect regex! Skipping search to prevent infinite loop...");
+		    	start = e;
 	    	}
 	    }
 	}
@@ -211,6 +232,18 @@ public class TextAreaAutoFormatterWidget extends Widget {
 		}
 		
 		return removed;
+	}
+
+	public void clearAllSyntax() {
+		syntaxSettings.clear();
+	}
+	
+	public ArrayList<Syntax> getSyntaxSettings() {
+		return syntaxSettings;
+	}
+
+	public void setSyntaxSettings(ArrayList<Syntax> syntaxSettings) {
+		this.syntaxSettings = syntaxSettings;
 	}
 
 	/**
@@ -265,6 +298,22 @@ public class TextAreaAutoFormatterWidget extends Widget {
 			this.escapeSequence = escapeSequence;
 			this.instructions = instructions;
 			this.resetMode = resetMode;
+		}
+
+		public String getKey() {
+			return key;
+		}
+
+		public char getEscapeSequence() {
+			return escapeSequence;
+		}
+
+		public String getInstructions() {
+			return instructions;
+		}
+
+		public SyntaxResetMode getResetMode() {
+			return resetMode;
 		}
 	}
 	
