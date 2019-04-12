@@ -61,6 +61,18 @@ public class TinyFileDialog {
 	}
 	
 	/**
+	 * Show an input dialog with the given settings.
+	 * 
+	 * @param title - window title
+	 * @param message - window message
+	 * @param defaultInput - the default input to be displayed
+	 * @return - the final string inputted into the dialog
+	 */
+	public static String showInputDialog(String title, String message, String defaultInput) {
+		return TinyFileDialogs.tinyfd_inputBox(title, message, defaultInput);
+	}
+	
+	/**
 	 * Shows a dialog for selecting a folder. 
 	 * 
 	 * @param title - window title

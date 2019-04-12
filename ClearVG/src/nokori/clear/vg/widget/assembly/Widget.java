@@ -289,32 +289,32 @@ public abstract class Widget extends WidgetContainer {
 	}
 
 	public void charEvent(Window window, CharEvent event) {
-		if (charEventListener != null) {
-			charEventListener.listen(event);
-		}
-		
 		if (internalCharEventListener != null) {
 			internalCharEventListener.listen(event);
+		}
+		
+		if (charEventListener != null) {
+			charEventListener.listen(event);
 		}
 	}
 
 	public void keyEvent(Window window, KeyEvent event) {
-		if (keyEventListener != null) {
-			keyEventListener.listen(event);
-		}
-		
 		if (internalKeyEventListener != null) {
 			internalKeyEventListener.listen(event);
+		}
+		
+		if (keyEventListener != null) {
+			keyEventListener.listen(event);
 		}
 	}
 	
 	public void mouseButtonEvent(Window window, MouseButtonEvent event) {
-		if (mouseButtonEventListener != null) {
-			mouseButtonEventListener.listen(event);
-		}
-		
 		if (internalMouseButtonEventListener != null) {
 			internalMouseButtonEventListener.listen(event);
+		}
+		
+		if (mouseButtonEventListener != null) {
+			mouseButtonEventListener.listen(event);
 		}
 	}
 	
@@ -323,12 +323,12 @@ public abstract class Widget extends WidgetContainer {
 		 * Standard Mouse Motion Listening
 		 */
 		
-		if (mouseMotionEventListener != null) {
-			mouseMotionEventListener.listen(event);
-		}
-		
 		if (internalMouseMotionEventListener != null) {
 			internalMouseMotionEventListener.listen(event);
+		}
+		
+		if (mouseMotionEventListener != null) {
+			mouseMotionEventListener.listen(event);
 		}
 		
 		/*
@@ -345,12 +345,12 @@ public abstract class Widget extends WidgetContainer {
 		if (!bMouseWithin && mouseWithin) {
 			MouseEnteredEvent e = MouseEnteredEvent.fire(window, System.nanoTime(), mouseX, mouseY);
 			
-			if (mouseEnteredEventListener != null) {
-				mouseEnteredEventListener.listen(e);
-			}
-			
 			if (internalMouseEnteredEventListener != null) {
 				internalMouseEnteredEventListener.listen(e);
+			}
+			
+			if (mouseEnteredEventListener != null) {
+				mouseEnteredEventListener.listen(e);
 			}
 		}
 		
@@ -358,23 +358,23 @@ public abstract class Widget extends WidgetContainer {
 		if (bMouseWithin && !mouseWithin) {
 			MouseExitedEvent e = MouseExitedEvent.fire(window, System.nanoTime(), mouseX, mouseY);
 			
-			if (mouseExitedEventListener != null) {
-				mouseExitedEventListener.listen(e);
-			}
-			
 			if (internalMouseExitedEventListener != null) {
 				internalMouseExitedEventListener.listen(e);
+			}
+			
+			if (mouseExitedEventListener != null) {
+				mouseExitedEventListener.listen(e);
 			}
 		}
 	}
 	
 	public void mouseScrollEvent(Window window, MouseScrollEvent event) {
-		if (mouseScrollEventListener != null) {
-			mouseScrollEventListener.listen(event);
-		}
-		
 		if (internalMouseScrollEventListener != null) {
 			internalMouseScrollEventListener.listen(event);
+		}
+		
+		if (mouseScrollEventListener != null) {
+			mouseScrollEventListener.listen(event);
 		}
 	}
 
