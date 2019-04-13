@@ -14,7 +14,7 @@ import static nokori.clear.vg.widget.text.ClearEscapeSequences.*;
 public class ClearTextAreaCodeEditorDemo extends ClearTextAreaDemo {
 
 	public static void main(String[] args) {
-		ClearApplication.launch(new ClearTextAreaCodeEditorDemo(), args);
+		ClearApp.launch(new ClearTextAreaCodeEditorDemo(), args);
 	}
 	
 	@Override

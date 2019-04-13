@@ -4,7 +4,7 @@ import nokori.clear.vg.ClearColor;
 
 import java.io.IOException;
 
-import nokori.clear.vg.ClearApplication;
+import nokori.clear.vg.ClearApp;
 import nokori.clear.vg.NanoVGContext;
 import nokori.clear.vg.ClearStaticResources;
 import nokori.clear.vg.font.Font;
@@ -19,13 +19,15 @@ import nokori.clear.windows.GLFWException;
 import nokori.clear.windows.Window;
 import nokori.clear.windows.WindowManager;
 
-public class ClearHelloWorldDemo extends ClearApplication {
+public class ClearHelloWorldDemo extends ClearApp {
 
 	private static final int WINDOW_WIDTH = 256;
 	private static final int WINDOW_HEIGHT = 256;
 	
+	protected WidgetAssembly button = new WidgetAssembly(100, 50, new WidgetClip(WidgetClip.Alignment.CENTER));
+	
 	public static void main(String[] args) {
-		ClearApplication.launch(new ClearHelloWorldDemo(), args);
+		ClearApp.launch(new ClearHelloWorldDemo(), args);
 	}
 
 	@Override
@@ -44,7 +46,7 @@ public class ClearHelloWorldDemo extends ClearApplication {
 		 * https://github.com/SkyAphid/JDialogue/
 		 */
 		
-		WidgetAssembly button = new WidgetAssembly(100, 50, new WidgetClip(WidgetClip.Alignment.CENTER));
+		button = new WidgetAssembly(100, 50, new WidgetClip(WidgetClip.Alignment.CENTER));
 		
 		/*
 		 * Background - rectangle with dropshadow
@@ -53,7 +55,7 @@ public class ClearHelloWorldDemo extends ClearApplication {
 		float cornerRadius = 3f;
 		
 		button.addChild(new DropShadowWidget(cornerRadius));
-		button.addChild(new RectangleWidget(cornerRadius, ClearColor.CORAL));
+		button.addChild(new RectangleWidget(cornerRadius, ClearColor.CORAL, true));
 		
 		/*
 		 * Text
@@ -74,7 +76,7 @@ public class ClearHelloWorldDemo extends ClearApplication {
 		 */
 		
 		button.setOnMouseMotionEvent(e -> {
-			if (button.isMouseWithinThisWidget(window)) {
+			if (button.isMouseIntersecting(window)) {
 				ClearStaticResources.getCursor(Cursor.Type.HAND).apply(window);
 			} else {
 				ClearStaticResources.getCursor(Cursor.Type.ARROW).apply(window);
@@ -82,7 +84,7 @@ public class ClearHelloWorldDemo extends ClearApplication {
 		});
 		
 		button.setOnMouseButtonEvent(e -> {
-			if (e.isPressed() && button.isMouseWithinThisWidget(e.getWindow())) {
+			if (e.isPressed() && button.isMouseIntersecting(e.getWindow())) {
 				button.setBackgroundFill(button.getBackgroundFill() != null ? null : ClearColor.LIGHT_GRAY);
 				button.setRenderChildren(!button.isRenderingChildren());
 			}

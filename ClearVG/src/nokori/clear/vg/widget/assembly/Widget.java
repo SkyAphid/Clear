@@ -227,19 +227,42 @@ public abstract class Widget extends WidgetContainer {
 	 * @param window
 	 * @return true if the Window's mouse coordinates fall within this widget.
 	 */
-	public boolean isMouseWithinThisWidget(Window window) {
-		return isPointWithinThisWidget(window.getMouseX(), window.getMouseY());
+	public boolean isMouseIntersecting(Window window) {
+		return intersects(window.getMouseX(), window.getMouseY());
 	}
 	
 	/**
-	 * Checks if the given coordinates are within this widget.
+	 * Checks if the given point are within the bounds of this widget.
 	 * 
 	 * @param x - the X screen coordinate
 	 * @param y - the Y screen coordinate
 	 * @return - true if the coordinates are within this widget
 	 */
-	public boolean isPointWithinThisWidget(double x, double y) {
+	public boolean intersects(double x, double y) {
 		return WidgetUtils.pointWithinRectangle(x, y, getClippedX(), getClippedY(), getWidth(), getHeight());
+	}
+	
+	/**
+	 * Checks if the given widget's coordinates are within this widget's coordinates.
+	 * 
+	 * @param w - the Widget to compare to this one
+	 * @return - true if the coordinates are within this widget (the given widget is intersecting this widget, rendering-wise)
+	 */
+	public boolean intersects(Widget w) {
+		return intersects(w.getClippedX(), w.getClippedY(), w.getWidth(), w.getHeight());
+	}
+	
+	/**
+	 * Checks if the given coordinates intersect with this Widget's getClippedX()/getClippedY() & Dimensions.
+	 * 
+	 * @param x 
+	 * @param y 
+	 * @param width
+	 * @param height
+	 * @return - true if the coordinates are within this widget
+	 */
+	public boolean intersects(float x, float y, float width, float height) {
+		return WidgetUtils.rectanglesIntersect(getClippedX(), getClippedY(), getWidth(), getHeight(), x, y, width, height);
 	}
 	
 	/*
@@ -275,7 +298,7 @@ public abstract class Widget extends WidgetContainer {
 	/**
 	 * @return true if the mouse if the mouseWithin flag is true (set via the last mouse motion event call).
 	 */
-	public boolean isMouseWithinThisWidget() {
+	public boolean isMouseWithin() {
 		return mouseWithin;
 	}
 	
@@ -284,7 +307,7 @@ public abstract class Widget extends WidgetContainer {
 	 * The primary use of this function is in situations where <code>setInputEnabled(false)</code> is called and the flag needs to be reset manually. 
 	 * This isn't done automatically in case the user wants to cache the state of the flag before input was disabled to check later.
 	 */
-	public void resetIsMouseWithin() {
+	public void resetMouseWithin() {
 		mouseWithin = false;
 	}
 
@@ -339,7 +362,7 @@ public abstract class Widget extends WidgetContainer {
 		double mouseY = event.getMouseY();
 		
 		boolean bMouseWithin = mouseWithin;
-		mouseWithin = isPointWithinThisWidget(mouseX, mouseY);
+		mouseWithin = intersects(mouseX, mouseY);
 		
 		//Mouse entered
 		if (!bMouseWithin && mouseWithin) {

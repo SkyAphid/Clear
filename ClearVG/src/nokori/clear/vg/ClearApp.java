@@ -25,9 +25,11 @@ import nokori.clear.windows.event.MouseScrollEvent;
 import nokori.clear.windows.util.WindowedApplication;
 
 /**
- * An application wrapper that allows users to quickly create ClearVG applications.
+ * An application wrapper that allows users to quickly create ClearVG applications. 
+ * 
+ * This wrapper will still work whether you're starting the program or if you need to make a second window during runtime. It's extremely flexible.
  */
-public abstract class ClearApplication extends WindowedApplication {
+public abstract class ClearApp extends WindowedApplication {
 
 	private Vector4f bgClearColor = new Vector4f(1f, 1f, 1f, 1f);
 	
@@ -38,12 +40,21 @@ public abstract class ClearApplication extends WindowedApplication {
 	/**
 	 * Initializes the ClearApplication with a RootWidgetAssembly
 	 */
-	public ClearApplication() {
+	public ClearApp() {
 		this(new RootWidgetAssembly());
 	}
 	
-	public ClearApplication(WidgetAssembly rootWidgetAssembly) {
+	public ClearApp(WidgetAssembly rootWidgetAssembly) {
 		this.rootWidgetAssembly = rootWidgetAssembly;
+	}
+	
+	public ClearApp(WindowManager windowManager, WidgetAssembly rootWidgetAssembly) {
+		super(windowManager);
+		this.rootWidgetAssembly = rootWidgetAssembly;
+	}
+	
+	public void init() {
+		init(windowManager, window, null);
 	}
 	
 	@Override
@@ -81,6 +92,8 @@ public abstract class ClearApplication extends WindowedApplication {
 		 * Rendering
 		 */
 		
+		window.makeContextCurrent();
+		
 		glViewport(0, 0, window.getFramebufferWidth(), window.getFramebufferHeight());
 		glClearColor(bgClearColor.x, bgClearColor.y, bgClearColor.z, bgClearColor.w);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -97,9 +110,12 @@ public abstract class ClearApplication extends WindowedApplication {
 	@Override
 	protected void endOfApplicationCallback() {
 		endOfNanoVGApplicationCallback();
-		ClearStaticResources.destroyAllCursors();
 		rootWidgetAssembly.dispose();
-		context.dispose();
+		
+		if (exitProgramOnEndOfApplication()) {
+			ClearStaticResources.destroyAllCursors();
+			context.dispose();
+		}
 	}
 
 	/**
@@ -171,5 +187,9 @@ public abstract class ClearApplication extends WindowedApplication {
 			}
 			
 		});
+	}
+
+	public NanoVGContext getContext() {
+		return context;
 	}
 }

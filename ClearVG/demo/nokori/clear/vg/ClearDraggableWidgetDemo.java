@@ -2,7 +2,7 @@ package nokori.clear.vg;
 
 import java.io.IOException;
 
-import nokori.clear.vg.ClearApplication;
+import nokori.clear.vg.ClearApp;
 import nokori.clear.vg.NanoVGContext;
 import nokori.clear.vg.font.Font;
 import nokori.clear.vg.font.FontStyle;
@@ -15,13 +15,13 @@ import nokori.clear.windows.GLFWException;
 import nokori.clear.windows.Window;
 import nokori.clear.windows.WindowManager;
 
-public class ClearDraggableWidgetDemo extends ClearApplication {
+public class ClearDraggableWidgetDemo extends ClearApp {
 
 	private static final int WINDOW_WIDTH = 1280;
 	private static final int WINDOW_HEIGHT = 720;
 	
 	public static void main(String[] args) {
-		ClearApplication.launch(new ClearDraggableWidgetDemo(), args);
+		ClearApp.launch(new ClearDraggableWidgetDemo(), args);
 	}
 
 	public ClearDraggableWidgetDemo() {

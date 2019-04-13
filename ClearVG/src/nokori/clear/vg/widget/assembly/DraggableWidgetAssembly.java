@@ -43,7 +43,7 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 				//The anchor is a relative X/Y value as to where the mouse was inside of the Widget when we clicked. 
 				//That way we can factor this into dragging calculations by subtracting the anchor from the mouseX/Y
 				//(Preventing the widget from snapping to the mouse coordinates from the upper-left)
-				anchor.set((float) (e.getMouseX() - getX()), (float) (e.getMouseY() - getY()));
+				clipDraggingAnchor((float) e.getMouseX(), (float) e.getMouseY());
 				setFocusedWidget(this);
 			}
 			
@@ -83,7 +83,7 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 			for (int i = 0; i < children.size(); i++) {
 				Widget w = children.get(i);
 
-				if (w.isMouseWithinThisWidget(window) && w.isInputEnabled()) {
+				if (w.isMouseIntersecting(window) && w.isInputEnabled()) {
 					hoveringChildren = true;
 					break;
 				}
@@ -92,7 +92,7 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 		
 		//System.err.println("canDrag() -> " + hoveringChildren + " " + isMouseWithinThisWidget(window) + " " + requiresMouseToBeWithinWidgetToDrag);
 		
-		return ((isMouseWithinThisWidget(window) || !requiresMouseToBeWithinWidgetToDrag) && !hoveringChildren);
+		return ((isMouseIntersecting(window) || !requiresMouseToBeWithinWidgetToDrag) && !hoveringChildren);
 	}
 	
 	/**
@@ -150,5 +150,16 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 	 */
 	public Vector2f getDraggingAnchor() {
 		return anchor;
+	}
+	
+	/**
+	 * Sets the dragging anchor for this DraggableWidgetAssembly (the relative X/Y coordinate of the mouse to the widget X/Y). Setting it manually may be useful for instances 
+	 * where you need to drag multiple Widgets at the same time.
+	 * 
+	 * @param mouseX
+	 * @param mouseY
+	 */
+	public void clipDraggingAnchor(float mouseX, float mouseY) {
+		anchor.set(mouseX - getClippedX(), mouseY - getClippedY());
 	}
 }

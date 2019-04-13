@@ -208,7 +208,7 @@ public class WidgetContainer {
 		for (int i = 0; i < children.size(); i++) {
 			Widget w = children.get(i);
 			
-			if (w.isMouseWithinThisWidget(window)) {
+			if (w.isMouseIntersecting(window)) {
 				intersecting.add(w);
 			}
 			
@@ -220,6 +220,26 @@ public class WidgetContainer {
 	
 	public int getNumChildren() {
 		return children.size();
+	}
+	
+	/**
+	 * Compiles a Stack containing every single child of this WidgetContainer (including all children of children).
+	 */
+	public Stack<Widget> getAllChildren(){
+		Stack<Widget> stack = new Stack<Widget>();
+		addChildrenToStack(stack, this);
+		return stack;
+	}
+	
+	private void addChildrenToStack(Stack<Widget> stack, WidgetContainer c) {
+		stack.addAll(c.children);
+		
+		for (int i = 0; i < c.children.size(); i++) {
+			if (c.children.get(i) instanceof WidgetContainer) {
+				WidgetContainer wC = (WidgetContainer) c.children.get(i);
+				addChildrenToStack(stack, wC);
+			}
+		}
 	}
 	
 	public boolean isTickingChildren() {

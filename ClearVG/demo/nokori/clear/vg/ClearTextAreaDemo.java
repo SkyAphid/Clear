@@ -3,7 +3,7 @@ package nokori.clear.vg;
 import nokori.clear.vg.ClearColor;
 
 import java.io.IOException;
-import nokori.clear.vg.ClearApplication;
+import nokori.clear.vg.ClearApp;
 import nokori.clear.vg.NanoVGContext;
 import nokori.clear.vg.font.Font;
 import nokori.clear.vg.widget.DropShadowWidget;
@@ -21,7 +21,7 @@ import static nokori.clear.vg.widget.text.ClearEscapeSequences.*;
  * This demo show-cases the TextArea functionality available in ClearVG.
  *
  */
-public class ClearTextAreaDemo extends ClearApplication {
+public class ClearTextAreaDemo extends ClearApp {
 
 	private static final int WINDOW_WIDTH = 1280;
 	private static final int WINDOW_HEIGHT = 720;
@@ -29,7 +29,7 @@ public class ClearTextAreaDemo extends ClearApplication {
 	protected TextAreaWidget textAreaWidget;
 	
 	public static void main(String[] args) {
-		ClearApplication.launch(new ClearTextAreaDemo(), args);
+		ClearApp.launch(new ClearTextAreaDemo(), args);
 	}
 	
 	@Override
@@ -38,7 +38,7 @@ public class ClearTextAreaDemo extends ClearApplication {
 		WidgetAssembly assembly = new WidgetAssembly(1000, 500, new WidgetClip(WidgetClip.Alignment.CENTER));
 		
 		assembly.addChild(new DropShadowWidget());
-		assembly.addChild(new RectangleWidget(ClearColor.WHITE_SMOKE, ClearColor.LIGHT_GRAY));
+		assembly.addChild(new RectangleWidget(ClearColor.WHITE_SMOKE, ClearColor.LIGHT_GRAY, true));
 		
 		try {
 			Font font = new Font("fonts/NotoSans/", "NotoSans-Regular", "NotoSans-Bold", "NotoSans-Italic", "NotoSans-Light").load(context);

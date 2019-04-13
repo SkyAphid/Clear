@@ -123,6 +123,7 @@ public class WindowManager {
 		}
 		
 		for (int i = 0; i < windows.size(); i++) {
+			windows.get(i).makeContextCurrent();
 			windows.get(i).swapBuffers();
 		}
 	}
@@ -384,7 +385,6 @@ public class WindowManager {
 		for(int i = 0; i < windows.size(); i++){
 			Window window = windows.get(i);
 			window.dispose();
-			glfwDestroyWindow(window.getHandle());
 		}
 		
 		glfwTerminate();

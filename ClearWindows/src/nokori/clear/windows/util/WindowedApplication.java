@@ -9,6 +9,10 @@ public abstract class WindowedApplication {
 
 	protected WindowManager windowManager;
 	protected Window window;
+
+	public WindowedApplication(WindowManager windowManager) {
+		this.windowManager = windowManager;
+	}
 	
 	public WindowedApplication() {
 		try {
@@ -25,8 +29,19 @@ public abstract class WindowedApplication {
 	 * @param args - the args passed through the main method
 	 */
 	public static void launch(WindowedApplication program, String[] args) {
+		launch(program, args, true);
+	}
+	
+	/**
+	 * Starts a Simple Window-based program.
+	 * 
+	 * @param program - a class that extends this one, meant to be the root of the program
+	 * @param args - the args passed through the main method
+	 * @param restartJVMOnFirstThread - if true, the JVM will be restarted on the first thread if not already. This ensures LWJGL3 compatibility on Mac.
+	 */
+	public static void launch(WindowedApplication program, String[] args, boolean restartJVMOnFirstThread) {
 		//Restarts the JVM if necessary on the first thread to ensure Mac compatibility
-		if (JVMUtil.restartJVMOnFirstThread(true, args)) {
+		if (restartJVMOnFirstThread && JVMUtil.restartJVMOnFirstThread(true, args)) {
 			return;
 		}
 
@@ -48,8 +63,7 @@ public abstract class WindowedApplication {
 			return;
 		}
 	}
-	
-	
+
 	private void loop() {
 		//Software loop
 		while (!window.isCloseRequested()) {
@@ -58,9 +72,13 @@ public abstract class WindowedApplication {
 		}
 		
 		endOfApplicationCallback();
-		windowManager.dispose();
 		
-		System.exit(0);
+		if (exitProgramOnEndOfApplication()) {
+			windowManager.dispose();
+			System.exit(0);
+		} else {
+			window.dispose();
+		}
 	}
 	
 	/**
@@ -91,6 +109,15 @@ public abstract class WindowedApplication {
 	
 	public Window getWindow() {
 		return window;
+	}
+	
+	/**
+	 * This overridable function allows you to change the end-of-life behavior for this WindowedApplication.
+	 * 
+	 * @return true if this WindowApplication should shutdown the JVM and dispose the WindowManager at the end of its life.
+	 */
+	protected boolean exitProgramOnEndOfApplication() {
+		return true;
 	}
 	
 	/**

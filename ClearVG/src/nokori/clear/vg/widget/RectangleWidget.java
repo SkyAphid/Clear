@@ -25,21 +25,32 @@ public class RectangleWidget extends Widget  {
 	 * 
 	 */
 	
-	public RectangleWidget(ClearColor fill) {
-		this(fill, null);
+	public RectangleWidget(ClearColor fill, boolean addWidgetSynch) {
+		this(fill, null, addWidgetSynch);
 	}
 	
-	public RectangleWidget(float cornerRadius, ClearColor fill) {
-		this(cornerRadius, fill, null);
+	public RectangleWidget(float cornerRadius, ClearColor fill, boolean addWidgetSynch) {
+		this(cornerRadius, fill, null, addWidgetSynch);
 	}
 	
-	public RectangleWidget(ClearColor fill, ClearColor strokeFill) {
-		this(0f, fill, strokeFill);
+	public RectangleWidget(ClearColor fill, ClearColor strokeFill, boolean addWidgetSynch) {
+		this(0f, fill, strokeFill, addWidgetSynch);
 	}
 	
-	public RectangleWidget(float cornerRadius, ClearColor fill, ClearColor strokeFill) {
+	/**
+	 * Creates a new automatically configured RectangleWidget 
+	 * 
+	 * @param cornerRadius - determines the radius of the corners. Set to 0 to create a hard rectangle.
+	 * @param fill - the internal fill of the rectangle
+	 * @param strokeFill - the outline fill of the rectangle
+	 * @param addWidgetSynch - if true, a WidgetSynch is added to this RectangleWidget, configuring it to synchronize itself with its parent widget.
+	 */
+	public RectangleWidget(float cornerRadius, ClearColor fill, ClearColor strokeFill, boolean addWidgetSynch) {
 		this(0, 0, 0, 0, cornerRadius, fill, strokeFill);
-		addChild(new WidgetSynch(WidgetSynch.Mode.WITH_PARENT));
+		
+		if (addWidgetSynch) {
+			addChild(new WidgetSynch(WidgetSynch.Mode.WITH_PARENT));
+		}
 	}
 	
 	/*

@@ -716,7 +716,7 @@ public class Window {
 		}
 	}
 	
-	void dispose() {
+	public void dispose() {
 		parent.removeWindow(Window.this);
 
 		glfwDestroyWindow(handle);

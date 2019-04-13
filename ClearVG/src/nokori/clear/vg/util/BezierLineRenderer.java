@@ -103,4 +103,7 @@ public class BezierLineRenderer {
 		this.strokeThickness = strokeThickness;
 	}
 
+	public void setStrokeAlpha(float alpha) {
+		strokeFill.alpha(alpha);
+	}
 }

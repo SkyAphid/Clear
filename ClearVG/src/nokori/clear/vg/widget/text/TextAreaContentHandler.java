@@ -271,7 +271,7 @@ public class TextAreaContentHandler {
 	 */
 	private void forEachCharCaretLogic(long vg, int characterIndex, int lineNumber, float x, float y, float adjustedClickY, float advanceW, float fontHeight) {
 		//Checks if the mouse click was in the bounding of this character - if so, the caret is set to this index.
-		float clickHeight = (widget.isFinalLine(lineNumber) && (widget.isMouseWithinThisWidget() || isHighlighting()) ? Float.MAX_VALUE : fontHeight);
+		float clickHeight = (widget.isFinalLine(lineNumber) && (widget.isMouseWithin() || isHighlighting()) ? Float.MAX_VALUE : fontHeight);
 
 		float clickX = caretUpdateQueue.x - widget.getScissorX();
 		float clickY = caretUpdateQueue.y;
@@ -294,14 +294,14 @@ public class TextAreaContentHandler {
 	 * which would be somewhat difficult with just the base controls.
 	 */
 	private void edgeCaretLogic(long vg, int totalTextLength, int lineNumber, int startIndex, int endIndex, float startX, float endX, float y, float adjustedClickY, float fontHeight) {
-		double mX = caretUpdateQueue.x;
-		double mY = caretUpdateQueue.y;
+		float mX = caretUpdateQueue.x;
+		float mY = caretUpdateQueue.y;
 		
 		if (updateCaret) {
 			//System.out.println(lineNumber + " Pass 1");
 			
 			//If this causes weird behavior in the future, change it to where it only takes the widget itself into account and remove the parent check
-			boolean withinBounds = widget.isPointWithinThisWidget(mX, mY); /*(widget.getParent() != null && widget.getParent().isPointWithinThisWidget(mX, mY) || */;
+			boolean withinBounds = widget.intersects(mX, mY); /*(widget.getParent() != null && widget.getParent().isPointWithinThisWidget(mX, mY) || */;
 
 			if (!withinBounds && !isHighlighting()) {
 				endEditing();
