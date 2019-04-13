@@ -119,7 +119,7 @@ public abstract class WindowedApplication {
 	protected boolean exitProgramOnEndOfApplication() {
 		return true;
 	}
-	
+
 	/**
 	 * This is called at the end of this program's life, right before WindowManager is disposed.
 	 */

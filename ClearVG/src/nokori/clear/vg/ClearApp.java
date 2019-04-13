@@ -37,6 +37,8 @@ public abstract class ClearApp extends WindowedApplication {
 
 	private WidgetAssembly rootWidgetAssembly;
 	
+	private boolean paused = false;
+	
 	/**
 	 * Initializes the ClearApplication with a RootWidgetAssembly
 	 */
@@ -84,15 +86,15 @@ public abstract class ClearApp extends WindowedApplication {
 		 * Ticking
 		 */
 		
-		TransitionManager.tick();
-		rootWidgetAssembly.tick(windowManager, window, context, rootWidgetAssembly);
-		rootWidgetAssembly.tickChildren(windowManager, window, context, rootWidgetAssembly);
+		if (!paused) {
+			TransitionManager.tick();
+			rootWidgetAssembly.tick(windowManager, window, context, rootWidgetAssembly);
+			rootWidgetAssembly.tickChildren(windowManager, window, context, rootWidgetAssembly);
+		}
 		
 		/*
 		 * Rendering
 		 */
-		
-		window.makeContextCurrent();
 		
 		glViewport(0, 0, window.getFramebufferWidth(), window.getFramebufferHeight());
 		glClearColor(bgClearColor.x, bgClearColor.y, bgClearColor.z, bgClearColor.w);
@@ -133,9 +135,11 @@ public abstract class ClearApp extends WindowedApplication {
 			
 			@Override
 			public void charEvent(Window window, long timestamp, int codepoint, String c, int mods) {
-				CharEvent event = CharEvent.fire(window, timestamp, codepoint, c, mods);
-				rootWidgetAssembly.charEvent(window, event);
-				rootWidgetAssembly.childrenCharEvent(window, event);
+				if (!paused) {
+					CharEvent event = CharEvent.fire(window, timestamp, codepoint, c, mods);
+					rootWidgetAssembly.charEvent(window, event);
+					rootWidgetAssembly.childrenCharEvent(window, event);
+				}
 			}
 			
 		});
@@ -145,9 +149,11 @@ public abstract class ClearApp extends WindowedApplication {
 			
 			@Override
 			public void keyEvent(Window window, long timestamp, int key, int scanCode, boolean pressed, boolean repeat, int mods) {
-				KeyEvent event = KeyEvent.fire(window, timestamp, key, scanCode, pressed, repeat, mods);
-				rootWidgetAssembly.keyEvent(window, event);
-				rootWidgetAssembly.childrenKeyEvent(window, event);
+				if (!paused) {
+					KeyEvent event = KeyEvent.fire(window, timestamp, key, scanCode, pressed, repeat, mods);
+					rootWidgetAssembly.keyEvent(window, event);
+					rootWidgetAssembly.childrenKeyEvent(window, event);
+				}
 			}
 			
 		});
@@ -157,9 +163,11 @@ public abstract class ClearApp extends WindowedApplication {
 
 			@Override
 			public void mouseButtonEvent(Window window, long timestamp, double mouseX, double mouseY, int button, boolean pressed, int mods) {
-				MouseButtonEvent event = MouseButtonEvent.fire(window, timestamp, mouseX, mouseY, button, pressed, mods);
-				rootWidgetAssembly.mouseButtonEvent(window, event);
-				rootWidgetAssembly.childrenMouseButtonEvent(window, event);
+				if (!paused) {
+					MouseButtonEvent event = MouseButtonEvent.fire(window, timestamp, mouseX, mouseY, button, pressed, mods);
+					rootWidgetAssembly.mouseButtonEvent(window, event);
+					rootWidgetAssembly.childrenMouseButtonEvent(window, event);
+				}
 			}
 			
 		});
@@ -169,9 +177,11 @@ public abstract class ClearApp extends WindowedApplication {
 
 			@Override
 			public void mouseMotionEvent(Window window, long timestamp, double mouseX, double mouseY, double dx, double dy) {
-				MouseMotionEvent event = MouseMotionEvent.fire(window, timestamp, mouseX, mouseY, dx, dy);
-				rootWidgetAssembly.mouseMotionEvent(window, event);
-				rootWidgetAssembly.childrenMouseMotionEvent(window, event);
+				if (!paused) {
+					MouseMotionEvent event = MouseMotionEvent.fire(window, timestamp, mouseX, mouseY, dx, dy);
+					rootWidgetAssembly.mouseMotionEvent(window, event);
+					rootWidgetAssembly.childrenMouseMotionEvent(window, event);
+				}
 			}
 			
 		});
@@ -181,9 +191,11 @@ public abstract class ClearApp extends WindowedApplication {
 
 			@Override
 			public void scrollEvent(Window window, long timestamp, double mouseX, double mouseY, double xoffset, double yoffset) {
-				MouseScrollEvent event = MouseScrollEvent.fire(window, timestamp, mouseX, mouseY, xoffset, yoffset);
-				rootWidgetAssembly.mouseScrollEvent(window, event);
-				rootWidgetAssembly.childrenMouseScrollEvent(window, event);
+				if (!paused) {
+					MouseScrollEvent event = MouseScrollEvent.fire(window, timestamp, mouseX, mouseY, xoffset, yoffset);
+					rootWidgetAssembly.mouseScrollEvent(window, event);
+					rootWidgetAssembly.childrenMouseScrollEvent(window, event);
+				}
 			}
 			
 		});
@@ -191,5 +203,13 @@ public abstract class ClearApp extends WindowedApplication {
 
 	public NanoVGContext getContext() {
 		return context;
+	}
+
+	public boolean isPaused() {
+		return paused;
+	}
+
+	public void setPaused(boolean paused) {
+		this.paused = paused;
 	}
 }

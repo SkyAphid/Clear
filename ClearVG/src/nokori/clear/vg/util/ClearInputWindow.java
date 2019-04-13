@@ -13,16 +13,19 @@ public class ClearInputWindow extends ClearApp {
 	private static final int WIDTH = 500;
 	private static final int HEIGHT = 250;
 	
+	private ClearApp parent;
 	private String title;
 	
-	private ClearInputWindow(WindowManager windowManager, WidgetAssembly rootWidgetAssembly) {
+	private ClearInputWindow(WindowManager windowManager, WidgetAssembly rootWidgetAssembly, ClearApp parent, String title) {
 		super(windowManager, rootWidgetAssembly);
+		this.parent = parent;
+		this.title = title;
 	}
 
 	public static ClearInputWindow show(ClearApp parent, String title, String message, String defaultInput) throws GLFWException {
-		ClearInputWindow c = new ClearInputWindow(parent.getWindowManager(), new RootWidgetAssembly());
-		c.title = title;
-		
+		ClearInputWindow c = new ClearInputWindow(parent.getWindowManager(), new RootWidgetAssembly(), parent, title);
+
+		parent.setPaused(true);
 		launch(c, null, false);
 		
 		return c;
@@ -35,7 +38,7 @@ public class ClearInputWindow extends ClearApp {
 
 	@Override
 	protected void endOfNanoVGApplicationCallback() {
-		
+		parent.setPaused(false);
 	}
 
 	@Override
