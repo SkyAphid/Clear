@@ -57,20 +57,20 @@ public abstract class WindowedApplication {
 			
 			//Run the program
 			program.loop();
-					
+
 		} catch (GLFWException e) {
 			e.printStackTrace();
 			return;
 		}
 	}
 
-	private void loop() {
+	protected void loop() {
 		//Software loop
 		while (!window.isCloseRequested()) {
 			run();
 			windowManager.update(true);
 		}
-		
+
 		endOfApplicationCallback();
 		
 		if (exitProgramOnEndOfApplication()) {

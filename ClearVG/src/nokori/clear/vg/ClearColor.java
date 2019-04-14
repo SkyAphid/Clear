@@ -32,6 +32,7 @@ public class ClearColor {
 	public static final ClearColor DARK_VIOLET = new ClearColor("#8A2BE2").immutable(true);
 	public static final ClearColor CYAN = new ClearColor("#00FFFF").immutable(true);
 	public static final ClearColor BLUE = new ClearColor("#0000FF").immutable(true);
+	public static final ClearColor BABY_BLUE = new ClearColor("#0078D7").immutable(true);
 	public static final ClearColor AQUA = new ClearColor("#00FFFF").immutable(true);
 	public static final ClearColor CORAL = new ClearColor("#FF7F50").immutable(true);
 

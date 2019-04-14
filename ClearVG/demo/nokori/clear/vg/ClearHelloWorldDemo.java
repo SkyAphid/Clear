@@ -24,7 +24,8 @@ public class ClearHelloWorldDemo extends ClearApp {
 	private static final int WINDOW_WIDTH = 256;
 	private static final int WINDOW_HEIGHT = 256;
 	
-	protected WidgetAssembly button = new WidgetAssembly(100, 50, new WidgetClip(WidgetClip.Alignment.CENTER));
+	protected WidgetAssembly button;
+	protected Font font;
 	
 	public static void main(String[] args) {
 		ClearApp.launch(new ClearHelloWorldDemo(), args);
@@ -62,7 +63,7 @@ public class ClearHelloWorldDemo extends ClearApp {
 		 */
 		
 		try {
-			Font font = new Font("fonts/NotoSans/", "NotoSans-Regular", "NotoSans-Bold", "NotoSans-Italic", "NotoSans-Light").load(context);
+			font = new Font("fonts/NotoSans/", "NotoSans-Regular", "NotoSans-Bold", "NotoSans-Italic", "NotoSans-Light").load(context);
 			
 			LabelWidget label = new LabelWidget(ClearColor.WHITE_SMOKE, "Hello World!", font, FontStyle.REGULAR, 20);
 			label.addChild(new WidgetClip(WidgetClip.Alignment.CENTER));

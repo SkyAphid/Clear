@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Locale;
 
 import org.joml.Vector2f;
 import org.lwjgl.BufferUtils;
@@ -30,6 +31,37 @@ public class Font {
 	
 	private FloatBuffer tempBuffer = BufferUtils.createFloatBuffer(1);
 	private FloatBuffer boundsTempBuffer = null;
+	
+	/**
+	 * Creates a font just using the font path. The files in the given folder are scanned and their type will be assumed.
+	 * <br><br>
+	 * Here's how to ensure your font files work with this constructor:
+	 * <br>• Regular font files must include "regular" somewhere in their name (case does not matter)
+	 * <br>• Bold font files must include "bold" somewhere in their name (case does not matter)
+	 * <br>• Italic font files must include "italic" somewhere in their name (case does not matter)
+	 * <br>• Light font files must include "light" somewhere in their name (case does not matter)
+	 * 
+	 * @param path
+	 */
+	public Font(File path) {
+		this(path.getAbsolutePath() + "/", getFontName(path, "regular"), getFontName(path, "bold"), getFontName(path, "italic"), getFontName(path, "light"));
+	}
+	
+	private static String getFontName(File path, String nameIncludes) {
+		File[] files = path.listFiles();
+		
+		for (int i = 0; i < files.length; i++) {
+			String name = files[i].getName();
+			
+			if (name.toLowerCase(Locale.ENGLISH).contains(nameIncludes)) {
+				String fontName = name.substring(0, name.lastIndexOf("."));
+				//System.out.println(nameIncludes + " -> " + fontName);
+				return fontName;
+			}
+		}
+		
+		return null;
+	}
 	
 	/**
 	 * Creates a font that only supports the regular style. Mostly meant to be used for testing purposes. Supports only TrueTypeFonts (TTF)
@@ -194,6 +226,25 @@ public class Font {
 		return tempBuffer.get(0);
 	}
 	
+	public Vector2f getTextBounds(NanoVGContext context, Vector2f boundsResultVector, ArrayList<String> lines, float fontSize, int textAlignment, FontStyle fontStyle) {
+		configureNVG(context, fontSize, textAlignment, fontStyle);
+		
+		boundsResultVector.set(0f, 0f);
+		Vector2f tempVector = new Vector2f();
+		
+		for (int i = 0; i < lines.size(); i++) {
+			tempVector = getTextBounds(context, tempVector, lines.get(i));
+			
+			if (tempVector.x() > boundsResultVector.x()) {
+				boundsResultVector.x = tempVector.x();
+			}
+			
+			boundsResultVector.y += tempVector.y();
+		}
+		
+		return boundsResultVector;
+	}
+	
 	/**
 	 * @return a Vector2f with the width and height of the given settings (x = w, y = h)
 	 */
@@ -248,6 +299,7 @@ public class Font {
 			builder.append(c);
 
 			if (c == '\n') {
+				//System.out.println("Add (1) - > " + builder.toString());
 				lines.add(builder.toString());
 				builder.setLength(0);
 				advanceX = 0;
@@ -257,6 +309,7 @@ public class Font {
 			float a = getTextBounds(context, boundsResultVector, Character.toString(c), fontSize, textAlignment, fontStyle).x;
 
 			if (advanceX + a > maxLineWidth) {
+				//System.out.println("Add (2) - > " + builder.toString());
 				lines.add(builder.toString());
 				builder.setLength(0);
 				advanceX = 0;
@@ -268,6 +321,7 @@ public class Font {
 				float wordLength = getWordLength(context, boundsResultVector, string, len, i+1, fontSize, textAlignment, fontStyle);
 
 				if (advanceX + wordLength > maxLineWidth) {
+					//System.out.println("Add (3) - > " + builder.toString());
 					lines.add(builder.toString());
 					builder.setLength(0);
 					advanceX = 0;
@@ -276,10 +330,12 @@ public class Font {
 		}
 
 		if(builder.length() > 0){
+			//System.out.println("Add (4) - > " + builder.toString());
 			lines.add(builder.toString());
 		}
 		
 		if (string.endsWith("\n")) {
+			//System.out.println("Add (3) Blank New Line");
 			lines.add("");
 		}
 		

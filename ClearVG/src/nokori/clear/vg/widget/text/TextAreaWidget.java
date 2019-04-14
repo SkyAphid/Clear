@@ -282,17 +282,7 @@ public class TextAreaWidget extends Widget {
 		 */
 		
 		if (lines == null || refreshLines) {
-			float lineSplitW = (wordWrappingEnabled ? (lineSplitOverrideEnabled ? lineSplitOverrideWidth : textContentW) : Float.MAX_VALUE);
-			
-			font.split(context, lines = new ArrayList<>(), text, lineSplitW, fontSize, TEXT_AREA_ALIGNMENT, defaultFontStyle);
-			
-			//Don't allow the lines array to be empty.
-			if (lines.isEmpty()) {
-				lines.add("");
-			}
-
-			stringWidth = textContentHandler.calculateMaxAdvance(context, textContentW, font, lines);
-			
+			calculateLineSplits(context, text);
 			refreshLines = false;
 		}
 		
@@ -305,7 +295,7 @@ public class TextAreaWidget extends Widget {
 		 */
 		
 		renderAreaHeight = (textContentH / fontHeight) * fontHeight;
-		stringHeight = font.getHeight(context, lines.size(), fontHeight, TEXT_AREA_ALIGNMENT, defaultFontStyle);
+		calculateStringHeight(context);
 		
 		/*
 		 * 
@@ -425,6 +415,25 @@ public class TextAreaWidget extends Widget {
 		} else {
 			horizontalScrollbarActive = false;
 		}
+	}
+	
+	/**
+	 * This function splits the content text into an arraylist containing individual lines, allowing us to render the text content piece by piece.
+	 * 
+	 * @param context
+	 * @param text
+	 */
+	public void calculateLineSplits(NanoVGContext context, String text) {
+		float lineSplitW = (wordWrappingEnabled ? (lineSplitOverrideEnabled ? lineSplitOverrideWidth : textContentW) : Float.MAX_VALUE);
+		
+		font.split(context, lines = new ArrayList<>(), text, lineSplitW, fontSize, TEXT_AREA_ALIGNMENT, defaultFontStyle);
+		
+		//Don't allow the lines array to be empty.
+		if (lines.isEmpty()) {
+			lines.add("");
+		}
+
+		stringWidth = textContentHandler.calculateMaxAdvance(context, textContentW, font, lines);
 	}
 	
 	private float getLineRenderY(int lineIndex) {
@@ -929,6 +938,15 @@ public class TextAreaWidget extends Widget {
 		return stringWidth;
 	}
 
+	public float calculateStringHeight(NanoVGContext context) {
+		if (lines == null) {
+			System.err.println("WARNING: TextAreaWidget: calculateStringHeight(): Lines are null - this function is going to fail. Calculate the line splits first (calculateLineSplits()).");
+		}
+		
+		stringHeight = font.getHeight(context, lines.size(), fontHeight, TEXT_AREA_ALIGNMENT, defaultFontStyle);
+		return stringHeight;
+	}
+	
 	public float getStringHeight() {
 		return stringHeight;
 	}

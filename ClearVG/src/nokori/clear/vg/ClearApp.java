@@ -39,6 +39,9 @@ public abstract class ClearApp extends WindowedApplication {
 	
 	private boolean paused = false;
 	
+	private ClearApp queueLaunch = null;
+	private int queueLaunchFrameDelay = 0;
+	
 	/**
 	 * Initializes the ClearApplication with a RootWidgetAssembly
 	 */
@@ -105,8 +108,29 @@ public abstract class ClearApp extends WindowedApplication {
 		
         rootWidgetAssembly.render(windowManager, window, context, rootWidgetAssembly);
         rootWidgetAssembly.renderChildren(windowManager, window, context, rootWidgetAssembly);
-        
+
+        if (paused) {
+        	long vg = context.get();
+        	
+			ClearColor.LIGHT_GRAY.alpha(0.75f).tallocNVG(fill -> {
+				nvgBeginPath(vg);
+				nvgRect(vg, 0, 0, window.getFramebufferWidth(), window.getFramebufferHeight());
+				nvgFillColor(vg, fill);
+				nvgFill(vg);
+				nvgClosePath(vg);
+			});
+        }
+
         nvgEndFrame(context.get());
+        
+        if (queueLaunch != null) {
+        	if (queueLaunchFrameDelay > 0) {
+        		queueLaunchFrameDelay--;
+        	} else {
+        		launch(queueLaunch, null, false);
+        		queueLaunch = null;
+        	}
+        }
 	}
 
 	@Override
@@ -205,11 +229,31 @@ public abstract class ClearApp extends WindowedApplication {
 		return context;
 	}
 
+	/**
+	 * Whether or not this ClearApp is paused (ticking and input is disabled, but rendering will continue)
+	 */
 	public boolean isPaused() {
 		return paused;
 	}
-
+	
+	/**
+	 * Toggles whether or not this ClearApp is paused. If true, ticking and input is disabled, but rendering will continue.
+	 * 
+	 * @param context
+	 * @param paused
+	 */
 	public void setPaused(boolean paused) {
 		this.paused = paused;
+		window.setClosingEnabled(!paused);
+	}
+
+	/**
+	 * Queues a ClearApp for launch after a one frame delay. This value is set to null after launch. It's recommended that you pause the ClearApp when you queue up a launch.
+	 * 
+	 * @param queueLaunch
+	 */
+	public void queueLaunch(ClearApp queueLaunch) {
+		this.queueLaunch = queueLaunch;
+		queueLaunchFrameDelay = 1;
 	}
 }

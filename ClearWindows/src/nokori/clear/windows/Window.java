@@ -61,6 +61,8 @@ public class Window {
 	
 	private boolean fullscreen;
 	
+	private boolean closeButtonEnabled = true;
+	
 	//Internal callbacks
 	private GLFWKeyCallback glfwKeyCallback;
 	private GLFWCharModsCallback glfwCharModsCallback;
@@ -220,7 +222,7 @@ public class Window {
 				//System.out.println("Window size: " + width + ", " + height);
 			}
 		});
-		
+
 		initialized = false;
 
 		this.swapInterval = SWAP_INTERVAL_UNDEFINED;
@@ -335,7 +337,25 @@ public class Window {
 	}
 	
 	public boolean isCloseRequested(){
-		return glfwWindowShouldClose(handle);
+		if (!closeButtonEnabled) {
+			glfwSetWindowShouldClose(handle, false);
+			return false;
+		} else {
+			return glfwWindowShouldClose(handle);
+		}
+	}
+	
+	public void requestClose() {
+		glfwSetWindowShouldClose(handle, true);
+	}
+	
+	public boolean isCloseButtonEnabled() {
+		return closeButtonEnabled;
+	}
+
+	public void setClosingEnabled(boolean closeButtonEnabled) {
+		isCloseRequested();
+		this.closeButtonEnabled = closeButtonEnabled;
 	}
 	
 	//Maximize/minimize controls
@@ -402,7 +422,7 @@ public class Window {
 	public boolean isMaximized(){
 		return getWindowAttribute(GLFW_MAXIMIZED);
 	}
-	
+
 	//Internals for multi-window fullscreen management on the GLFW thread
 	boolean getWindowAttributeInternal(int attribute){
 		return glfwGetWindowAttrib(handle, attribute) == GL_TRUE;
