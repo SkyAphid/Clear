@@ -100,16 +100,16 @@ public class LabelWidget extends Widget {
 		//Calculate the line split and then derive the height from that
 		if (lines == null) {
 			font.split(context, lines = new ArrayList<String>(), text, autoCalculateWidth ? AUTO_CALCULATE_WIDTH : getWidth(), fontSize, textAlignment, style);
+			
+			font.getTextBounds(context, bounds, lines, fontSize, textAlignment, style);
+			
+			//Calculate width automatically if applicable
+			if (autoCalculateWidth) {
+				setWidth(bounds.x());
+			}
+			
+			setHeight(bounds.y());
 		}
-		
-		font.getTextBounds(context, bounds, lines, fontSize, textAlignment, style);
-		
-		//Calculate width automatically if applicable
-		if (autoCalculateWidth) {
-			setWidth(bounds.x());
-		}
-		
-		setHeight(bounds.y());
 		
 		return this;
 	}
@@ -117,7 +117,8 @@ public class LabelWidget extends Widget {
 	@Override
 	public void render(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
 		font.configureNVG(context, fontSize, textAlignment, style);
-
+		calculateBounds(context);
+		
 		long vg = context.get();
 		
 		NVGColor fill = (this.fill != null ? this.fill.callocNVG() : null);

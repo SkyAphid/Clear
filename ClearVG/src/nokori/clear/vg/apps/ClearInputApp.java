@@ -1,4 +1,4 @@
-package nokori.clear.vg.subapps;
+package nokori.clear.vg.apps;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,30 +27,31 @@ public abstract class ClearInputApp extends ClearApp {
 	
 	private int width, height;
 	private ClearApp parent;
-	private String title, message, defaultInput;
+	private ClearColor buttonOutline;
 	private File fontLocation;
+	private String title, message, defaultInput;
 	
-	public ClearInputApp(ClearApp parent, int windowWidth, int windowHeight, File fontLocation, String title, String message, String defaultInput) {
-		this(parent.getWindowManager(), new RootWidgetAssembly(), parent, windowWidth, windowHeight, fontLocation, title, message, defaultInput);
+	public ClearInputApp(ClearApp parent, int windowWidth, int windowHeight, ClearColor buttonOutline, File fontLocation, String title, String message, String defaultInput) {
+		this(parent.getWindowManager(), new RootWidgetAssembly(), parent, windowWidth, windowHeight, buttonOutline, fontLocation, title, message, defaultInput);
 	}
 	
 	private ClearInputApp(WindowManager windowManager, WidgetAssembly rootWidgetAssembly, 
-			ClearApp parent, int windowWidth, int windowHeight, File fontLocation, String title, String message, String defaultInput) {
+			ClearApp parent, int windowWidth, int windowHeight, ClearColor buttonOutline, File fontLocation, String title, String message, String defaultInput) {
 		
 		super(windowManager, rootWidgetAssembly);
 		this.parent = parent;
 		this.width = windowWidth;
 		this.height = windowHeight;
+		this.buttonOutline = buttonOutline;
 		this.fontLocation = fontLocation;
 		this.title = title;
 		this.message = message;
 		this.defaultInput = defaultInput;
 	}
 
-	public static void show(ClearInputApp clearInputWindow) throws GLFWException {
-		ClearApp parent = clearInputWindow.parent;
+	public void show() throws GLFWException {
 		parent.setPaused(true);
-		parent.queueLaunch(clearInputWindow);
+		parent.queueLaunch(this);
 	}
 	
 	@Override
@@ -90,7 +91,7 @@ public abstract class ClearInputApp extends ClearApp {
 			float buttonSynchX = xPadding;
 			float buttonSynchY = (yPadding * 4f) + messageLabel.getHeight() + inputField.getHeight();
 			
-			ButtonAssembly confirmButton = new ButtonAssembly(75, 25, ClearColor.LIGHT_GRAY, ClearColor.BABY_BLUE, 0f, font, FONT_SIZE, ClearColor.LIGHT_BLACK, "Confirm");
+			ButtonAssembly confirmButton = new ButtonAssembly(75, 25, ClearColor.LIGHT_GRAY, buttonOutline, 0f, font, FONT_SIZE, ClearColor.LIGHT_BLACK, "Confirm");
 			confirmButton.addChild(new WidgetClip(WidgetClip.Alignment.TOP_LEFT, buttonSynchX, buttonSynchY));
 			
 			confirmButton.setOnMouseButtonEvent(e -> {
@@ -106,7 +107,7 @@ public abstract class ClearInputApp extends ClearApp {
 			 * Exit button
 			 */
 
-			ButtonAssembly exitButton = new ButtonAssembly(75, 25, ClearColor.LIGHT_GRAY, ClearColor.BABY_BLUE, 0f, font, FONT_SIZE, ClearColor.LIGHT_BLACK, "Cancel");
+			ButtonAssembly exitButton = new ButtonAssembly(75, 25, ClearColor.LIGHT_GRAY, buttonOutline, 0f, font, FONT_SIZE, ClearColor.LIGHT_BLACK, "Cancel");
 			exitButton.addChild(new WidgetClip(WidgetClip.Alignment.TOP_LEFT, buttonSynchX + confirmButton.getWidth() + xPadding, buttonSynchY));
 			
 			exitButton.setOnMouseButtonEvent(e -> {
@@ -131,7 +132,15 @@ public abstract class ClearInputApp extends ClearApp {
 
 	@Override
 	public Window createWindow(WindowManager windowManager) throws GLFWException {
-		return windowManager.createWindow(title, width, height, false, true);
+		Window parentWindow = parent.getWindow();
+		
+		int centerX = parentWindow.getX() + parentWindow.getWidth()/2 - width/2;
+		int centerY = parentWindow.getY() + parentWindow.getHeight()/2 - height/2;
+		
+		Window newWindow = windowManager.createWindow(title, centerX, centerY, width, height, false, true);
+		newWindow.setIcons(parentWindow.getIconFiles());
+
+		return newWindow;
 	}
 
 	@Override

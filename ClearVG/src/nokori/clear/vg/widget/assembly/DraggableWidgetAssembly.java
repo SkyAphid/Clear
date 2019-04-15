@@ -5,7 +5,6 @@ import org.lwjgl.glfw.GLFW;
 
 import nokori.clear.windows.Window;
 import nokori.clear.windows.event.MouseButtonEvent;
-
 import static nokori.clear.vg.ClearStaticResources.*;
 
 /**
@@ -43,7 +42,7 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 				//The anchor is a relative X/Y value as to where the mouse was inside of the Widget when we clicked. 
 				//That way we can factor this into dragging calculations by subtracting the anchor from the mouseX/Y
 				//(Preventing the widget from snapping to the mouse coordinates from the upper-left)
-				clipDraggingAnchor((float) e.getMouseX(), (float) e.getMouseY());
+				draggingAnchorCallback((float) e.getMouseX(), (float) e.getMouseY());
 				setFocusedWidget(this);
 			}
 			
@@ -57,10 +56,37 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 			if (dragging) {
 				//Calculating the coordinates like this instead of using the mouse event DX/DY means that the user will have more freedom in how they use move()
 				//E.G. calculating it like this will allow the user to modify move to allow for grid snapping without any issues arising from the new X/Y values
-				move(getX() + (float) (e.getMouseX() - getX()) - anchor.x(), getY() + (float) (e.getMouseY() - getY()) - anchor.y());
 				//System.err.println(this + " Dragging: " + getX() + "/" + getY() + " " + anchor.x() + "/" + anchor.y());
+				
+				draggingCallback((float) e.getMouseX(), (float) e.getMouseY());
 			}
 		});
+	}
+	
+	/**
+	 * This is split into its own function so that it can be overriden separately from <code>clipDraggingAnchor()</code>
+	 * 
+	 * @param e
+	 */
+	protected void draggingAnchorCallback(float mouseX, float mouseY) {
+		clipDraggingAnchor(mouseX, mouseY);
+	}
+	
+	/**
+	 * This is split into its own function so that it can be overriden separately from <code>move()</code>
+	 * 
+	 * @param e
+	 */
+	protected void draggingCallback(float mouseX, float mouseY) {
+		move(getDragX(mouseX), getDragY(mouseY));
+	}
+	
+	public float getDragX(float mouseX) {
+		return getX() + (mouseX - getX()) - anchor.x();
+	}
+	
+	public float getDragY(float mouseY) {
+		return getY() + (mouseY- getY()) - anchor.y();
 	}
 
 	/**
@@ -160,6 +186,6 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 	 * @param mouseY
 	 */
 	public void clipDraggingAnchor(float mouseX, float mouseY) {
-		anchor.set(mouseX - getClippedX(), mouseY - getClippedY());
+		anchor.set(mouseX - getX(), mouseY - getY());
 	}
 }

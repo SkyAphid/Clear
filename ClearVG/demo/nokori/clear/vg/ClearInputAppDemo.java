@@ -4,7 +4,7 @@ import java.io.File;
 
 import nokori.clear.vg.ClearApp;
 import nokori.clear.vg.NanoVGContext;
-import nokori.clear.vg.subapps.ClearInputApp;
+import nokori.clear.vg.apps.ClearInputApp;
 import nokori.clear.vg.widget.assembly.WidgetAssembly;
 import nokori.clear.windows.GLFWException;
 import nokori.clear.windows.Window;
@@ -25,16 +25,17 @@ public class ClearInputAppDemo extends ClearHelloWorldDemo {
 			if (button.isMouseWithin() && e.isPressed()) {
 				
 				try {
-					ClearInputApp.show(new ClearInputApp(this, 300, 200, new File("fonts/NotoSans/"), 
-							"Input Window Demo", 
-							"Input something here.\n\nThis is a new line.\nNew lines should offset the input box...", 
+					
+					new ClearInputApp(this, 300, 200, ClearColor.BABY_BLUE, new File("fonts/NotoSans/"),
+							"Input Window Demo",
+							"Input something here.\n\nThis is a new line.\nNew lines should offset the input box...",
 							"Default text") {
-						
+
 						@Override
 						protected void confirmButtonPressed(String text) {
 							TinyFileDialog.showMessageDialog("ClearInputWindow Text Confirmed", text, TinyFileDialog.Icon.INFORMATION);
 						}
-					});
+					}.show();
 					
 				} catch (GLFWException e1) {
 					e1.printStackTrace();

@@ -63,6 +63,8 @@ public class Window {
 	
 	private boolean closeButtonEnabled = true;
 	
+	private File[] iconFiles = null;
+	
 	//Internal callbacks
 	private GLFWKeyCallback glfwKeyCallback;
 	private GLFWCharModsCallback glfwCharModsCallback;
@@ -672,8 +674,8 @@ public class Window {
 	 * 
 	 * @param iconFiles - the array of files to check/load
 	 */
-	public void setIcon(File[] iconFiles) {
-		setIcon(null, iconFiles);
+	public void setIcons(File[] iconFiles) {
+		setIcons(null, iconFiles);
 	}
 	
 	/**
@@ -682,7 +684,7 @@ public class Window {
 	 * @param filetype - only uses the Files that end with this file extension. Set to null to just use any file.
 	 * @param iconFiles - the array of files to check/load
 	 */
-	public void setIcon(String filetype, File[] files) {
+	public void setIcons(String filetype, File[] files) {
 		
 		/*
 		 * Check the listed files for images that can be used as icons
@@ -690,10 +692,10 @@ public class Window {
 		
 		Stack<File> validFiles = new Stack<File>();
 		
-		for(int i = 0; i < files.length; i++) {
+		for (int i = 0; i < files.length; i++) {
 			File f = files[i];
-			
-			if (filetype != null && f.getName().endsWith(filetype)) {
+
+			if (filetype == null || f.getName().endsWith(filetype)) {
 				validFiles.push(f);
 			}
 		}
@@ -707,6 +709,8 @@ public class Window {
 		for (int i = 0; i < iconFiles.length; i++) {
 			iconFiles[i] = validFiles.pop();
 		}
+		
+		this.iconFiles = iconFiles;
 		
 		/*
 		 * Set the icons
@@ -736,6 +740,10 @@ public class Window {
 		}
 	}
 	
+	public File[] getIconFiles() {
+		return iconFiles;
+	}
+
 	public void dispose() {
 		parent.removeWindow(Window.this);
 
