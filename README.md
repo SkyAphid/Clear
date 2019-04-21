@@ -32,11 +32,11 @@ Clear is a wrapper for LWJGL3 that makes it simple to build basic programs that 
 ![clear_textarea](https://user-images.githubusercontent.com/6147299/53695030-3a029e80-3d7c-11e9-9375-ff3f71f0b5db.png)
 
 #### Other Examples:
-- [Circle Demo](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearCircleDemo.java)
 - [Draggable Widget Demo](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearDraggableWidgetDemo.java)
 - [Input App Demo](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearInputAppDemo.java)
 - [TextAreaWidget Code Editor Demo](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearTextAreaCodeEditorDemo.java)
 - [TextAreaWidget Text Field Demo](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearTextFieldDemo.java)
+- [Circle Rendering Demo](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearCircleDemo.java)
 
 # Recommended Projects (See Also)
 - [LWJGUI - LWJGL3 JavaFX Alternative](https://github.com/orange451/LWJGUI)
