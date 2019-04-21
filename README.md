@@ -32,10 +32,14 @@ Clear is a wrapper for LWJGL3 that makes it simple to build basic programs that 
 ### [Text Area Support (formatting, line numbers, editing, in-depth customization)](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearTextAreaDemo.java)
 ![clear_textarea](https://user-images.githubusercontent.com/6147299/53695030-3a029e80-3d7c-11e9-9375-ff3f71f0b5db.png)
 
+### [Code Area Support (syntax-highlighting, line numbers, tabbing)](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearTextAreaCodeEditorDemo.java)
+![Clear CodeArea](https://user-images.githubusercontent.com/6147299/56476929-2367f200-6465-11e9-8a25-67481a251ae5.png)
+
+### [Input Windows & Sub-Windows (Configured specially for LWJGL3)](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearTextFieldDemo.java)
+![Clear InputWindow](https://user-images.githubusercontent.com/6147299/56476930-24991f00-6465-11e9-8e79-0dbc3ca54b1a.jpg)
+
 #### Other Examples:
 - [Draggable Widget Demo](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearDraggableWidgetDemo.java)
-- [Input App Demo](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearInputAppDemo.java)
-- [TextAreaWidget Code Editor Demo](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearTextAreaCodeEditorDemo.java)
 - [TextAreaWidget Text Field Demo](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearTextFieldDemo.java)
 - [Circle Rendering Demo](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearCircleDemo.java)
 
