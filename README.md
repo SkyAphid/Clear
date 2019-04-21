@@ -13,6 +13,7 @@ Clear is a wrapper for LWJGL3 that makes it simple to build basic programs that 
 - Create OpenGL-capable windows in two lines
 - Contains utilities for creating windowed programs with simple looping functionality
 - Has classes for making input callbacks for windows
+- Has framework for opening multiple windows at once and exerting fine control over them
 - Has a TinyFileDialog wrapper class that allows you to open various message/open/save/input dialogs in one line each
 
 ## ClearVG
