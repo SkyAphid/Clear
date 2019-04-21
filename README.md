@@ -24,13 +24,19 @@ Clear is a wrapper for LWJGL3 that makes it simple to build basic programs that 
 
 # Examples
 
-### [Hello World (basic clickable button)](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearHelloWorld.java)
+### [Hello World (basic clickable button)](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearHelloWorldDemo.java)
 ![clear_helloworld](https://user-images.githubusercontent.com/6147299/53410619-f24dd280-3989-11e9-91dd-5c653870fc59.png) 
 
 
 ### [Text Area Support (formatting, line numbers, editing, in-depth customization)](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearTextAreaDemo.java)
 ![clear_textarea](https://user-images.githubusercontent.com/6147299/53695030-3a029e80-3d7c-11e9-9375-ff3f71f0b5db.png)
 
+#### Other Examples:
+- (https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearCircleDemo.java)[Circle Demo]
+- (https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearDraggableWidgetDemo.java)[Draggable Widget Demo]
+- (https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearInputAppDemo.java)[Input App Demo]
+- (https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearTextAreaCodeEditorDemo.java)[TextAreaWidget Code Editor Demo]
+- (https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearTextFieldDemo.java)[TextAreaWidget Text Field Demo]
 
 # Recommended Projects (See Also)
 - [LWJGUI - LWJGL3 JavaFX Alternative](https://github.com/orange451/LWJGUI)
