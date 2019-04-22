@@ -13,22 +13,35 @@ Clear is a wrapper for LWJGL3 that makes it simple to build basic programs that 
 - Create OpenGL-capable windows in two lines
 - Contains utilities for creating windowed programs with simple looping functionality
 - Has classes for making input callbacks for windows
-- Has a TinyFileDialog wrapper class that allows you to open various message/open/save dialogs in one line each
+- Has framework for opening multiple windows at once and exerting fine control over them
+- Has a TinyFileDialog wrapper class that allows you to open various message/open/save/input dialogs in one line each
 
 ## ClearVG
 - Create a NanoVG-capable application within 100 lines
 - Has basic tools for making pretty user-interfaces
 - Reliable and customizable
+- Contains basic Widgets such as shapes, buttons, draggables, and systems for assembling Widgets into complex UI elements (WidgetAssembly)
+- Contains a fully realized TextAreaWidget that has text input systems, extendability, custom formatting, automatic formatting (for creating code areas), and much more
 
 # Examples
 
-### [Hello World (basic clickable button)](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearHelloWorld.java)
+### [Hello World (basic clickable button)](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearHelloWorldDemo.java)
 ![clear_helloworld](https://user-images.githubusercontent.com/6147299/53410619-f24dd280-3989-11e9-91dd-5c653870fc59.png) 
 
 
 ### [Text Area Support (formatting, line numbers, editing, in-depth customization)](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearTextAreaDemo.java)
 ![clear_textarea](https://user-images.githubusercontent.com/6147299/53695030-3a029e80-3d7c-11e9-9375-ff3f71f0b5db.png)
 
+### [Code Area Support (syntax-highlighting, line numbers, tabbing)](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearTextAreaCodeEditorDemo.java)
+![Clear CodeArea](https://user-images.githubusercontent.com/6147299/56476929-2367f200-6465-11e9-8a25-67481a251ae5.png)
+
+### [Input Windows & Sub-Windows (Configured specially for LWJGL3)](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearTextFieldDemo.java)
+![Clear InputWindow](https://user-images.githubusercontent.com/6147299/56476930-24991f00-6465-11e9-8e79-0dbc3ca54b1a.jpg)
+
+#### Other Examples:
+- [Draggable Widget Demo](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearDraggableWidgetDemo.java)
+- [TextAreaWidget Text Field Demo](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearTextFieldDemo.java)
+- [Circle Rendering Demo](https://github.com/SkyAphid/Clear/blob/master/ClearVG/demo/nokori/clear/vg/ClearCircleDemo.java)
 
 # Recommended Projects (See Also)
 - [LWJGUI - LWJGL3 JavaFX Alternative](https://github.com/orange451/LWJGUI)
