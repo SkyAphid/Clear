@@ -77,7 +77,7 @@ public class ClearHelloWorldDemo extends ClearApp {
 		 */
 		
 		button.setOnMouseMotionEvent(e -> {
-			if (button.isMouseIntersecting(window)) {
+			if (button.isMouseIntersectingThisWidget(window)) {
 				ClearStaticResources.getCursor(Cursor.Type.HAND).apply(window);
 			} else {
 				ClearStaticResources.getCursor(Cursor.Type.ARROW).apply(window);
@@ -85,7 +85,7 @@ public class ClearHelloWorldDemo extends ClearApp {
 		});
 		
 		button.setOnMouseButtonEvent(e -> {
-			if (e.isPressed() && button.isMouseIntersecting(e.getWindow())) {
+			if (e.isPressed() && button.isMouseIntersectingThisWidget(e.getWindow())) {
 				button.setBackgroundFill(button.getBackgroundFill() != null ? null : ClearColor.LIGHT_GRAY);
 				button.setRenderChildren(!button.isRenderingChildren());
 			}

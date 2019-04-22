@@ -797,7 +797,7 @@ public class TextAreaWidget extends Widget {
 	}
 	
 	private void verticalScrollbarMouseScrollEvent(Window window, MouseScrollEvent event) {
-		if (!isMouseIntersecting(window) || !verticalScrollbarActive) {
+		if (!isMouseIntersectingThisWidget(window) || !verticalScrollbarActive) {
 			return;
 		}
 		

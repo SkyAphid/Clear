@@ -45,7 +45,7 @@ public class DefaultTextAreaContentInputHandler extends TextAreaContentInputHand
 			
 			Widget focused = ClearStaticResources.getFocusedWidget();
 			
-			if (event.isPressed() && widget.isMouseIntersecting(window) 
+			if (event.isPressed() && widget.isMouseIntersectingThisWidget(window) 
 					&& focused instanceof TextAreaWidget && focused != widget) {
 				
 				((TextAreaWidget) focused).endEditing();

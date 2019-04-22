@@ -227,7 +227,7 @@ public abstract class Widget extends WidgetContainer {
 	 * @param window
 	 * @return true if the Window's mouse coordinates fall within this widget.
 	 */
-	public boolean isMouseIntersecting(Window window) {
+	public boolean isMouseIntersectingThisWidget(Window window) {
 		return intersects(window.getMouseX(), window.getMouseY());
 	}
 	

@@ -109,7 +109,7 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 			for (int i = 0; i < children.size(); i++) {
 				Widget w = children.get(i);
 
-				if (w.isMouseIntersecting(window) && w.isInputEnabled()) {
+				if (w.isMouseIntersectingThisWidget(window) && w.isInputEnabled()) {
 					hoveringChildren = true;
 					break;
 				}
@@ -118,7 +118,7 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 		
 		//System.err.println("canDrag() -> " + hoveringChildren + " " + isMouseWithinThisWidget(window) + " " + requiresMouseToBeWithinWidgetToDrag);
 		
-		return ((isMouseIntersecting(window) || !requiresMouseToBeWithinWidgetToDrag) && !hoveringChildren);
+		return ((isMouseIntersectingThisWidget(window) || !requiresMouseToBeWithinWidgetToDrag) && !hoveringChildren);
 	}
 	
 	/**

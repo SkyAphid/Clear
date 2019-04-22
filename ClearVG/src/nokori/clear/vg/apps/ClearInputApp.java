@@ -138,7 +138,10 @@ public abstract class ClearInputApp extends ClearApp {
 		int centerY = parentWindow.getY() + parentWindow.getHeight()/2 - height/2;
 		
 		Window newWindow = windowManager.createWindow(title, centerX, centerY, width, height, false, true);
-		newWindow.setIcons(parentWindow.getIconFiles());
+		
+		if (parentWindow.getIconFiles() != null) {
+			newWindow.setIcons(parentWindow.getIconFiles());
+		}
 
 		return newWindow;
 	}

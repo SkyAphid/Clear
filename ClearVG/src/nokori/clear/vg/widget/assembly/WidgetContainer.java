@@ -208,7 +208,7 @@ public class WidgetContainer {
 		for (int i = 0; i < children.size(); i++) {
 			Widget w = children.get(i);
 			
-			if (w.isMouseIntersecting(window)) {
+			if (w.isMouseIntersectingThisWidget(window)) {
 				intersecting.add(w);
 			}
 			
