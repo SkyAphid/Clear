@@ -1,10 +1,10 @@
 package nokori.clear.windows.event.vg;
 
 import nokori.clear.windows.Window;
-import nokori.clear.windows.event.Event;
+import nokori.clear.windows.event.EventImpl;
 import nokori.clear.windows.pool.Pool;
 
-public class MouseEnteredEvent implements Event {
+public class MouseEnteredEvent extends EventImpl {
 	
 	private static final Pool<MouseEnteredEvent> POOL = new Pool<MouseEnteredEvent>() {
 		@Override
@@ -14,7 +14,6 @@ public class MouseEnteredEvent implements Event {
 	};
 	
 	private Window window;
-	private long timestamp;
 	private double mouseX;
 	private double mouseY;
 	
@@ -32,11 +31,6 @@ public class MouseEnteredEvent implements Event {
 		return e;
 	}
 	
-	@Override
-	public long getTimestamp() {
-		return timestamp;
-	}
-
 	@Override
 	public void reset() {
 		window = null;

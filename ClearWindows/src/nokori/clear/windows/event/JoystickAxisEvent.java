@@ -3,7 +3,7 @@ package nokori.clear.windows.event;
 import nokori.clear.windows.Joystick;
 import nokori.clear.windows.pool.Pool;
 
-public class JoystickAxisEvent implements Event {
+public class JoystickAxisEvent extends EventImpl {
 	
 	private static final Pool<JoystickAxisEvent> POOL = new Pool<JoystickAxisEvent>() {
 		@Override
@@ -13,7 +13,6 @@ public class JoystickAxisEvent implements Event {
 	};
 	
 	private Joystick joystick;
-	private long timestamp;
 	private int axis;
 	private float newValue;
 	
@@ -29,12 +28,6 @@ public class JoystickAxisEvent implements Event {
 		e.newValue = newValue;
 		
 		return e;
-	}
-
-	
-	@Override
-	public long getTimestamp() {
-		return timestamp;
 	}
 
 	@Override

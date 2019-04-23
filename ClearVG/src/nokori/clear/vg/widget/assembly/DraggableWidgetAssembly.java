@@ -46,9 +46,9 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 				setFocusedWidget(this);
 			}
 			
-			//If dragging stops, unfocus
-			if (bDragging && !dragging) {
-				setFocusedWidget(null);
+			//If dragging stops, unfocus if applicable
+			if (!dragging) {
+				clearFocusIfApplicable(this);
 			}
 		});
 		

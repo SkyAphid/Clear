@@ -3,7 +3,7 @@ package nokori.clear.windows.event;
 import nokori.clear.windows.Window;
 import nokori.clear.windows.pool.Pool;
 
-public class CharEvent implements Event {
+public class CharEvent extends EventImpl {
 
 	private static final Pool<CharEvent> POOL = new Pool<CharEvent>() {
 		@Override
@@ -12,8 +12,6 @@ public class CharEvent implements Event {
 		}
 	};
 	
-	private Window window;
-	private long timestamp;
 	private int codepoint;
 	private String c;
 	private int mods;
@@ -30,19 +28,9 @@ public class CharEvent implements Event {
 		
 		return e;
 	}
-	
-	@Override
-	public long getTimestamp() {
-		return timestamp;
-	}
-
 	@Override
 	public void reset() {
 		window = null;
-	}
-
-	public Window getWindow() {
-		return window;
 	}
 
 	public int getCodepoint() {

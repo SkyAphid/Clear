@@ -3,7 +3,7 @@ package nokori.clear.windows.event;
 import nokori.clear.windows.Window;
 import nokori.clear.windows.pool.Pool;
 
-public class KeyEvent implements Event{
+public class KeyEvent extends EventImpl {
 	
 	private static final Pool<KeyEvent> POOL = new Pool<KeyEvent>() {
 		@Override
@@ -12,8 +12,6 @@ public class KeyEvent implements Event{
 		}
 	};
 	
-	private Window window;
-	private long timestamp;
 	private int key;
 	private int scanCode;
 	private boolean pressed;
@@ -38,17 +36,8 @@ public class KeyEvent implements Event{
 	}
 	
 	@Override
-	public long getTimestamp() {
-		return timestamp;
-	}
-	
-	@Override
 	public void reset() {
 		window = null;
-	}
-
-	public Window getWindow() {
-		return window;
 	}
 
 	public int getKey() {

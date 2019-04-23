@@ -71,16 +71,22 @@ public class Window {
 	private GLFWCursorPosCallback glfwCursorPosCallback;
 	private GLFWMouseButtonCallback glfwMouseButtonCallback;
 	private GLFWScrollCallback glfwScrollCallback;
+	
 	private GLFWWindowPosCallback glfwWindowPosCallback;
 	private GLFWFramebufferSizeCallback glfwFramebufferSizeCallback;
 	private GLFWWindowSizeCallback glfwWindowSizeCallback;
 	
+	//User callbacks
 	private ArrayList<KeyCallback> keyCallbacks = new ArrayList<>();
 	private ArrayList<CharCallback> charCallbacks = new ArrayList<>();
 	private ArrayList<MouseMotionCallback> mouseMotionCallbacks = new ArrayList<>();
 	private ArrayList<MouseButtonCallback> mouseCallbacks = new ArrayList<>();
 	private ArrayList<MouseScrollCallback> scrollCallbacks = new ArrayList<>();
-
+	
+	private ArrayList<WindowPosCallback> windowPosCallbacks = new ArrayList<>();
+	private ArrayList<WindowSizeCallback> windowSizeCallbacks = new ArrayList<>();
+	private ArrayList<WindowFramebufferSizeCallback> windowFramebufferSizeCallbacks = new ArrayList<>();
+	
 	private AtomicIntegerArray pressedKeys;
 	
 	//
@@ -189,6 +195,10 @@ public class Window {
 			public void invoke(long window, int wx, int wy) {
 				x = wx;
 				y = wy;
+				
+				for (WindowPosCallback c : windowPosCallbacks) {
+					c.windowPositionEvent(Window.this, System.nanoTime(), wx, wy);
+				}
 			}
 		});
 		
@@ -206,6 +216,10 @@ public class Window {
 				framebufferWidth = newWidth;
 				framebufferHeight = newHeight;
 				
+				for (WindowFramebufferSizeCallback c : windowFramebufferSizeCallbacks) {
+					c.windowSizeEvent(Window.this, System.nanoTime(), newWidth, newHeight);
+				}
+				
 				//System.out.println("Framebuffer size: " + width + ", " + height);
 			}
 		});
@@ -220,6 +234,10 @@ public class Window {
 				
 				width = newWidth;
 				height = newHeight;
+				
+				for (WindowSizeCallback c : windowSizeCallbacks) {
+					c.windowSizeEvent(Window.this, System.nanoTime(), newWidth, newHeight);
+				}
 				
 				//System.out.println("Window size: " + width + ", " + height);
 			}
@@ -284,6 +302,10 @@ public class Window {
 	
 	public void setPosition(int x, int y){
 		glfwSetWindowPos(handle, x, y);
+	}
+	
+	public void setSize(int width, int height){
+		glfwSetWindowSize(handle, width, height);
 	}
 	
 	public void setWindowed(int x, int y, VideoMode videoMode){
@@ -468,6 +490,18 @@ public class Window {
 		if (callback instanceof MouseScrollCallback) {
 			scrollCallbacks.add((MouseScrollCallback) callback);
 		}
+		
+		if (callback instanceof WindowPosCallback) {
+			windowPosCallbacks.add((WindowPosCallback) callback);
+		}
+		
+		if (callback instanceof WindowSizeCallback) {
+			windowSizeCallbacks.add((WindowSizeCallback) callback);
+		}
+		
+		if (callback instanceof WindowFramebufferSizeCallback) {
+			windowFramebufferSizeCallbacks.add((WindowFramebufferSizeCallback) callback);
+		}
 	}
 	
 	public void removeInputCallback(InputCallback... callbacks) {
@@ -495,6 +529,18 @@ public class Window {
 		
 		if (callback instanceof MouseScrollCallback) {
 			scrollCallbacks.remove(callback);
+		}
+		
+		if (callback instanceof WindowPosCallback) {
+			windowPosCallbacks.remove(callback);
+		}
+		
+		if (callback instanceof WindowSizeCallback) {
+			windowSizeCallbacks.remove(callback);
+		}
+		
+		if (callback instanceof WindowFramebufferSizeCallback) {
+			windowFramebufferSizeCallbacks.remove(callback);
 		}
 	}
 
@@ -536,6 +582,30 @@ public class Window {
 
 	public void setScrollCallbacks(ArrayList<MouseScrollCallback> scrollCallbacks) {
 		this.scrollCallbacks = scrollCallbacks;
+	}
+
+	public ArrayList<WindowPosCallback> getWindowPosCallbacks() {
+		return windowPosCallbacks;
+	}
+
+	public void setWindowPosCallbacks(ArrayList<WindowPosCallback> windowPosCallbacks) {
+		this.windowPosCallbacks = windowPosCallbacks;
+	}
+
+	public ArrayList<WindowSizeCallback> getWindowSizeCallbacks() {
+		return windowSizeCallbacks;
+	}
+
+	public void setWindowSizeCallbacks(ArrayList<WindowSizeCallback> windowSizeCallbacks) {
+		this.windowSizeCallbacks = windowSizeCallbacks;
+	}
+
+	public ArrayList<WindowFramebufferSizeCallback> getWindowFramebufferSizeCallbacks() {
+		return windowFramebufferSizeCallbacks;
+	}
+
+	public void setWindowFramebufferSizeCallbacks(ArrayList<WindowFramebufferSizeCallback> windowFramebufferSizeCallbacks) {
+		this.windowFramebufferSizeCallbacks = windowFramebufferSizeCallbacks;
 	}
 
 	public long getHandle() {

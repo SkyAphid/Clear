@@ -1,6 +1,8 @@
 package nokori.clear.vg.widget.assembly;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Stack;
 
 import nokori.clear.vg.NanoVGContext;
@@ -22,6 +24,7 @@ public class WidgetContainer {
 	
 	private boolean tickChildren = true;
 	private boolean renderChildren = true;
+	private boolean invertInputOrder = false;
 	
 	/**
 	 * This is a lambda function that allows outside classes to quickly iterate through all of the Widgets contained by this object.
@@ -62,60 +65,94 @@ public class WidgetContainer {
 	}
 	
 	public void childrenCharEvent(Window window, CharEvent event) {
-		for (int i = 0; i < children.size(); i++) {
+		iterateChildren(invertInputOrder, (i) -> {
 			Widget w = children.get(i);
 			
 			if (w.isInputEnabled()) {
 				w.charEvent(window, event);
 				w.childrenCharEvent(window, event);
 			}
-		}
+		});
 	}
 	
 	public void childrenKeyEvent(Window window, KeyEvent event) {
-		for (int i = 0; i < children.size(); i++) {
+		iterateChildren(invertInputOrder, (i) -> {
 			Widget w = children.get(i);
 			
 			if (w.isInputEnabled()) {
 				w.keyEvent(window, event);
 				w.childrenKeyEvent(window, event);
 			}
-		}
+		});
 	}
 	
 	public void childrenMouseButtonEvent(Window window, MouseButtonEvent event) {
-		for (int i = 0; i < children.size(); i++) {
+		iterateChildren(invertInputOrder, (i) -> {
 			Widget w = children.get(i);
 			
 			if (w.isInputEnabled()) {
 				w.mouseButtonEvent(window, event);
 				w.childrenMouseButtonEvent(window, event);
 			}
-		}
+		});
 	}
 	
 	public void childrenMouseMotionEvent(Window window, MouseMotionEvent event) {
-		for (int i = 0; i < children.size(); i++) {
+		iterateChildren(invertInputOrder, (i) -> {
 			Widget w = children.get(i);
 			
 			if (w.isInputEnabled()) {
 				w.mouseMotionEvent(window, event);
 				w.childrenMouseMotionEvent(window, event);
 			}
-		}
+		});
 	}
 	
 	public void childrenMouseScrollEvent(Window window, MouseScrollEvent event) {
-		for (int i = 0; i < children.size(); i++) {
+		iterateChildren(invertInputOrder, (i) -> {
 			Widget w = children.get(i);
 			
 			if (w.isInputEnabled()) {
 				w.mouseScrollEvent(window, event);
 				w.childrenMouseScrollEvent(window, event);
 			}
-		}
+		});
 	}
 	
+	private void iterateChildren(boolean reverseOrder, IterationHandler h) {
+		if (reverseOrder) {
+			for (int i = children.size()-1; i >= 0; i--) {
+				h.event(i);
+			}
+		} else {
+			for (int i = 0; i < children.size(); i++) {
+				h.event(i);
+			}
+		}
+	}
+
+	private abstract interface IterationHandler {
+		public void event(int index);
+	};
+	
+	/**
+	 * @see <code>setInvertInputOrder()</code>
+	 * @return
+	 */
+	public boolean isInvertInputOrder() {
+		return invertInputOrder;
+	}
+
+	/**
+	 * If true, the input of children will be reversed to prioritize an inverse input order 
+	 * (e.g. things rendered last, thus on top, will be prioritized for input over things rendered first)
+	 * 
+	 * @param invertInputOrder
+	 */
+	public void setInvertInputOrder(boolean invertInputOrder) {
+		this.invertInputOrder = invertInputOrder;
+	}
+
 	protected void addChildCallback(Widget widget) {
 		
 	}
@@ -196,6 +233,34 @@ public class WidgetContainer {
 		while(!children.isEmpty()){
 			removeChild(0);
 		}
+	}
+	
+	/**
+	 * Sorts the children of this WidgetContainer with the given Comparator.
+	 * 
+	 * @param comparator
+	 */
+	public void sortChildren(Comparator<Widget> comparator) {
+		children.sort(comparator);
+	}
+	
+	/**
+	 * Reverses the list containing all of the child widgets
+	 */
+	public void reverseChildren() {
+		Collections.reverse(children);
+	}
+	
+	/**
+	 * A shortcut function that automatically sorts the children of this WidgetContainer by their Y-Values using a Comparator.
+	 */
+	public void sortChildrenByYCoordinates() {
+		sortChildren(new Comparator<Widget>() {
+			@Override
+			public int compare(Widget w1, Widget w2) {
+				return Float.compare(w1.getClippedY(), w2.getClippedY());
+			}
+		});
 	}
 	
 	public Widget getChild(int index) {

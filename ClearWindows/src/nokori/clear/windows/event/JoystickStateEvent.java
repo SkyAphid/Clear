@@ -3,7 +3,7 @@ package nokori.clear.windows.event;
 import nokori.clear.windows.Joystick;
 import nokori.clear.windows.pool.Pool;
 
-public class JoystickStateEvent implements Event{
+public class JoystickStateEvent extends EventImpl {
 	
 	private static final Pool<JoystickStateEvent> POOL = new Pool<JoystickStateEvent>() {
 		@Override
@@ -13,7 +13,6 @@ public class JoystickStateEvent implements Event{
 	};
 	
 	private Joystick joystick;
-	private long timestamp;
 	private boolean connected;
 
 	private JoystickStateEvent() {}
@@ -27,11 +26,6 @@ public class JoystickStateEvent implements Event{
 		e.connected = connected;
 		
 		return e;
-	}
-	
-	@Override
-	public long getTimestamp() {
-		return timestamp;
 	}
 
 	@Override
