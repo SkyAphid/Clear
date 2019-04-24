@@ -51,6 +51,7 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 			//If dragging stops, unfocus if applicable
 			if (!dragging) {
 				clearFocusIfApplicable(this);
+				draggingReleaseCallback(e);
 			}
 		});
 		
@@ -67,7 +68,6 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 	
 	/**
 	 * This is split into its own function so that it can be overriden separately from <code>clipDraggingAnchor()</code>
-	 * @param e TODO
 	 * @param e
 	 */
 	protected void draggingAnchorCallback(MouseButtonEvent e) {
@@ -76,11 +76,14 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 	
 	/**
 	 * This is split into its own function so that it can be overriden separately from <code>move()</code>
-	 * @param e TODO
 	 * @param e
 	 */
 	protected void draggingCallback(MouseMotionEvent e) {
 		move(getDragX(e.getMouseX()), getDragY(e.getMouseY()));
+	}
+	
+	protected void draggingReleaseCallback(MouseButtonEvent e) {
+		
 	}
 	
 	public float getDragX(double mouseX) {
