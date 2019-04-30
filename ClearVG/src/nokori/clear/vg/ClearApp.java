@@ -1,8 +1,6 @@
 package nokori.clear.vg;
 
 import static org.lwjgl.nanovg.NanoVG.*;
-import static org.lwjgl.opengl.GL11.*;
-
 import org.joml.Vector4f;
 
 import nokori.clear.vg.transition.TransitionManager;
