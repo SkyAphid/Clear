@@ -13,7 +13,7 @@ import nokori.clear.vg.ClearStaticResources;
 import nokori.clear.vg.NanoVGContext;
 import nokori.clear.vg.font.Font;
 import nokori.clear.vg.font.FontStyle;
-import nokori.clear.vg.transition.TemplateTransition;
+import nokori.clear.vg.transition.TransitionImpl;
 import nokori.clear.vg.widget.assembly.WidgetUtils;
 import nokori.clear.windows.Window;
 
@@ -64,7 +64,7 @@ public class TextAreaContentHandler {
 
 	private float caretFader = 0f;
 	
-	private TemplateTransition caretFadeTransition = (TemplateTransition) new TemplateTransition(750, 0f, 1f, p -> {
+	private TransitionImpl caretFadeTransition = (TransitionImpl) new TransitionImpl(750, 0f, 1f, p -> {
 		caretFader = p;
 	});
 	

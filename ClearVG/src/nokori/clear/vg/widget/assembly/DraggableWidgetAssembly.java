@@ -20,6 +20,7 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 
 	private Vector2f anchor = new Vector2f();
 	private boolean dragging = false;
+	private Vector2f startPos = new Vector2f();
 
 	private boolean requiresMouseToBeWithinWidgetToDrag = true;
 	private boolean ignoreChildrenWidgets = false;
@@ -33,8 +34,9 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 		
 		setOnInternalMouseButtonEvent(e -> {
 			boolean bDragging = dragging;
-			dragging = ((dragging || canDrag(e.getWindow())) && isFocusedOrCanFocus(this) && isDragButtonEvent(e));
-
+			dragging = ((dragging || canDrag(e.getWindow(), 1.0f)) && isFocusedOrCanFocus(this) && isDragButtonEvent(e));
+			startPos.set(getClippedX(), getClippedY());
+			
 			/*System.err.println(this + ": " + canDrag(e.getWindow()) + " " + isFocusedOrCanFocus(this) + " " + isDragButtonEvent(e) 
 					+ " = " + dragging
 					+ " | Dimensions: " + DraggableWidgetAssembly.this.getWidth() + "/" + DraggableWidgetAssembly.this.getHeight());*/
@@ -51,7 +53,7 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 			//If dragging stops, unfocus if applicable
 			if (!dragging) {
 				clearFocusIfApplicable(this);
-				draggingReleaseCallback(e);
+				draggingReleaseCallback(e, (startPos.x != getClippedX() || startPos.y != getClippedY()));
 			}
 		});
 		
@@ -82,7 +84,7 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 		move(getDragX(e.getMouseX()), getDragY(e.getMouseY()));
 	}
 	
-	protected void draggingReleaseCallback(MouseButtonEvent e) {
+	protected void draggingReleaseCallback(MouseButtonEvent e, boolean wasMoved) {
 		
 	}
 	
@@ -106,7 +108,7 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 		setY(newY);
 	}
 	
-	private boolean canDrag(Window window) {
+	protected boolean canDrag(Window window, float scale) {
 		//We won't let the user drag the widget if the mouse is hovering one of its draggable widget assembly children (normal children don't count)
 		boolean hoveringChildren = false;
 		
@@ -143,7 +145,8 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 
 	/**
 	 * This value determines whether or not the mouse has to actually be within the bounds of this Widget for the dragging functionality to be activated. 
-	 * Disabling this can have some advantages, such as when you want to be able to drag an entire canvas around.
+	 * Disabling this can have some advantages, such as when you want to be able to drag an entire canvas (widget assembly containing multiple nodes) around 
+	 * without worrying about the input not being recognized because you tried to drag outside of its bounds.
 	 * 
 	 * @param requiresMouseToBeWithinWidgetToDrag
 	 */

@@ -14,7 +14,7 @@ public abstract class TextAreaContentInputHandler {
 	
 	protected TextAreaWidget widget;
 	protected TextAreaContentHandler contentHandler;
-	
+
 	public TextAreaContentInputHandler(TextAreaWidget textAreaWidget, TextAreaContentHandler textAreaContentHandler) {
 		this.widget = textAreaWidget;
 		this.contentHandler = textAreaContentHandler;

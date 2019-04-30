@@ -285,12 +285,8 @@ public class ClearColor {
 		float b2 = to.getBlue();
 		float a2 = to.getAlpha();
 		
-		store.set(mix(r1, r2, mult), mix(g1, g2, mult), mix(b1, b2, mult), mix(a1, a2, mult));
+		store.set(WidgetUtils.mix(r1, r2, mult), WidgetUtils.mix(g1, g2, mult), WidgetUtils.mix(b1, b2, mult), WidgetUtils.mix(a1, a2, mult));
 		
 		return store;
-	}
-	
-	public static float mix(float x, float y, float a){
-		return x + (y-x)*a;
 	}
 }

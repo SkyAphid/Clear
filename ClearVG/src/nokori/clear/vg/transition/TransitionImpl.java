@@ -5,7 +5,7 @@ package nokori.clear.vg.transition;
  * It's useful for creating basic transitions.
  *
  */
-public class TemplateTransition extends Transition {
+public class TransitionImpl extends Transition {
 
 	private float start, end;
 	private float currentValue;
@@ -13,17 +13,17 @@ public class TemplateTransition extends Transition {
 	private ProgressCallback callback = null;
 	private CurveProcessor curveProcessor = null;
 	
-	public TemplateTransition(long durationInMillis, float start, float end, ProgressCallback callback, CurveProcessor curveProcessor) {
+	public TransitionImpl(long durationInMillis, float start, float end, ProgressCallback callback, CurveProcessor curveProcessor) {
 		this(durationInMillis, start, end, callback);
 		this.curveProcessor = curveProcessor;
 	}
 	
-	public TemplateTransition(long durationInMillis, float start, float end, ProgressCallback callback) {
+	public TransitionImpl(long durationInMillis, float start, float end, ProgressCallback callback) {
 		this(durationInMillis, start, end);
 		this.callback = callback;
 	}
 	
-	public TemplateTransition(long durationInMillis, float start, float end) {
+	public TransitionImpl(long durationInMillis, float start, float end) {
 		super(durationInMillis);
 		this.start = start;
 		this.end = end;

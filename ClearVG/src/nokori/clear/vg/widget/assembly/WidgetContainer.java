@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.Stack;
 
 import nokori.clear.vg.NanoVGContext;
+import nokori.clear.vg.util.NanoVGScaler;
 import nokori.clear.windows.Window;
 import nokori.clear.windows.WindowManager;
 import nokori.clear.windows.event.CharEvent;
@@ -25,6 +26,8 @@ public class WidgetContainer {
 	private boolean tickChildren = true;
 	private boolean renderChildren = true;
 	private boolean invertInputOrder = false;
+	
+	protected NanoVGScaler scaler = new NanoVGScaler();
 	
 	/**
 	 * This is a lambda function that allows outside classes to quickly iterate through all of the Widgets contained by this object.
@@ -321,6 +324,14 @@ public class WidgetContainer {
 
 	public void setRenderChildren(boolean renderChildren) {
 		this.renderChildren = renderChildren;
+	}
+	
+	public NanoVGScaler getScaler() {
+		return scaler;
+	}
+
+	public void setScaler(NanoVGScaler scaler) {
+		this.scaler = scaler;
 	}
 
 	public void dispose() {

@@ -3,6 +3,7 @@ package nokori.clear.vg.widget.text;
 import org.lwjgl.glfw.GLFW;
 
 import nokori.clear.vg.ClearStaticResources;
+import nokori.clear.vg.util.NanoVGScaler;
 import nokori.clear.vg.widget.assembly.Widget;
 import nokori.clear.windows.Window;
 import nokori.clear.windows.event.CharEvent;
@@ -14,8 +15,11 @@ public class DefaultTextAreaContentInputHandler extends TextAreaContentInputHand
 	
 	private boolean mousePressed = false;
 	
+	private NanoVGScaler scaler;
+	
 	public DefaultTextAreaContentInputHandler(TextAreaWidget textAreaWidget, TextAreaContentHandler textAreaContentHandler) {
 		super(textAreaWidget, textAreaContentHandler);
+		this.scaler = textAreaWidget.getScaler();
 	}
 
 	public void charEvent(Window window, CharEvent event) {
@@ -26,7 +30,7 @@ public class DefaultTextAreaContentInputHandler extends TextAreaContentInputHand
 	
 	public void mouseMotionEvent(Window window, MouseMotionEvent event) {
 		if (mousePressed && !widget.isScrollbarSelected() && ClearStaticResources.isFocused(widget)) {
-			contentHandler.queueCaret((float) event.getMouseX(), (float) event.getMouseY());
+			contentHandler.queueCaret((float) event.getScaledMouseX(scaler.getScale()), (float) event.getScaledMouseY(scaler.getScale()));
 		} else {
 			reset(widget.isScrollbarSelected());
 		}
@@ -66,7 +70,7 @@ public class DefaultTextAreaContentInputHandler extends TextAreaContentInputHand
 				//This queues up caret repositioning based on the mouse coordinates
 				//Update the caret positioning on next render when we have the character
 				//locations available
-				contentHandler.queueCaret((float) event.getMouseX(), (float) event.getMouseY());
+				contentHandler.queueCaret((float) event.getScaledMouseX(scaler.getScale()), (float) event.getScaledMouseY(scaler.getScale()));
 				
 				// If the mouse wasn't previously pressed, reset the highlighting.
 				if (!bMousePressed) {

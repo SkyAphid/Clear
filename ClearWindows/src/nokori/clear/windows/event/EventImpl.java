@@ -9,6 +9,12 @@ public abstract class EventImpl implements Event {
 	protected boolean consumed = false;
 	
 	@Override
+	public void reset() {
+		window = null;
+		consumed = false;
+	}
+	
+	@Override
 	public long getTimestamp() {
 		return timestamp;
 	}

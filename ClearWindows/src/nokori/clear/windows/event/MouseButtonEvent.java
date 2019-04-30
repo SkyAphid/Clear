@@ -3,7 +3,7 @@ package nokori.clear.windows.event;
 import nokori.clear.windows.Window;
 import nokori.clear.windows.pool.Pool;
 
-public class MouseButtonEvent  extends EventImpl {
+public class MouseButtonEvent extends MouseEventImpl {
 	
 	private static final Pool<MouseButtonEvent> POOL = new Pool<MouseButtonEvent>() {
 		@Override
@@ -12,8 +12,6 @@ public class MouseButtonEvent  extends EventImpl {
 		}
 	};
 	
-	private double mouseX;
-	private double mouseY;
 	private int button;
 	private boolean pressed;
 	private int mods;
@@ -33,19 +31,6 @@ public class MouseButtonEvent  extends EventImpl {
 		e.mods = mods;
 		
 		return e;
-	}
-	
-	@Override
-	public void reset() {
-		window = null;
-	}
-
-	public double getMouseX() {
-		return mouseX;
-	}
-
-	public double getMouseY() {
-		return mouseY;
 	}
 
 	public int getButton() {

@@ -3,6 +3,7 @@ package nokori.clear.vg.widget.text;
 import nokori.clear.vg.ClearColor;
 import nokori.clear.vg.NanoVGContext;
 import nokori.clear.vg.font.Font;
+import nokori.clear.vg.util.NanoVGScaler;
 import nokori.clear.vg.widget.assembly.WidgetAssembly;
 import nokori.clear.windows.Window;
 import nokori.clear.windows.WindowManager;
@@ -32,15 +33,23 @@ public class TextFieldWidget extends TextAreaWidget {
 	 * This shortened version of the primary constructor will calculate the widget height automatically by using the NanoVGContext.
 	 */
 	public TextFieldWidget(NanoVGContext context, float width, ClearColor fill, String text, Font font, float fontSize) {
-		this(context, 0, 0, width, fill, text, font, fontSize);
+		this(context, width, new NanoVGScaler(), fill, text, font, fontSize);
+	}
+	
+	public TextFieldWidget(NanoVGContext context, float width, NanoVGScaler scaler, ClearColor fill, String text, Font font, float fontSize) {
+		this(context, 0, 0, width, scaler, fill, text, font, fontSize);
+	}
+	
+	public TextFieldWidget(NanoVGContext context, float x, float y, float width, ClearColor fill, String text, Font font, float fontSize) {
+		this(context, x, y, width, new NanoVGScaler(), fill, text, font, fontSize);
 	}
 	
 	/**
 	 * This is the primary constructor which allows full and complete customization of the TextFieldWidget. Additionally, the widget's height will be 
 	 * calculated at initialization thanks to the inclusion of a NanoVGContext.
 	 */
-	public TextFieldWidget(NanoVGContext context, float x, float y, float width, ClearColor fill, String text, Font font, float fontSize) {
-		super(x, y, width, 0f, fill, text, font, fontSize);
+	public TextFieldWidget(NanoVGContext context, float x, float y, float width, NanoVGScaler scaler, ClearColor fill, String text, Font font, float fontSize) {
+		super(x, y, width, 0f, scaler, fill, text, font, fontSize);
 		
 		if (context != null) {
 			calculateHeight(context);

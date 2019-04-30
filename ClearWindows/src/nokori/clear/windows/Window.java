@@ -27,6 +27,7 @@ import org.lwjgl.opengl.GL;
 import org.lwjgl.stb.STBImage;
 
 import nokori.clear.windows.callback.*;
+import nokori.clear.windows.event.MouseEventImpl;
 
 public class Window {
 	
@@ -729,6 +730,14 @@ public class Window {
 	public double getMouseY() {
 		updateMouse();
 		return my.get(0);
+	}
+	
+	public double getScaledMouseX(float scale) {
+		return MouseEventImpl.getScaledMouseCoordinate(getMouseX(), scale);
+	}
+	
+	public double getScaledMouseY(float scale) {
+		return MouseEventImpl.getScaledMouseCoordinate(getMouseY(), scale);
 	}
 	
 	public boolean isKeyDown(int key){

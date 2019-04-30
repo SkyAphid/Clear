@@ -32,6 +32,7 @@ public class JoystickAxisEvent extends EventImpl {
 
 	@Override
 	public void reset() {
+		super.reset();
 		joystick = null;
 	}
 

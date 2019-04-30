@@ -83,7 +83,7 @@ public abstract class Transition {
 	public float getProgress() {
 		return stopwatch.getNormalizedDistanceBetweenTime();
 	}
-	
+
 	public boolean isFinished() {
 		return (isPlaying && stopwatch.isCurrentTimePassedEndTime());
 	}

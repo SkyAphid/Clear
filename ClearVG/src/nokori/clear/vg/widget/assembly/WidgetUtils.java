@@ -115,9 +115,13 @@ public class WidgetUtils {
 		return false;
 	}
 	
-	public static boolean mouseWithinRectangle(Window window, double x, double y, double w, double h) {
-		return pointWithinRectangle(window.getMouseX(), window.getMouseY(), x, y, w, h);
+	public static boolean mouseWithinRectangle(Widget widget, Window window, double x, double y, double w, double h) {
+		return pointWithinRectangle(window.getScaledMouseX(widget.getScaler().getScale()), window.getScaledMouseY(widget.getScaler().getScale()), x, y, w, h);
 	}
+	
+	/*
+	 * CLAMP functions from NOKORI ENGINE
+	 */
 	
 	public static float clamp(float f, float min, float max){
 		return f > min ? (f < max ? f : max) : min;
@@ -133,5 +137,31 @@ public class WidgetUtils {
 	
 	public static long clamp(long i, long min, long max){
 		return i > min ? (i < max ? i : max) : min;
+	}
+	
+	/*
+	 * MIX functions from NOKORI ENGINE
+	 */
+
+	public static float mix(float x, float y, float a) {
+		return x + (y - x) * a;
+	}
+
+	public static double mix(double x, double y, double a) {
+		return x + (y - x) * a;
+	}
+
+	/*
+	 * SMOOTHMIX functions from NOKORI ENGINE
+	 */
+	
+	public static float smoothmix(float x, float y, float a) {
+		a = a * a * (3.0f - 2.0f * a);
+		return x + (y - x) * a;
+	}
+	
+	public static float smoothermix(float x, float y, float a) {
+		a = a * a * a * (a * (a * 6 - 15) + 10);
+		return x + (y - x) * a;
 	}
 }

@@ -3,7 +3,7 @@ package nokori.clear.windows.event;
 import nokori.clear.windows.Window;
 import nokori.clear.windows.pool.Pool;
 
-public class MouseScrollEvent  extends EventImpl {
+public class MouseScrollEvent extends MouseEventImpl {
 	
 	private static final Pool<MouseScrollEvent> POOL = new Pool<MouseScrollEvent>() {
 		@Override
@@ -12,8 +12,6 @@ public class MouseScrollEvent  extends EventImpl {
 		}
 	};
 	
-	private double mouseX;
-	private double mouseY;
 	private double xoffset;
 	private double yoffset;
 
@@ -33,24 +31,11 @@ public class MouseScrollEvent  extends EventImpl {
 		return e;
 	}
 
-	@Override
-	public void reset() {
-		window = null;
-	}
-
-	public double getMouseX() {
-		return mouseX;
-	}
-
-	public double getMouseY() {
-		return mouseY;
-	}
-
-	public double getXoffset() {
+	public double getXOffset() {
 		return xoffset;
 	}
 
-	public double getYoffset() {
+	public double getYOffset() {
 		return yoffset;
 	}
 }

@@ -14,6 +14,7 @@ import nokori.clear.windows.WindowManager;
 import nokori.clear.windows.event.CharEvent;
 import nokori.clear.windows.event.KeyEvent;
 import nokori.clear.windows.event.MouseButtonEvent;
+import nokori.clear.windows.event.MouseEventImpl;
 import nokori.clear.windows.event.MouseMotionEvent;
 import nokori.clear.windows.event.MouseScrollEvent;
 import nokori.clear.windows.event.vg.MouseEnteredEvent;
@@ -185,7 +186,7 @@ public abstract class Widget extends WidgetContainer {
 	public void setHeight(float height) {
 		size.y = height;
 	}
-	
+
 	/**
 	 * @return an x value that takes into account the parent widgets position (if applicable). Used to make sure that child widgets are rendered in the parents bounds appropriately. 
 	 * e.g. <code>clippedX = parent.getX() + widget.getX()</code>
@@ -220,15 +221,16 @@ public abstract class Widget extends WidgetContainer {
 	public void setInputEnabled(boolean inputEnabled) {
 		this.inputEnabled = inputEnabled;
 	}
-
+	
 	/**
 	 * Checks if the mouse is within this widget on the fly by using the data stored in the given Window (rather than using the cached state).
 	 * 
 	 * @param window
+	 * @param scale - the scale to transform the coordinates by (for use in UIs that can be scaled up and down either manually or via NanoVGScaler)
 	 * @return true if the Window's mouse coordinates fall within this widget.
 	 */
 	public boolean isMouseIntersectingThisWidget(Window window) {
-		return intersects(window.getMouseX(), window.getMouseY());
+		return intersects(MouseEventImpl.getScaledMouseCoordinate(window.getMouseX(), scaler.getScale()), MouseEventImpl.getScaledMouseCoordinate(window.getMouseY(), scaler.getScale()));
 	}
 	
 	/**
@@ -358,9 +360,9 @@ public abstract class Widget extends WidgetContainer {
 		 * Mouse Entered/Exited Widget Callbacks
 		 */
 		
-		double mouseX = event.getMouseX();
-		double mouseY = event.getMouseY();
-		
+		double mouseX = MouseEventImpl.getScaledMouseCoordinate(event.getMouseX(), scaler.getScale());
+		double mouseY = MouseEventImpl.getScaledMouseCoordinate(event.getMouseY(), scaler.getScale());
+
 		boolean bMouseWithin = mouseWithin;
 		mouseWithin = intersects(mouseX, mouseY);
 		
@@ -534,5 +536,4 @@ public abstract class Widget extends WidgetContainer {
 		this.internalMouseScrollEventListener = internalMouseScrollEventListener;
 	}
 	
-
 }

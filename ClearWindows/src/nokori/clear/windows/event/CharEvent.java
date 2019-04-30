@@ -28,11 +28,7 @@ public class CharEvent extends EventImpl {
 		
 		return e;
 	}
-	@Override
-	public void reset() {
-		window = null;
-	}
-
+	
 	public int getCodepoint() {
 		return codepoint;
 	}

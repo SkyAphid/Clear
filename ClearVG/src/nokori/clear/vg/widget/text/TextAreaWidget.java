@@ -13,7 +13,8 @@ import nokori.clear.vg.NanoVGContext;
 import nokori.clear.vg.font.Font;
 import nokori.clear.vg.font.FontStyle;
 import nokori.clear.vg.transition.FillTransition;
-import nokori.clear.vg.transition.TemplateTransition;
+import nokori.clear.vg.transition.TransitionImpl;
+import nokori.clear.vg.util.NanoVGScaler;
 import nokori.clear.vg.widget.assembly.Widget;
 import nokori.clear.vg.widget.assembly.WidgetAssembly;
 import nokori.clear.vg.widget.assembly.WidgetUtils;
@@ -145,7 +146,7 @@ public class TextAreaWidget extends Widget {
 	
 	private float verticalScroll = 0.0f;
 	private float verticalScrollIncrement = 0.01f;
-	private TemplateTransition verticalScrollTransition = null;
+	private TransitionImpl verticalScrollTransition = null;
 	
 	private static final float VERTICAL_SCROLLBAR_MIN_HEIGHT = 60f;
 	private float verticalScrollbarDefaultHeight;
@@ -194,14 +195,20 @@ public class TextAreaWidget extends Widget {
 	}
 	
 	public TextAreaWidget(float width, float height, ClearColor fill, String text, Font font, float fontSize) {
-		this(0, 0, width, height, fill, text, font, fontSize);
+		this(0, 0, width, height, new NanoVGScaler(), fill, text, font, fontSize);
 	}
 
 	public TextAreaWidget(float x, float y, float width, float height, ClearColor fill, String text, Font font, float fontSize) {
+		this(x, y, width, height, new NanoVGScaler(), fill, text, font, fontSize);
+	}
+	
+	public TextAreaWidget(float x, float y, float width, float height, NanoVGScaler scaler, ClearColor fill, String text, Font font, float fontSize) {
 		super(x, y, width, height);
 		this.defaultTextFill = fill;
 		this.font = font;
 		this.fontSize = fontSize;
+		
+		setScaler(scaler);
 		
 		lineSplitOverrideWidth = width;
 		
@@ -309,6 +316,7 @@ public class TextAreaWidget extends Widget {
 			WidgetUtils.nvgRect(vg, backgroundFill, x, y, width, height);
 		}
 
+		nvgSave(vg);
 		nvgBeginPath(vg);
 		
 		scissorY = -Math.max((getMaxScissorY() * verticalScroll), 0f);
@@ -333,7 +341,7 @@ public class TextAreaWidget extends Widget {
 		
 		textContentHandler.renderHighlight(vg, textContentX, textContentW, fontHeight);
 		
-		resetRenderConfiguration(context);
+		resetTextRenderConfiguration(context);
 
 		/*
 		 * Render text
@@ -358,14 +366,14 @@ public class TextAreaWidget extends Widget {
 			totalCharacters += textContentHandler.renderLine(context, text.length(), i, lines.get(i), totalCharacters, textContentX, rY, scissorY, fontHeight);
 		}
 		
-		nvgResetTransform(vg);
-		nvgResetScissor(vg);
 		nvgClosePath(vg);
+		nvgRestore(vg);
 		
 		/*
 		 * Render Line numbers
 		 */
 		
+		nvgSave(vg);	
 		nvgBeginPath(vg);
 		
 		nvgScissor(vg, x, y, textContentW, textContentH);
@@ -387,9 +395,8 @@ public class TextAreaWidget extends Widget {
 		
 		textContentHandler.endOfRenderingCallback();
 		
-		nvgResetTransform(vg);
-		nvgResetScissor(vg);
 		nvgClosePath(vg);
+		nvgRestore(vg);
 
 		/*
 		 * 
@@ -454,7 +461,7 @@ public class TextAreaWidget extends Widget {
 	/**
 	 * Used by TextContentRenderer to set this TextArea back to the user's defined parameters in-between TextRenderCommands.
 	 */
-	public void resetRenderConfiguration(NanoVGContext context) {
+	public void resetTextRenderConfiguration(NanoVGContext context) {
 		font.configureNVG(context, fontSize, TEXT_AREA_ALIGNMENT, defaultFontStyle);
 		
 		defaultTextFill.tallocNVG(fill -> {
@@ -733,7 +740,7 @@ public class TextAreaWidget extends Widget {
 		
 		//I-Beam for when the mouse is hovering the text content
 		if (ClearStaticResources.isFocusedOrCanFocus(this) && inputSettings.isCaretEnabled() 
-				&& WidgetUtils.mouseWithinRectangle(window, textContentX, textContentY, textContentW, textContentH)) {
+				&& WidgetUtils.mouseWithinRectangle(this, window, textContentX, textContentY, textContentW, textContentH)) {
 			
 			applyCursor(window, Cursor.Type.I_BEAM);
 		}
@@ -754,7 +761,7 @@ public class TextAreaWidget extends Widget {
 		//Is mouse hovering scrollbar?
 		verticalScrollbarHovering = (verticalScrollbarActive 
 				&& inputSettings.isVerticalScrollbarEnabled()
-				&& WidgetUtils.mouseWithinRectangle(window, verticalScrollbarX, verticalScrollbarY, scrollbarThickness, verticalScrollbarHeight));
+				&& WidgetUtils.mouseWithinRectangle(this, window, verticalScrollbarX, verticalScrollbarY, scrollbarThickness, verticalScrollbarHeight));
 		
 		if (verticalScrollbarHovering) {
 			applyCursor(window, Cursor.Type.HAND);
@@ -763,7 +770,7 @@ public class TextAreaWidget extends Widget {
 		//The scrollbar value follows mouse. 
 		//We subtract the mouse Y from the widget render Y and then divide that by the height of the widget to get a normalized value we can use for the scroller.
 		if (verticalScrollbarSelected) {
-			float relativeMouseY = (float) (event.getMouseY() - textContentY);
+			float relativeMouseY = (float) (event.getScaledMouseY(scaler.getScale()) - textContentY);
 			float mouseYMult = WidgetUtils.clamp((relativeMouseY  / textContentH), 0f, 1f);
 			setVerticalScroll(mouseYMult);
 		}
@@ -775,7 +782,7 @@ public class TextAreaWidget extends Widget {
 		//Is mouse hovering scrollbar?
 		horizontalScrollbarHovering = (horizontalScrollbarActive 
 				&& inputSettings.isHorizontalScrollbarEnabled()
-				&& WidgetUtils.mouseWithinRectangle(window, horizontalScrollbarX, horizontalScrollbarY, horizontalScrollbarWidth, scrollbarThickness));
+				&& WidgetUtils.mouseWithinRectangle(this, window, horizontalScrollbarX, horizontalScrollbarY, horizontalScrollbarWidth, scrollbarThickness));
 		
 		if (horizontalScrollbarHovering) {
 			applyCursor(window, Cursor.Type.HAND);
@@ -784,7 +791,7 @@ public class TextAreaWidget extends Widget {
 		//The scrollbar value follows mouse. 
 		//We subtract the mouse Y from the widget render Y and then divide that by the height of the widget to get a normalized value we can use for the scroller.
 		if (horizontalScrollbarSelected) {
-			float relativeMouseX = (float) (event.getMouseX() - textContentX);
+			float relativeMouseX = (float) (event.getScaledMouseX(scaler.getScale()) - textContentX);
 			float mouseXMult = WidgetUtils.clamp((relativeMouseX  / textContentW), 0f, 1f);
 			setHorizontalScroll(mouseXMult);
 		}
@@ -801,7 +808,7 @@ public class TextAreaWidget extends Widget {
 			return;
 		}
 		
-		double dx = -event.getYoffset();
+		double dx = -event.getYOffset();
 
 		float start = verticalScroll;
 		float end = (float) (verticalScroll + (dx * verticalScrollIncrement));
@@ -810,7 +817,7 @@ public class TextAreaWidget extends Widget {
 			verticalScrollTransition.stop();
 		}
 		
-		verticalScrollTransition = new TemplateTransition(100, start, end);
+		verticalScrollTransition = new TransitionImpl(100, start, end);
 		
 		verticalScrollTransition.setProgressCallback(v -> {
 			setVerticalScroll(WidgetUtils.clamp(v, 0f, 1f));

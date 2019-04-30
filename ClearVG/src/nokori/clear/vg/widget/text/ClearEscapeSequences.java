@@ -86,7 +86,7 @@ public class ClearEscapeSequences {
 		
 		if (c == ESCAPE_SEQUENCE_RESET) {
 			if (!checkOnly) {
-				widget.resetRenderConfiguration(context);
+				widget.resetTextRenderConfiguration(context);
 			}
 			
 			return true;
