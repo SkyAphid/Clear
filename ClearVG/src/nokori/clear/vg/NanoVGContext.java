@@ -41,7 +41,7 @@ public class NanoVGContext {
 	 * <br><code>glClearColor(clearColorR, G, B, A)</code>
 	 * <br><code>glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT)</code>
 	 */
-	public void glClearFrame(int viewportWidth, int viewportHeight, float clearColorR, float clearColorG, float clearColorB, float clearColorA) {
+	public static void glClearFrame(int viewportWidth, int viewportHeight, float clearColorR, float clearColorG, float clearColorB, float clearColorA) {
 		glViewport(0, 0, viewportWidth, viewportHeight);
 		glClearColor(clearColorR, clearColorG, clearColorB, clearColorA);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);

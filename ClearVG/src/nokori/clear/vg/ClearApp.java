@@ -99,7 +99,7 @@ public abstract class ClearApp extends WindowedApplication {
 		 * Rendering
 		 */
 		
-		context.glClearFrame(window.getFramebufferWidth(), window.getFramebufferHeight(), bgClearColor.x(), bgClearColor.y(), bgClearColor.z(), bgClearColor.w());
+		NanoVGContext.glClearFrame(window.getFramebufferWidth(), window.getFramebufferHeight(), bgClearColor.x(), bgClearColor.y(), bgClearColor.z(), bgClearColor.w());
         context.beginFrame(window.getWidth(), window.getHeight(), window.getFramebufferWidth(), window.getFramebufferHeight());
 		
         rootWidgetAssembly.render(windowManager, window, context, rootWidgetAssembly);
