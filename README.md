@@ -17,6 +17,8 @@ Clear is a wrapper for LWJGL3 that makes it simple to build basic programs that 
 - Has a TinyFileDialog wrapper class that allows you to open various message/open/save/input dialogs in one line each
 
 ## ClearVG
+- Create a NanoVG context within one line
+- Works independent of ClearWindows (can be used with your own personal windowing solution)
 - Create a NanoVG-capable application within 100 lines
 - Has basic tools for making pretty user-interfaces
 - Reliable and customizable
