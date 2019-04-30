@@ -99,12 +99,8 @@ public abstract class ClearApp extends WindowedApplication {
 		 * Rendering
 		 */
 		
-		glViewport(0, 0, window.getFramebufferWidth(), window.getFramebufferHeight());
-		glClearColor(bgClearColor.x, bgClearColor.y, bgClearColor.z, bgClearColor.w);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		
-        float pxRatio = window.getFramebufferWidth() / (float) window.getHeight();
-        nvgBeginFrame(context.get(), window.getWidth(), window.getHeight(), pxRatio);
+		context.glClearFrame(window.getFramebufferWidth(), window.getFramebufferHeight(), bgClearColor.x(), bgClearColor.y(), bgClearColor.z(), bgClearColor.w());
+        context.beginFrame(window.getWidth(), window.getHeight(), window.getFramebufferWidth(), window.getFramebufferHeight());
 		
         rootWidgetAssembly.render(windowManager, window, context, rootWidgetAssembly);
         rootWidgetAssembly.renderChildren(windowManager, window, context, rootWidgetAssembly);
@@ -121,7 +117,7 @@ public abstract class ClearApp extends WindowedApplication {
 			});
         }
 
-        nvgEndFrame(context.get());
+        context.endFrame();
         
         if (queueLaunch != null) {
         	if (queueLaunchFrameDelay > 0) {
