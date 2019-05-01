@@ -6,8 +6,6 @@ import nokori.clear.vg.ClearColor;
 import nokori.clear.vg.NanoVGContext;
 import nokori.clear.vg.widget.assembly.Widget;
 import nokori.clear.vg.widget.assembly.WidgetAssembly;
-import nokori.clear.windows.Window;
-import nokori.clear.windows.WindowManager;
 
 public class CircleWidget extends Widget {
 	
@@ -26,10 +24,10 @@ public class CircleWidget extends Widget {
 	}
 	
 	@Override
-	public void tick(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {}
+	public void tick(NanoVGContext context, WidgetAssembly rootWidgetAssembly) {}
 
 	@Override
-	public void render(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
+	public void render(NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
 		long vg = context.get();
 		
 		nvgBeginPath(vg);

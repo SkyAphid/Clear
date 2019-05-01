@@ -25,7 +25,7 @@ public class ClearDraggableWidgetDemo extends ClearApp {
 	}
 
 	public ClearDraggableWidgetDemo() {
-		super(new WidgetAssembly(new WidgetSynch(WidgetSynch.Mode.WITH_WINDOW)));
+		super(new WidgetAssembly(new WidgetSynch(WidgetSynch.Mode.WITH_FRAMEBUFFER)));
 	}
 	
 	@Override

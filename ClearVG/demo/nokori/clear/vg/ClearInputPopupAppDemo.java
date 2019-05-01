@@ -11,10 +11,10 @@ import nokori.clear.windows.Window;
 import nokori.clear.windows.WindowManager;
 import nokori.clear.windows.util.TinyFileDialog;
 
-public class ClearInputAppDemo extends ClearHelloWorldDemo {
+public class ClearInputPopupAppDemo extends ClearHelloWorldDemo {
 
 	public static void main(String[] args) {
-		ClearApp.launch(new ClearInputAppDemo(), args);
+		ClearApp.launch(new ClearInputPopupAppDemo(), args);
 	}
 
 	@Override

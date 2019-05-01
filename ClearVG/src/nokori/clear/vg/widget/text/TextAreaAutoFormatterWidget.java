@@ -7,9 +7,6 @@ import java.util.regex.Pattern;
 import nokori.clear.vg.NanoVGContext;
 import nokori.clear.vg.widget.assembly.Widget;
 import nokori.clear.vg.widget.assembly.WidgetAssembly;
-import nokori.clear.windows.Window;
-import nokori.clear.windows.WindowManager;
-
 import static nokori.clear.vg.widget.text.ClearEscapeSequences.*;
 
 /**
@@ -46,7 +43,7 @@ public class TextAreaAutoFormatterWidget extends Widget {
 	}
 
 	@Override
-	public void tick(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
+	public void tick(NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
 		/*TextAreaWidget textAreaWidget = (TextAreaWidget) parent;
 		TextAreaContentHandler h = textAreaWidget.getTextContentHandler();
 		System.out.println("Caret position: " + h.getCaretPosition() + " (" + textAreaWidget.getTextBuilder().length() + ")");*/
@@ -57,7 +54,7 @@ public class TextAreaAutoFormatterWidget extends Widget {
 	}
 
 	@Override
-	public void render(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {}
+	public void render(NanoVGContext context, WidgetAssembly rootWidgetAssembly) {}
 	
 	/**
 	 * This is called from TextAreaWidget's requestRefresh() function.

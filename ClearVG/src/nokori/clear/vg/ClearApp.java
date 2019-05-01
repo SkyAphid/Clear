@@ -72,7 +72,7 @@ public abstract class ClearApp extends WindowedApplication {
 			Widget w = rootWidgetAssembly.getChild(i);
 			
 			if (w instanceof WidgetSynch) {
-				((WidgetSynch) w).synch(window);
+				((WidgetSynch) w).synch(context);
 			}
 		}
 		
@@ -89,8 +89,8 @@ public abstract class ClearApp extends WindowedApplication {
 		
 		if (!paused) {
 			TransitionManager.tick();
-			rootWidgetAssembly.tick(windowManager, window, context, rootWidgetAssembly);
-			rootWidgetAssembly.tickChildren(windowManager, window, context, rootWidgetAssembly);
+			rootWidgetAssembly.tick(context, rootWidgetAssembly);
+			rootWidgetAssembly.tickChildren(context, rootWidgetAssembly);
 		}
 		
 		/*
@@ -100,8 +100,8 @@ public abstract class ClearApp extends WindowedApplication {
 		NanoVGContext.glClearFrame(window.getFramebufferWidth(), window.getFramebufferHeight(), bgClearColor.x(), bgClearColor.y(), bgClearColor.z(), bgClearColor.w());
         context.beginFrame(window.getWidth(), window.getHeight(), window.getFramebufferWidth(), window.getFramebufferHeight());
 		
-        rootWidgetAssembly.render(windowManager, window, context, rootWidgetAssembly);
-        rootWidgetAssembly.renderChildren(windowManager, window, context, rootWidgetAssembly);
+        rootWidgetAssembly.render(context, rootWidgetAssembly);
+        rootWidgetAssembly.renderChildren(context, rootWidgetAssembly);
 
         if (paused) {
         	long vg = context.get();

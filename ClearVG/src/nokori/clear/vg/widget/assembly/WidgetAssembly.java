@@ -4,8 +4,6 @@ import org.lwjgl.nanovg.NanoVG;
 
 import nokori.clear.vg.ClearColor;
 import nokori.clear.vg.NanoVGContext;
-import nokori.clear.windows.Window;
-import nokori.clear.windows.WindowManager;
 
 /**
  * This is an empty generic implementation of a Widget that can be used primarily as a container for other Widgets.
@@ -57,10 +55,10 @@ public class WidgetAssembly extends Widget {
 	}
 
 	@Override
-	public void tick(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {}
+	public void tick(NanoVGContext context, WidgetAssembly rootWidgetAssembly) {}
 	
 	@Override
-	public void render(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
+	public void render(NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
 		if (backgroundFill != null) {
 			backgroundFill.tallocNVG(fill -> {
 				long vg = context.get();

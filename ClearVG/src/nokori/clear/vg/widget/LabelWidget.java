@@ -8,9 +8,6 @@ import nokori.clear.vg.font.Font;
 import nokori.clear.vg.font.FontStyle;
 import nokori.clear.vg.widget.assembly.Widget;
 import nokori.clear.vg.widget.assembly.WidgetAssembly;
-import nokori.clear.windows.Window;
-import nokori.clear.windows.WindowManager;
-
 import static org.lwjgl.nanovg.NanoVG.*;
 
 import java.util.ArrayList;
@@ -85,9 +82,7 @@ public class LabelWidget extends Widget {
 	}
 
 	@Override
-	public void tick(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
-		calculateBounds(context);
-	}
+	public void tick(NanoVGContext context, WidgetAssembly rootWidgetAssembly) {}
 
 	/**
 	 * Splits the text into lines (if there are line breaks) and calculates the height of this LabelWidget. This is called by <code>tick()</code> automatically, 
@@ -115,7 +110,7 @@ public class LabelWidget extends Widget {
 	}
 	
 	@Override
-	public void render(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
+	public void render(NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
 		font.configureNVG(context, fontSize, textAlignment, style);
 		calculateBounds(context);
 		
@@ -146,12 +141,14 @@ public class LabelWidget extends Widget {
 		return text;
 	}
 
-	public void setText(String text) {
+	public void setText(NanoVGContext context, String text) {
 		if (!this.text.equals(text)) {
 			lines = null;
 		}
 		
 		this.text = text;
+		
+		calculateBounds(context);
 	}
 
 	public Font getFont() {

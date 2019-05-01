@@ -8,7 +8,6 @@ import java.util.Stack;
 import nokori.clear.vg.NanoVGContext;
 import nokori.clear.vg.util.NanoVGScaler;
 import nokori.clear.windows.Window;
-import nokori.clear.windows.WindowManager;
 import nokori.clear.windows.event.CharEvent;
 import nokori.clear.windows.event.KeyEvent;
 import nokori.clear.windows.event.MouseButtonEvent;
@@ -45,24 +44,24 @@ public class WidgetContainer {
 		public void process(Widget w);
 	}
 	
-	public void tickChildren(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
+	public void tickChildren(NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
 		for (int i = 0; i < children.size(); i++) {
 			Widget w = children.get(i);
 			
 			if (tickChildren) {
-				w.tick(windowManager, window, context, rootWidgetAssembly);
-				w.tickChildren(windowManager, window, context, rootWidgetAssembly);
+				w.tick(context, rootWidgetAssembly);
+				w.tickChildren(context, rootWidgetAssembly);
 			}
 		}
 	}
 	
-	public void renderChildren(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
+	public void renderChildren(NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
 		for (int i = 0; i < children.size(); i++) {
 			Widget w = children.get(i);
 			
 			if (renderChildren) {
-				w.render(windowManager, window, context, rootWidgetAssembly);
-				w.renderChildren(windowManager, window, context, rootWidgetAssembly);
+				w.render(context, rootWidgetAssembly);
+				w.renderChildren(context, rootWidgetAssembly);
 			}
 		}
 	}

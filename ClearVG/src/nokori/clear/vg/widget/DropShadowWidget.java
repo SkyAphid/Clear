@@ -10,8 +10,6 @@ import nokori.clear.vg.ClearColor;
 import nokori.clear.vg.NanoVGContext;
 import nokori.clear.vg.widget.assembly.WidgetAssembly;
 import nokori.clear.vg.widget.assembly.WidgetSynch;
-import nokori.clear.windows.Window;
-import nokori.clear.windows.WindowManager;
 
 public class DropShadowWidget extends RectangleWidget {
 	
@@ -55,7 +53,7 @@ public class DropShadowWidget extends RectangleWidget {
 	}
 	
 	@Override
-	public void render(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
+	public void render(NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
 		long vg = context.get();
 		
 		float x = getClippedX() + shadowOffset.x;

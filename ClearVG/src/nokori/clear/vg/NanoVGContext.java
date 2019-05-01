@@ -18,6 +18,8 @@ public class NanoVGContext {
 	private boolean modernOpenGL;
 	private long nvgContext;
 	
+	private int framebufferWidth, framebufferHeight;
+	
 	/**
 	 * Initializes a NanoVG context and returns this object.
 	 */
@@ -52,11 +54,14 @@ public class NanoVGContext {
 	 * 
 	 * @param windowWidth - the actual window width in pixels
 	 * @param windowHeight - the actual window height in pixels
-	 * @param windowFramebufferWidth - the window framebuffer width (internal rendering)
-	 * @param windowFramebufferHeight - the window framebuffer height (internal rendering)
+	 * @param framebufferWidth - the window framebuffer width (internal rendering)
+	 * @param framebufferHeight - the window framebuffer height (internal rendering)
 	 */
-	public void beginFrame(int windowWidth, int windowHeight, int windowFramebufferWidth, int windowFramebufferHeight) {
-      	float pxRatio = (float) windowFramebufferWidth / (float) windowHeight;
+	public void beginFrame(int windowWidth, int windowHeight, int framebufferWidth, int framebufferHeight) {
+		this.framebufferWidth = framebufferWidth;
+		this.framebufferHeight = framebufferHeight;
+		
+      	float pxRatio = (float) framebufferWidth / (float) windowHeight;
         nvgBeginFrame(nvgContext, windowWidth, windowHeight, pxRatio);
 	}
 	
@@ -81,6 +86,20 @@ public class NanoVGContext {
 		return nvgContext;
 	}
 	
+	/**
+	 * @return the framebuffer width of the window configured in <code>beginFrame()</code>
+	 */
+	public int getFramebufferWidth() {
+		return framebufferWidth;
+	}
+
+	/**
+	 * @return the framebuffer height of the window configured in <code>beginFrame()</code>
+	 */
+	public int getFramebufferHeight() {
+		return framebufferHeight;
+	}
+
 	/**
 	 * Disposes this NanoVG context.
 	 */

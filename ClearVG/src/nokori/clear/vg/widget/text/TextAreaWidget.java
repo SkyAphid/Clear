@@ -20,7 +20,6 @@ import nokori.clear.vg.widget.assembly.WidgetAssembly;
 import nokori.clear.vg.widget.assembly.WidgetUtils;
 import nokori.clear.windows.Cursor;
 import nokori.clear.windows.Window;
-import nokori.clear.windows.WindowManager;
 import nokori.clear.windows.event.CharEvent;
 import nokori.clear.windows.event.KeyEvent;
 import nokori.clear.windows.event.MouseButtonEvent;
@@ -223,12 +222,12 @@ public class TextAreaWidget extends Widget {
 	}
 
 	@Override
-	public void tick(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
+	public void tick(NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
 		//System.out.println(ClearStaticResources.getFocusedWidget());
 	}
 
 	@Override
-	public void render(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
+	public void render(NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
 		float x = getClippedX();
 		float y = getClippedY();
 		float width = getWidth();

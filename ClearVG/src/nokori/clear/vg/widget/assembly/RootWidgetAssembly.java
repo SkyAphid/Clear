@@ -7,6 +7,6 @@ package nokori.clear.vg.widget.assembly;
  */
 public class RootWidgetAssembly extends WidgetAssembly {
 	public RootWidgetAssembly() {
-		super(new WidgetSynch(WidgetSynch.Mode.WITH_WINDOW));
+		super(new WidgetSynch(WidgetSynch.Mode.WITH_FRAMEBUFFER));
 	}
 }

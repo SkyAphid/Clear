@@ -10,7 +10,6 @@ import nokori.clear.vg.widget.listener.MouseExitedEventListener;
 import nokori.clear.vg.widget.listener.MouseMotionEventListener;
 import nokori.clear.vg.widget.listener.MouseScrollEventListener;
 import nokori.clear.windows.Window;
-import nokori.clear.windows.WindowManager;
 import nokori.clear.windows.event.CharEvent;
 import nokori.clear.windows.event.KeyEvent;
 import nokori.clear.windows.event.MouseButtonEvent;
@@ -70,7 +69,7 @@ public abstract class Widget extends WidgetContainer {
 	 * @param context
 	 * @param rootWidgetAssembly
 	 */
-	public abstract void tick(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly);
+	public abstract void tick(NanoVGContext context, WidgetAssembly rootWidgetAssembly);
 	
 	/**
 	 * This is the rendering function for this widget. NanoVG rendering calls should be inserted here.
@@ -80,7 +79,7 @@ public abstract class Widget extends WidgetContainer {
 	 * @param context
 	 * @param rootWidgetAssembly
 	 */
-	public abstract void render(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly);
+	public abstract void render(NanoVGContext context, WidgetAssembly rootWidgetAssembly);
 	
 	/**
 	 * This is called when a widget is removed from a widget container or at the end of the program's life. Make sure to dispose any native resources that will leak otherwise.

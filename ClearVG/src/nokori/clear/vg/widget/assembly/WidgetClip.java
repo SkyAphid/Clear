@@ -1,8 +1,6 @@
 package nokori.clear.vg.widget.assembly;
 
 import nokori.clear.vg.NanoVGContext;
-import nokori.clear.windows.Window;
-import nokori.clear.windows.WindowManager;
 
 public class WidgetClip extends Widget {
 	
@@ -35,7 +33,7 @@ public class WidgetClip extends Widget {
 	}
 
 	@Override
-	public void tick(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
+	public void tick(NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
 		if (parent == null || parent.parent == null) {
 			System.err.println("WARNING: WidgetClip isn't attached to another Widget, or that Widget isn't attached to another Widget!"
 					+ "\nBoth must be present for a WidgetClip to work correctly! (Heirarchy: Widget -> Child Widget -> Widget Clip)");
@@ -151,7 +149,7 @@ public class WidgetClip extends Widget {
 	}
 
 	@Override
-	public void render(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {}
+	public void render(NanoVGContext context, WidgetAssembly rootWidgetAssembly) {}
 
 	@Override
 	public void dispose() {

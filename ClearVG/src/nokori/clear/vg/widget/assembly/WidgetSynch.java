@@ -1,8 +1,6 @@
 package nokori.clear.vg.widget.assembly;
 
 import nokori.clear.vg.NanoVGContext;
-import nokori.clear.windows.Window;
-import nokori.clear.windows.WindowManager;
 
 /**
  * WidgetSynch's will synchronize the parent Widget's dimensions to the designated Widget's dimensions. This Widget is very useful for WidgetAssemblies that 
@@ -31,9 +29,9 @@ public class WidgetSynch extends Widget {
 		WITH_PARENT,
 		
 		/**
-		 * Synchronize with Window: the width/height will be synchronized with the Window.
+		 * Synchronize with frambuffer: the width/height will be synchronized with the framebuffer settings in NanoVGContext.
 		 */
-		WITH_WINDOW
+		WITH_FRAMEBUFFER
 	};
 	
 	private Mode mode = Mode.MANUAL;
@@ -97,44 +95,44 @@ public class WidgetSynch extends Widget {
 	}
 
 	@Override
-	public void tick(WindowManager windowManager, Window window, NanoVGContext context,	WidgetAssembly rootWidgetAssembly) {
-		synch(window);
+	public void tick(NanoVGContext context,	WidgetAssembly rootWidgetAssembly) {
+		synch(context);
 	}
 
 	/**
 	 * This checks if each synchonization type is enabled and calls the corresponding functions. This is called every frame from tick() by default.
 	 */
-	public void synch(Window window) {
+	public void synch(NanoVGContext context) {
 		Mode activeMode = mode;
 		
 		if (activeMode == Mode.WITH_PARENT && parent.parent == null) {
-			activeMode = Mode.WITH_WINDOW;
+			activeMode = Mode.WITH_FRAMEBUFFER;
 		}
 		
 		if (synchXEnabled) {
-			synchX(window);
+			synchX(context);
 		}
 		
 		if (synchYEnabled) {
-			synchY(window);
+			synchY(context);
 		}
 		
 		if (synchWidthEnabled) {
-			synchWidth(window, activeMode);
+			synchWidth(context, activeMode);
 		}
 		
 		if (synchHeightEnabled) {
-			synchHeight(window, activeMode);
+			synchHeight(context, activeMode);
 		}
 	}
 	
 	/**
 	 * If X synchronization is enabled, this will be called, this will be called to synchronize the parent's X with its parent's X.
 	 */
-	protected void synchX(Window window) {
+	protected void synchX(NanoVGContext context) {
 		float internalOffsetX = 0f;
 		
-		if (mode == Mode.WITH_WINDOW) {
+		if (mode == Mode.WITH_FRAMEBUFFER) {
 			internalOffsetX = -parent.getClippedX();
 		}
 		
@@ -144,10 +142,10 @@ public class WidgetSynch extends Widget {
 	/**
 	 * If Y synchronization is enabled, this will be called, this will be called to synchronize the parent's Y with its parent's Y.
 	 */
-	protected void synchY(Window window) {
+	protected void synchY(NanoVGContext context) {
 		float internalOffsetY = 0f;
 		
-		if (mode == Mode.WITH_WINDOW) {
+		if (mode == Mode.WITH_FRAMEBUFFER) {
 			internalOffsetY = -parent.getClippedY();
 		}
 		
@@ -157,13 +155,13 @@ public class WidgetSynch extends Widget {
 	/**
 	 * If width synchronization is enabled, this will be called, this will be called to synchronize the parent's height with its parent's height.
 	 */
-	protected void synchWidth(Window window, Mode mode) {
+	protected void synchWidth(NanoVGContext context, Mode mode) {
 		switch(mode) {
 		case WITH_PARENT:
 			parent.setWidth(parent.parent.getWidth() + wOffset);
 			break;
-		case WITH_WINDOW:
-			parent.setWidth(window.getFramebufferWidth() + wOffset);
+		case WITH_FRAMEBUFFER:
+			parent.setWidth(context.getFramebufferWidth() + wOffset);
 			break;
 		case MANUAL:
 		default:
@@ -176,13 +174,13 @@ public class WidgetSynch extends Widget {
 	/**
 	 * If height synchronization is enabled, this will be called to synchronize the parent's width with its parent's width.
 	 */
-	protected void synchHeight(Window window, Mode mode) {
+	protected void synchHeight(NanoVGContext context, Mode mode) {
 		switch(mode) {
 		case WITH_PARENT:
 			parent.setHeight(parent.parent.getHeight() + hOffset);
 			break;
-		case WITH_WINDOW:
-			parent.setHeight(window.getFramebufferHeight() + hOffset);
+		case WITH_FRAMEBUFFER:
+			parent.setHeight(context.getFramebufferHeight() + hOffset);
 			break;
 		case MANUAL:
 		default:
@@ -273,7 +271,7 @@ public class WidgetSynch extends Widget {
 	}
 
 	@Override
-	public void render(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {}
+	public void render(NanoVGContext context, WidgetAssembly rootWidgetAssembly) {}
 
 	@Override
 	public void dispose() {}

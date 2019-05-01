@@ -5,8 +5,6 @@ import nokori.clear.vg.NanoVGContext;
 import nokori.clear.vg.font.Font;
 import nokori.clear.vg.util.NanoVGScaler;
 import nokori.clear.vg.widget.assembly.WidgetAssembly;
-import nokori.clear.windows.Window;
-import nokori.clear.windows.WindowManager;
 
 /**
  * This class is an extension of TextAreaWidget that simplifies its functionality down into just being a one-line field input.
@@ -67,8 +65,8 @@ public class TextFieldWidget extends TextAreaWidget {
 
 
 	@Override
-	public void tick(WindowManager windowManager, Window window, NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
-		super.tick(windowManager, window, context, rootWidgetAssembly);
+	public void tick(NanoVGContext context, WidgetAssembly rootWidgetAssembly) {
+		super.tick(context, rootWidgetAssembly);
 		calculateHeight(context);
 	}
 
