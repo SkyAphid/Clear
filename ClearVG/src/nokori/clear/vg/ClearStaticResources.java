@@ -20,6 +20,8 @@ public class ClearStaticResources {
 
 	public static void setFocusedWidget(Widget focusedWidget) {
 		ClearStaticResources.focusedWidget = focusedWidget;
+		//System.err.println(focusedWidget);
+		//Thread.dumpStack();
 	}
 
 	public static boolean isFocusedOrCanFocus(Widget widget) {

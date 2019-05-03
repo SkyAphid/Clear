@@ -226,10 +226,42 @@ public abstract class Widget extends WidgetContainer {
 	 * 
 	 * @param window
 	 * @param scale - the scale to transform the coordinates by (for use in UIs that can be scaled up and down either manually or via NanoVGScaler)
-	 * @return true if the Window's mouse coordinates fall within this widget.
+	 * @return true if the Window's mouse coordinates fall within this widget
 	 */
 	public boolean isMouseIntersectingThisWidget(Window window) {
 		return intersects(MouseEventImpl.getScaledMouseCoordinate(window.getMouseX(), scaler.getScale()), MouseEventImpl.getScaledMouseCoordinate(window.getMouseY(), scaler.getScale()));
+	}
+	
+	/**
+	 * Checks if the mouse is within one of the child widgets of this widget. Returns true on the first instance of a mouse intersection with a child.
+	 * 
+	 * @param window
+	 * @return true if the mouse is currently intersecting one of the children widgets of this widget
+	 */
+	public boolean isMouseIntersectingChild(Window window) {
+		double mouseX = MouseEventImpl.getScaledMouseCoordinate(window.getMouseX(), scaler.getScale());
+		double mouseY = MouseEventImpl.getScaledMouseCoordinate(window.getMouseY(), scaler.getScale());
+		
+		return intersectsChild(mouseX, mouseY);
+	}
+
+	/**
+	 * Checks if the given x/y is intersecting one of this widget's child widgets.
+	 * 
+	 * @param x
+	 * @param y
+	 * @return true if the coordinates are within at least one child widget of this widget
+	 */
+	public boolean intersectsChild(double x, double y) {
+		for (int i = 0; i < getNumChildren(); i++) {
+			Widget child = getChild(i);
+			
+			if (child.intersects(x, y)) {
+				return true;
+			}
+		}
+		
+		return false;
 	}
 	
 	/**

@@ -49,12 +49,14 @@ public class DefaultTextAreaContentInputHandler extends TextAreaContentInputHand
 			
 			Widget focused = ClearStaticResources.getFocusedWidget();
 			
+			//Cancel editing if the mouse is hovering this text field but its currently focused on another text field
 			if (event.isPressed() && widget.isMouseIntersectingThisWidget(window) 
-					&& focused instanceof TextAreaWidget && focused != widget) {
+					&& (focused instanceof TextAreaWidget && focused != widget)) {
 				
 				((TextAreaWidget) focused).endEditing();
 			}
 			
+			//Reset this input handler if its not currently possible to focus on it
 			if (!ClearStaticResources.isFocusedOrCanFocus(widget)) {
 				reset(true);
 				return;
@@ -65,13 +67,13 @@ public class DefaultTextAreaContentInputHandler extends TextAreaContentInputHand
 			 */
 			boolean bMousePressed = mousePressed;
 			mousePressed = event.isPressed();
-
+			
 			if (mousePressed) {
 				//This queues up caret repositioning based on the mouse coordinates
 				//Update the caret positioning on next render when we have the character
 				//locations available
 				contentHandler.queueCaret((float) event.getScaledMouseX(scaler.getScale()), (float) event.getScaledMouseY(scaler.getScale()));
-				
+
 				// If the mouse wasn't previously pressed, reset the highlighting.
 				if (!bMousePressed) {
 					contentHandler.resetHighlighting();
@@ -82,6 +84,11 @@ public class DefaultTextAreaContentInputHandler extends TextAreaContentInputHand
 		}
 	}
 	
+	/**
+	 * Resets this input handler (sets mousePressed to false, resets the content handlers highlighting)
+	 * 
+	 * @param resetHighlighting
+	 */
 	public void reset(boolean resetHighlighting) {
 		mousePressed = false;
 		

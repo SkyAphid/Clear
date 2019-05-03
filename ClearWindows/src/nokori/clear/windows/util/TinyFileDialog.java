@@ -138,7 +138,9 @@ public class TinyFileDialog {
         filters.put(MemoryStack.stackUTF8("*." + fileExtension)).flip();
         
         defaultPath = defaultPath.getAbsoluteFile();
+        
         String defaultString = defaultPath.getAbsolutePath();
+        
         if(defaultPath.isDirectory() && !defaultString.endsWith(File.separator)){
         	defaultString += File.separator;
         }

@@ -451,6 +451,52 @@ public class Font {
 		return this;
 	}
 	
+	public enum FallbackFontMode {
+		/**
+		 * Only the regular font is added as a fallback to this fonts regular font
+		 */
+		REGULAR_ONLY,
+		
+		/**
+		 * The regular font on the fallback font is applied to all of the fonts in the receiving font (regular, italic, bold, light)
+		 */
+		REGULAR_TO_ALL,
+		
+		/**
+		 * All corresponding fonts are added as fallback fonts to the receiving font
+		 */
+		ALL
+	}
+	
+	/**
+	 * Adds a Fallback Font to this Font with the given settings (FallbackMode). 
+	 * 
+	 * <br><br>An example of a fallback font being needed is a situation where font doesn't have a special character that you need (e.g. an emoji character), you can 
+	 * add a font that contains the desired special character as a fallback font and it'll render the special character from that font in the place of the missing one.
+	 * 
+	 * @param context - the NanoVGContext necessary for assigning the fallback font
+	 * @param font - the font to assign as a fallback font to this font
+	 * @param mode - the fallback font mode. See the descriptions of each enumerator to see what they do.
+	 * @return
+	 */
+	public Font addFallbackFont(NanoVGContext context, Font font, FallbackFontMode mode) {
+		nvgAddFallbackFont(context.get(), fontNameRegular, font.fontNameRegular);
+		
+		if (mode == FallbackFontMode.REGULAR_TO_ALL) {
+			nvgAddFallbackFont(context.get(), fontNameBold, font.fontNameRegular);
+			nvgAddFallbackFont(context.get(), fontNameItalic, font.fontNameRegular);
+			nvgAddFallbackFont(context.get(), fontNameLight, font.fontNameRegular);
+		}
+		
+		if (mode == FallbackFontMode.ALL) {
+			nvgAddFallbackFont(context.get(), fontNameBold, font.fontNameBold);
+			nvgAddFallbackFont(context.get(), fontNameItalic, font.fontNameItalic);
+			nvgAddFallbackFont(context.get(), fontNameLight, font.fontNameLight);
+		}
+		
+		return this;
+	}
+	
 	private ByteBuffer createFont(NanoVGContext context, String name, File file) throws IOException {
 		ByteBuffer dataBuffer = ioResourceToByteBuffer(file.getAbsolutePath(), (int) file.getTotalSpace());
 		nvgCreateFontMem(context.get(), name, dataBuffer, 0);

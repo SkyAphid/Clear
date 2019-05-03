@@ -58,7 +58,7 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 		});
 		
 		setOnInternalMouseMotionEvent(e -> {
-			if (dragging) {
+			if (dragging && isFocusedOrCanFocus(this)) {
 				//Calculating the coordinates like this instead of using the mouse event DX/DY means that the user will have more freedom in how they use move()
 				//E.G. calculating it like this will allow the user to modify move to allow for grid snapping without any issues arising from the new X/Y values
 				//System.err.println(this + " Dragging: " + getX() + "/" + getY() + " " + anchor.x() + "/" + anchor.y());
@@ -73,7 +73,7 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 	 * @param e
 	 */
 	protected void draggingAnchorCallback(MouseButtonEvent e) {
-		clipDraggingAnchor((float) e.getMouseX(), (float) e.getMouseY());
+		clipDraggingAnchor((float) e.getScaledMouseX(scaler.getScale()), (float) e.getScaledMouseY(scaler.getScale()));
 	}
 	
 	/**
@@ -81,7 +81,7 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 	 * @param e
 	 */
 	protected void draggingCallback(MouseMotionEvent e) {
-		move(getDragX(e.getMouseX()), getDragY(e.getMouseY()));
+		move(getDragX(e.getScaledMouseX(scaler.getScale())), getDragY(e.getScaledMouseY(scaler.getScale())));
 	}
 	
 	protected void draggingReleaseCallback(MouseButtonEvent e, boolean wasMoved) {
@@ -93,7 +93,7 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 	}
 	
 	public float getDragY(double mouseY) {
-		return (float) (getY() + (mouseY- getY()) - anchor.y());
+		return (float) (getY() + (mouseY - getY()) - anchor.y());
 	}
 
 	/**
@@ -103,7 +103,7 @@ public class DraggableWidgetAssembly extends WidgetAssembly {
 	 * @param newX - the requested new X value for the widget
 	 * @param newY - the requested new Y value for the widget
 	 */
-	protected void move(float newX, float newY) {
+	public void move(float newX, float newY) {
 		setX(newX);
 		setY(newY);
 	}
