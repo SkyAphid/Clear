@@ -1,7 +1,9 @@
 # Clear
 Clear is a wrapper for LWJGL3 that makes it simple to build basic programs that require a user-interface. The windowing and UI wrappers are separated into two projects in case you want to use one and not the other. The goal of the project is to provide a very sound foundation for creating custom user-interfaces that aren't limited by foundational design decisions (such as forcing certain layout types to be used, or so on). This is for GUI creators who want something "free-form" to build their interfaces in.
 
-![clear_helloworld](https://user-images.githubusercontent.com/6147299/53410619-f24dd280-3989-11e9-91dd-5c653870fc59.png) 
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/6147299/53410619-f24dd280-3989-11e9-91dd-5c653870fc59.png">
+</p>
 
 ## General Features
 - Heavily customizable: focus on user extendability
