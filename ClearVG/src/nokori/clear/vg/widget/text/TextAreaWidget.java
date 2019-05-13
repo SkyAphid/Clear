@@ -852,10 +852,26 @@ public class TextAreaWidget extends Widget {
 	}
 	
 	/**
-	 * @return the StringBuilder containing the text for this TextAreaWidget. A StringBuilder is stored instead of a basic String for editing/performance purposes.
+	 * A StringBuilder is stored in this class instead of a basic String for editing/performance purposes. It's modified frequently by the various mechanics of this class. 
+	 * This function will allow you to access it, but be careful in doing so.
+	 * 
+	 * <br><br><b>WARNING: </b> This is the raw rendering text. If you save this text to a file, any codes or escape sequences used for rendering will also be saved. 
+	 * Use the <code>getText()</code> function instead if you wish to get the uncoded text.
+	 * 
+	 * @return the StringBuilder containing the text for this TextAreaWidget
 	 */
 	public StringBuilder getTextBuilder() {
 		return textBuilder;
+	}
+	
+	/**
+	 * This function uses the <code>getProcessedText()</code> function in the TextContentHandler of this TextAreaWidget to retrieve the text content of this widget, allowing you to 
+	 * access a text end-result in this TextAreaWidget.
+	 * 
+	 * @return the processed raw text content of this TextAreaWidget
+	 */
+	public String getText() {
+		return textContentHandler.getProcessedText(getTextBuilder().toString());
 	}
 	
 	public void setTextBuilder(StringBuilder textBuilder) {
@@ -1337,8 +1353,5 @@ public class TextAreaWidget extends Widget {
 	@Override
 	public void dispose() {
 	}
-
-
-
 
 }
