@@ -337,7 +337,7 @@ public class TextAreaWidget extends Widget {
 		cullOffset = fontHeight * 5;
 		
 		textContentHandler.beginFrame();
-		
+
 		textContentHandler.renderHighlight(vg, textContentX, textContentW, fontHeight);
 		
 		resetTextRenderConfiguration(context);

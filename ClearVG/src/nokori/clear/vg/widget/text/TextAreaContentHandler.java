@@ -314,7 +314,10 @@ public class TextAreaContentHandler {
 					//System.out.println(lineNumber + " Pass 2");
 					
 					setCaretPosition(startIndex);
+					
 					refreshHighlightIndex();
+					highlightRenderLogic(vg, startX, y, startIndex);
+					
 					resetCaretFader();
 					notifyCaretUpdated(true);
 					return;
@@ -332,6 +335,8 @@ public class TextAreaContentHandler {
 					}
 					
 					refreshHighlightIndex();
+					highlightRenderLogic(vg, endX, y, endIndex);
+					
 					resetCaretFader();
 					notifyCaretUpdated(true);
 					return;
