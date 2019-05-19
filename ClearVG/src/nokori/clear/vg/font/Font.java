@@ -118,7 +118,6 @@ public class Font {
 	 * 
 	 * @param context
 	 * @param fontSize
-	 * @param textAlignment
 	 * @param fontStyle
 	 */
 	public void configureNVG(NanoVGContext context, float fontSize, FontStyle fontStyle) {
@@ -173,7 +172,6 @@ public class Font {
 	 * 
 	 * @param context
 	 * @param fontSize
-	 * @param textAlignment
 	 * @param fontStyle
 	 * @return
 	 */
@@ -200,9 +198,6 @@ public class Font {
 	 * through NanoVG directly.
 	 * 
 	 * @param context
-	 * @param fontSize
-	 * @param textAlignment
-	 * @param fontStyle
 	 * @return
 	 */
 	public float getHeight(NanoVGContext context) {
