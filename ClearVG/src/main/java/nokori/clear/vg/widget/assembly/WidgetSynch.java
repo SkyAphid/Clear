@@ -64,29 +64,33 @@ public class WidgetSynch extends Widget {
 	public WidgetSynch(Mode mode, boolean synchXEnabled, boolean synchYEnabled, boolean synchWidthEnabled, boolean synchHeightEnabled) {
 		this(mode, null, synchXEnabled, synchYEnabled, synchWidthEnabled, synchHeightEnabled, 0f, 0f, 0f, 0f);
 	}
-	
+
+	public WidgetSynch(Mode mode, boolean synchXEnabled, boolean synchYEnabled, boolean synchWidthEnabled, boolean synchHeightEnabled, float xOffset, float yOffset, float wOffset, float hOffset) {
+		this(mode, null, synchXEnabled, synchYEnabled, synchWidthEnabled, synchHeightEnabled, xOffset, yOffset, wOffset, hOffset);
+	}
+
 	/**
 	 * This constructor allows the configuring of which aspects to synchronize between the assigned Widget and its parent. 
 	 * Offsets can also be inputted to tweak the values used for synchronization.
 	 * 
 	 * @param synchWith - the widget to synchronize with. This cannot be null if the Mode is set to MANUAL.
-	 * @param synchX - synchronize the x-position with the parent (sets it to zero)
-	 * @param synchY - synchronize the y-position with the parent (sets it to zero)
-	 * @param synchWidth - synchronize the width with the parent (sets it to the parents width)
-	 * @param synchHeight - synchronize the height with the parent (sets it to the parents height)
+	 * @param synchXEnabled - synchronize the x-position with the parent (sets it to zero)
+	 * @param synchYEnabled - synchronize the y-position with the parent (sets it to zero)
+	 * @param synchWidthEnabled - synchronize the width with the parent (sets it to the parents width)
+	 * @param synchHeightEnabled - synchronize the height with the parent (sets it to the parents height)
 	 * @param xOffset - this value is added to the synchronized x-value
 	 * @param yOffset - this value is added to the synchronized y-value
 	 * @param wOffset - this value is added to the synchronized width-value
 	 * @param hOffset - this value is added to the synchronized height-value
 	 */
-	public WidgetSynch(Mode mode, Widget synchWith, boolean synchX, boolean synchY, boolean synchWidth, boolean synchHeight, float xOffset, float yOffset, float wOffset, float hOffset) {
+	public WidgetSynch(Mode mode, Widget synchWith, boolean synchXEnabled, boolean synchYEnabled, boolean synchWidthEnabled, boolean synchHeightEnabled, float xOffset, float yOffset, float wOffset, float hOffset) {
 		this.mode = mode;
 		this.synchWith = synchWith;
 		
-		this.synchXEnabled = synchX;
-		this.synchYEnabled = synchY;
-		this.synchWidthEnabled = synchWidth;
-		this.synchHeightEnabled = synchHeight;
+		this.synchXEnabled = synchXEnabled;
+		this.synchYEnabled = synchYEnabled;
+		this.synchWidthEnabled = synchWidthEnabled;
+		this.synchHeightEnabled = synchHeightEnabled;
 		
 		this.xOffset = xOffset;
 		this.yOffset = yOffset;

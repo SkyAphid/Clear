@@ -62,16 +62,16 @@ public abstract class ClearInputApp extends ClearApp {
 
 		try {
 			Font font = new Font(fontLocation).load(context);
-			
+
 			/*
 			 * Message
 			 */
-			
+
 			float widgetWidth = width - (xPadding * 2f);
-			
+
 			LabelWidget messageLabel = new LabelWidget(widgetWidth, ClearColor.LIGHT_BLACK, message, font, FontStyle.REGULAR, FONT_SIZE).calculateBounds(context);
 			messageLabel.addChild(new WidgetClip(WidgetClip.Alignment.TOP_LEFT, xPadding, yPadding));
-			
+
 			rootWidgetAssembly.addChild(messageLabel);
 			
 			/*
