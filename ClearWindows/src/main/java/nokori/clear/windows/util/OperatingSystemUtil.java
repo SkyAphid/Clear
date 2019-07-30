@@ -6,7 +6,10 @@ import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 
-public class ClearUtil {
+/**
+ * This class contains some utilities for working around LWJGL's incompatibility with AWT, such as opening URL's in the users browser.
+ */
+public class OperatingSystemUtil {
 
     public MappedByteBuffer getMappedByteBuffer(File file) throws Exception {
         try (RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r")) {
