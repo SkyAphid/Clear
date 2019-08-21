@@ -96,29 +96,32 @@ public class TinyFileDialog {
      * @param additionalAcceptedFileExtensions any additional accepted file extensions
      * @return the selected file
      */
-    public static File showOpenFileDialog(String title, File defaultPath, String filterDescription, String acceptedFileExtension, String... additionalAcceptedFileExtensions) {
+	public static File showOpenFileDialog(String title, File defaultPath, String filterDescription, String... acceptedFileExtensions){
+		
+		PointerBuffer filters = MemoryStack.stackMallocPointer(acceptedFileExtensions.length);
 
-        PointerBuffer filters = MemoryStack.stackMallocPointer(1 + additionalAcceptedFileExtensions.length);
-
-        filters.put(MemoryStack.stackUTF8("*." + acceptedFileExtension));
-        for (int i = 0; i < additionalAcceptedFileExtensions.length; i++) {
-            filters.put(MemoryStack.stackUTF8("*." + additionalAcceptedFileExtensions[i]));
+        filters.put(MemoryStack.stackUTF8("*." + acceptedFileExtensions[0]));
+        
+        if (acceptedFileExtensions.length > 1) {
+            for(int i = 1; i < acceptedFileExtensions.length; i++){
+            	filters.put(MemoryStack.stackUTF8("*." + acceptedFileExtensions[i]));
+            }
         }
-
+        
         filters.flip();
 
         defaultPath = defaultPath.getAbsoluteFile();
         String defaultString = defaultPath.getAbsolutePath();
-        if (defaultPath.isDirectory() && !defaultString.endsWith(File.separator)) {
-            defaultString += File.separator;
+        if(defaultPath.isDirectory() && !defaultString.endsWith(File.separator)){
+        	defaultString += File.separator;
         }
-
+        
         //System.out.println(defaultString + " : exists: " + new File(defaultString).exists());
-
+        
         String result = TinyFileDialogs.tinyfd_openFileDialog(title, defaultString, filters, filterDescription, false);
-
-        return result != null ? new File(result) : null;
-    }
+		
+		return result != null ? new File(result) : null; 
+	}
 
     /**
      * Opens a file save dialog.
